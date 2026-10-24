@@ -196,6 +196,20 @@ pub struct Entry {
     pub channels: Vec<Channel>,
     pub manual_check: Option<ManualCheck>,
     pub obsolete: Option<Obsolete>,
+    /// Hashes of source pages at verification, for the monthly drift check.
+    #[serde(default)]
+    pub evidence: Vec<Evidence>,
+}
+
+/// A source page's state when the entry was verified (normalisation in `registry/README.md`).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Evidence {
+    /// One of the entry's `sources`.
+    pub url: String,
+    pub checked_at: Datetime,
+    /// Lowercase hex SHA-256 of the page's normalised main text.
+    pub sha256: String,
 }
 
 /// A named group of entries in `registry/au/packs/<id>.toml`.
@@ -357,10 +371,10 @@ fn check_entry(entry: &Entry, file: &str, today: NaiveDate, report: &mut Report)
     check_channels(entry, &mut errors);
     check_channel_levers(entry, &mut errors);
     check_obsolete(entry, &mut errors);
+    check_evidence(entry, today, &mut errors);
     match date_of(&entry.verified_at) {
         None => errors.push("verified_at must be a date such as 2026-10-24".to_owned()),
-        // One day of grace: entries are dated in Australian time, CI may run in UTC.
-        Some(date) if today.succ_opt().is_some_and(|tomorrow| date > tomorrow) => {
+        Some(date) if is_future(date, today) => {
             errors.push(format!("verified_at {date} is in the future"));
         }
         Some(date) if is_stale(date, today) => {
@@ -458,6 +472,26 @@ fn check_channel_levers(entry: &Entry, errors: &mut Vec<String>) {
             errors.push(format!(
                 "more than one channel is preferred for `{}`",
                 lever.name()
+            ));
+        }
+    }
+}
+
+fn check_evidence(entry: &Entry, today: NaiveDate, errors: &mut Vec<String>) {
+    for evidence in &entry.evidence {
+        let url = &evidence.url;
+        if !entry.sources.contains(url) {
+            errors.push(format!("evidence url `{url}` is not one of the sources"));
+        }
+        let hex = |c: char| c.is_ascii_digit() || ('a'..='f').contains(&c);
+        if evidence.sha256.len() != 64 || !evidence.sha256.chars().all(hex) {
+            errors.push(format!(
+                "evidence sha256 for `{url}` must be 64 lowercase hex digits"
+            ));
+        }
+        if date_of(&evidence.checked_at).is_none_or(|date| is_future(date, today)) {
+            errors.push(format!(
+                "evidence checked_at for `{url}` must be a date, not in the future"
             ));
         }
     }
@@ -570,6 +604,12 @@ fn date_of(value: &Datetime) -> Option<NaiveDate> {
         }
         _ => None,
     }
+}
+
+/// More than a day ahead. The day of grace covers entries dated in Australian time
+/// whilst CI runs in UTC.
+fn is_future(date: NaiveDate, today: NaiveDate) -> bool {
+    today.succ_opt().is_some_and(|tomorrow| date > tomorrow)
 }
 
 fn is_stale(verified: NaiveDate, today: NaiveDate) -> bool {
@@ -770,6 +810,41 @@ entries = ["example-au"]
         assert_error(&report, "more than one channel is preferred for `app13`");
         let report = check_one(|t| format!("{t}{}", second.replace("preferred = true\n", "")));
         assert_eq!(report.findings, []);
+    }
+
+    #[test]
+    fn checks_evidence() {
+        let sha = "a".repeat(64);
+        let evidence = |url: &str, date: &str, sha: &str| {
+            format!("\n[[evidence]]\nurl = \"{url}\"\nchecked_at = {date}\nsha256 = \"{sha}\"\n")
+        };
+        let good = evidence("https://example.com.au/privacy", "2026-10-24", &sha);
+        assert_eq!(check_one(|t| format!("{t}{good}")).findings, []);
+        let report = check_one(|t| {
+            format!(
+                "{t}{}",
+                evidence("https://other.com.au/", "2026-10-24", &sha)
+            )
+        });
+        assert_error(&report, "is not one of the sources");
+        let report = check_one(|t| {
+            format!(
+                "{t}{}",
+                evidence(
+                    "https://example.com.au/privacy",
+                    "2026-10-24",
+                    &"A".repeat(64)
+                )
+            )
+        });
+        assert_error(&report, "64 lowercase hex digits");
+        let report = check_one(|t| {
+            format!(
+                "{t}{}",
+                evidence("https://example.com.au/privacy", "2026-10-26", &sha)
+            )
+        });
+        assert_error(&report, "not in the future");
     }
 
     #[test]

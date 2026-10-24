@@ -29,3 +29,8 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "
 kind = "phone"
 address = "0433 185 315"
 levers = []
+
+[[evidence]]
+url = "https://conexum.com.au/privacy/"
+checked_at = 2026-10-24
+sha256 = "c042d4b37b1a1faf648aa9d305c95d18d2c00ff9a4946346bddab807dc4f6cc8"

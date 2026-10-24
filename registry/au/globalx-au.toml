@@ -29,3 +29,13 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "
 kind = "phone"
 address = "+61 (02) 8206 6000"
 levers = []
+
+[[evidence]]
+url = "https://globalx.com.au/privacy-policy/"
+checked_at = 2026-10-24
+sha256 = "d92a2132ba46fb8f1c7f6d7401ae7c3f30f368afe1df952f6012328d1395ccb5"
+
+[[evidence]]
+url = "https://globalx.com.au/contact-us/"
+checked_at = 2026-10-24
+sha256 = "d720b6f85ca83cc86affafc7c4b3ec7863492a96c7dd55f2220d8b28044c4c79"

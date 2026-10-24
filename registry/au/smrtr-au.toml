@@ -24,3 +24,13 @@ preferred = true
 kind = "web-form"
 address = "https://smrtr.com.au/opt-out-form/"
 levers = ["app7-no-marketing", "app7-no-facilitation"]
+
+[[evidence]]
+url = "https://smrtr.com.au/privacy-policy/"
+checked_at = 2026-10-24
+sha256 = "72991b5938ea97e9900c74e2cfca5817d60d0e4110dcf5b77e39e0c62f4e3d8d"
+
+[[evidence]]
+url = "https://smrtr.com.au/opt-out-form/"
+checked_at = 2026-10-24
+sha256 = "2dd29130a442bbfedca79d6774b998a0ea102ac8558814ad092e3e0aa7b82acf"

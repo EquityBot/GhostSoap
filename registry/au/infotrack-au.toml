@@ -29,3 +29,8 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "
 kind = "phone"
 address = "1800 738 524"
 levers = []
+
+[[evidence]]
+url = "https://www.infotrack.com.au/wp-content/uploads/InfoTrack-AU-Privacy-Policy-12-March-2026.pdf"
+checked_at = 2026-10-24
+sha256 = "89e488d631029b1f1912d8c9ea0e9aabeb04ca3a0c5e7f20653f60dc8b7087fb"

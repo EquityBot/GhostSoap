@@ -29,3 +29,13 @@ levers = []
 kind = "post"
 address = "Australia Post Group, Privacy Contact Officer, GPO Box 1777, Melbourne VIC 3000"
 levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://auspost.com.au/privacy"
+checked_at = 2026-10-24
+sha256 = "05f14a60d7d91a3dcedf4349825118837a1c435053f24e5e466bb7069238b288"
+
+[[evidence]]
+url = "https://auspost.com.au/business/services/data-services/contact-data-quality"
+checked_at = 2026-10-24
+sha256 = "d61547187f0914806d5ee7a028b6de7dd103a942d0fa076792fa2378bdc4d7d3"

@@ -29,3 +29,8 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "
 kind = "phone"
 address = "1300 734 318"
 levers = []
+
+[[evidence]]
+url = "https://www.cotality.com/au/legal/privacy-policy"
+checked_at = 2026-10-24
+sha256 = "cf84cd07ed7f075e50ed1a774eb9cbb347e4a20f9bd4a8e84c89af754a896ba9"

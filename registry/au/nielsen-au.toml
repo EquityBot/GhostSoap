@@ -24,3 +24,8 @@ preferred = true
 kind = "email"
 address = "australia.panelsupport@nielsen.com"
 levers = []
+
+[[evidence]]
+url = "https://au.computermobilepanel.nielsen.com/ui/AU/en/privacypolicyen.html"
+checked_at = 2026-10-24
+sha256 = "3a3367d795bd224f86ce228c2c08837ddf0da97c647022469c31d59b27146fcb"
