@@ -2,6 +2,8 @@
 
 /// Elements whose content is never page text.
 const SKIPPED: [&str; 6] = ["script", "style", "noscript", "template", "svg", "iframe"];
+/// Skipped elements whose content is raw text, which ends at the first matching end tag.
+const RAW_TEXT: [&str; 4] = ["script", "style", "noscript", "iframe"];
 
 /// Whether a response is HTML: its media type names HTML in any letter case or, with no
 /// `Content-Type`, its body starts like an HTML document.
@@ -17,6 +19,38 @@ pub fn is_html(content_type: Option<&str>, body: &[u8]) -> bool {
     }
 }
 
+/// A start or end tag (or `<!` and `<?` markup) in the lowercased document.
+struct Tag {
+    name: String,
+    closing: bool,
+    self_closing: bool,
+    /// Index just past the tag's `>`.
+    end: usize,
+}
+
+/// The tag starting at `from`, which holds `<`, or `None` if that `<` is text: markup
+/// starts with a letter, `/` and a letter, `!` or `?`.
+fn tag_at(lower: &str, from: usize) -> Option<Tag> {
+    let bytes = lower.as_bytes();
+    let closing = bytes.get(from + 1) == Some(&b'/');
+    let start = from + 1 + usize::from(closing);
+    let first = *bytes.get(start)?;
+    if !(first.is_ascii_alphabetic() || !closing && (first == b'!' || first == b'?')) {
+        return None;
+    }
+    let end = tag_end(lower, from);
+    let name = lower[start..end]
+        .chars()
+        .take_while(|&c| !c.is_ascii_whitespace() && c != '/' && c != '>')
+        .collect();
+    Some(Tag {
+        name,
+        closing,
+        self_closing: lower[..end].ends_with("/>"),
+        end,
+    })
+}
+
 #[derive(Clone, Copy, PartialEq)]
 enum Seen {
     No,
@@ -24,10 +58,11 @@ enum Seen {
     Done,
 }
 
-/// The text of the first element called `name`.
+/// The text of the first element called `name`, including any nested ones.
 struct Region {
     name: &'static str,
     seen: Seen,
+    depth: usize,
     text: String,
 }
 
@@ -36,14 +71,24 @@ impl Region {
         Self {
             name,
             seen: Seen::No,
+            depth: 0,
             text: String::new(),
         }
     }
 
-    fn tag(&mut self, name: &str, closing: bool) {
-        match (self.seen, closing) {
-            (Seen::No, false) if name == self.name => self.seen = Seen::Inside,
-            (Seen::Inside, true) if name == self.name => self.seen = Seen::Done,
+    fn tag(&mut self, tag: &Tag) {
+        if tag.name != self.name {
+            return;
+        }
+        match (self.seen, tag.closing) {
+            (Seen::No, false) => (self.seen, self.depth) = (Seen::Inside, 1),
+            (Seen::Inside, false) => self.depth += 1,
+            (Seen::Inside, true) => {
+                self.depth -= 1;
+                if self.depth == 0 {
+                    self.seen = Seen::Done;
+                }
+            }
             _ => {}
         }
     }
@@ -67,24 +112,22 @@ pub fn main_text(html: &str) -> String {
         let piece = if lower[i..].starts_with("<!--") {
             i = after(&lower, i, "-->");
             continue;
-        } else if lower.as_bytes()[i] == b'<' {
-            let close = tag_end(&lower, i);
-            let closing = lower[i + 1..].starts_with('/');
-            let name: String = lower[i + 1 + usize::from(closing)..close]
-                .chars()
-                .take_while(|&c| !c.is_ascii_whitespace() && c != '/' && c != '>')
-                .collect();
-            i = close;
-            if !closing && SKIPPED.contains(&name.as_str()) {
-                let closing_tag = after(&lower, i, &format!("</{name}"));
-                i = after(&lower, closing_tag, ">");
+        } else if let Some(tag) = (lower.as_bytes()[i] == b'<')
+            .then(|| tag_at(&lower, i))
+            .flatten()
+        {
+            i = if tag.closing || !SKIPPED.contains(&tag.name.as_str()) {
+                main.tag(&tag);
+                body.tag(&tag);
+                tag.end
             } else {
-                main.tag(&name, closing);
-                body.tag(&name, closing);
-            }
+                skip_element(&lower, &tag)
+            };
             " "
         } else {
-            let next = lower[i..].find('<').map_or(html.len(), |j| i + j);
+            // A `<` that starts no markup is text.
+            let from = i + usize::from(lower.as_bytes()[i] == b'<');
+            let next = lower[from..].find('<').map_or(html.len(), |j| from + j);
             let text = &html[i..next];
             i = next;
             text
@@ -104,6 +147,60 @@ pub fn main_text(html: &str) -> String {
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+/// The index just past the end of the skipped element that `start` opens, or the end of
+/// the document. Raw-text elements end at their first end tag; `template` and `svg` nest,
+/// and `<svg/>` closes itself.
+fn skip_element(lower: &str, start: &Tag) -> usize {
+    let name = start.name.as_str();
+    if RAW_TEXT.contains(&name) {
+        return raw_text_end(lower, start.end, name);
+    }
+    if name == "svg" && start.self_closing {
+        return start.end;
+    }
+    let mut depth = 1;
+    let mut i = start.end;
+    while let Some(j) = lower[i..].find('<').map(|j| i + j) {
+        if lower[j..].starts_with("<!--") {
+            i = after(lower, j, "-->");
+            continue;
+        }
+        let Some(tag) = tag_at(lower, j) else {
+            i = j + 1;
+            continue;
+        };
+        i = tag.end;
+        if !tag.closing && RAW_TEXT.contains(&tag.name.as_str()) {
+            i = raw_text_end(lower, i, &tag.name);
+        } else if tag.name == name {
+            if tag.closing {
+                depth -= 1;
+                if depth == 0 {
+                    return i;
+                }
+            } else if !(name == "svg" && tag.self_closing) {
+                depth += 1;
+            }
+        }
+    }
+    lower.len()
+}
+
+/// The index just past the first `</name>` end tag at or after `from`, or the end of the
+/// document. `</scripture>` does not end a `script`.
+fn raw_text_end(lower: &str, from: usize, name: &str) -> usize {
+    let close = format!("</{name}");
+    let mut i = from;
+    while let Some(j) = lower[i..].find(&close).map(|j| i + j + close.len()) {
+        let boundary = lower.as_bytes().get(j);
+        if boundary.is_none_or(|&b| b.is_ascii_whitespace() || b == b'/' || b == b'>') {
+            return after(lower, j, ">");
+        }
+        i = j;
+    }
+    lower.len()
 }
 
 /// The index just past the `>` that ends the tag starting at `from`, skipping quoted
@@ -216,6 +313,40 @@ mod tests {
             <script>document.write('<main>Fake</main>')</script>\
             <main>Current <script>'</main>'</script>policy</main></body></html>";
         assert_eq!(main_text(html), "Current policy");
+    }
+
+    #[test]
+    fn skipped_elements_end_at_their_own_end_tag() {
+        let html = "<body><script>const e = \"</scripture><main>Decoy</main>\";</script>\
+            <template><template>x</template><main>Decoy</main></template>\
+            <template><script>\"</template>\"</script><main>Decoy</main></template>\
+            <svg><svg/><svg><text>t</text></svg><main>Decoy</main></svg>\
+            <main>Actual policy</main></body>";
+        assert_eq!(main_text(html), "Actual policy");
+    }
+
+    #[test]
+    fn a_self_closing_svg_skips_only_itself() {
+        for svg in ["<svg/>", "<svg aria-label=\"a > b\"/>"] {
+            let html = format!("<body>{svg}<main>Actual policy</main></body>");
+            assert_eq!(main_text(&html), "Actual policy");
+        }
+    }
+
+    #[test]
+    fn a_less_than_sign_that_starts_no_tag_is_text() {
+        let html = "<main>Threshold: 5 < 10 > 0. Requests remain available.</main>";
+        assert_eq!(
+            main_text(html),
+            "Threshold: 5 < 10 > 0. Requests remain available."
+        );
+        assert_eq!(main_text("<main>a <3 b</main><p>Not main</p>"), "a <3 b");
+    }
+
+    #[test]
+    fn nested_main_keeps_the_whole_first_element() {
+        let html = "<main>Before <main>Inner</main> After</main><main>Second</main>";
+        assert_eq!(main_text(html), "Before Inner After");
     }
 
     #[test]
