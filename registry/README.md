@@ -17,7 +17,7 @@ cargo run -- registry check
 | `abn` | `NN NNN NNN NNN`, checked against ABN Lookup; the check digit is validated |
 | `kinds` | `credit-reporting-body`, `property-data`, `people-search`, `marketing-list`, `ad-tech`, `directory`, `loyalty` |
 | `priority` | `crucial`, `high`, `standard` |
-| `quality` | `tested` (a GhostSoap request got a reply), `verified` (contact checked against the entity's own privacy policy), `imported` (licence-compatible dataset), `lead` (not yet checked). Only `tested` and `verified` entries may enter packs |
+| `quality` | `tested` (a GhostSoap request got a reply), `verified` (contact checked against the entity's own privacy policy or contact pages, by a person or an AI agent, with the evidence recorded in provenance), `imported` (licence-compatible dataset), `lead` (not yet checked). Only `tested` and `verified` entries may enter packs |
 | `verified_at` | TOML date of the last check; `registry check` warns after 12 months and rejects a date more than a day ahead |
 | `sources` | At least one https URL from the entity itself |
 | `levers` | The requests this entity is eligible for; listing a lever does not mean it is always sent (see below). `app7-no-marketing`, `app7-no-facilitation`, `app7-source`, `app11-destroy`, `app13`, `app13-notify-recipients`, `app13-statement`, `s20r-access`, `s20t-correction`, `s20k-ban`, `s21t-access`, `s21v-correction`, `spam-unsubscribe` |

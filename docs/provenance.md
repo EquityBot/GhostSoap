@@ -10,7 +10,7 @@ None yet.
 
 ### Method
 
-Every entry was checked on 24 October 2026 by AI research agents working for the maintainer, from public pages only: no form was submitted and no account created.
+Every entry was checked on 24 October 2026 by AI research agents working for the maintainer, from public pages only: no form was submitted and no account created. No person has re-checked them. Under the register's quality definition (plan section 5), an agent check with the evidence recorded below counts as `verified`.
 
 - **Contact:** each channel was taken from the entity's own privacy policy, credit reporting policy or contact page, listed in the entry's `sources`. Every channel (email, post, phone, web form and manual-check page) was then matched against the saved text of those pages or, for links, a query of the page's links.
 - **ABN:** each ABN was read from the entity's own pages or found on ABN Lookup by name, then re-checked on ABN Lookup; all 29 were active.
