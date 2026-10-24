@@ -65,7 +65,7 @@ A future `au-erasure` letter waits for passed legislation; the law table design 
 
 **Later (M5 to M7):** SMTP sending, read-only IMAP reply queue, an interface for non-technical users.
 
-**Out of scope:** non-Australian brokers (the user can use other tools; GhostSoap may link to them), account creation on brokers, automated web forms, people-search scanning, any hosted service.
+**Out of scope:** non-Australian brokers (the user can use other tools; GhostSoap may link to them), except overseas people-search sites that list Australians, which get manual opt-out entries only (section 6), account creation on brokers, automated web forms, people-search scanning, any hosted service.
 
 ## 5. Architecture
 
@@ -162,9 +162,12 @@ Every command supports `--json`; output honours `NO_COLOR`, and no status is sho
 
 - **Seed:** the 3 credit reporting bodies; the firms in the ACCC's 2024 data broker report (CoreLogic, PropTrack, Quantium, LiveRamp, Nielsen, Oracle and others named there); Australian people-search sites (leads from the Optery list such as Reverse Australia, verified independently); marketing-list firms; directories; the large loyalty programmes as APP 7 targets. Target for v0.1: 25 to 40 entries at `verified` or better. Small and correct beats large and stale.
 - **Data licence:** CC0-1.0 for `registry/` and `checklist/`, so other projects (datenanfragen, eraseme) can reuse it; code under Apache-2.0.
-- **Freshness:** CI fails an entry with no source, an unknown lever or a malformed ABN, and warns when `verified_at` is older than 12 months. A scheduled workflow opens one issue a quarter listing stale entries.
+- **Freshness:** CI fails an entry with no source, an unknown lever or a malformed ABN, and warns when `verified_at` is older than 12 months. A scheduled workflow opens one issue a quarter listing stale entries. Since M1, entries carry `[[evidence]]` hashes of their source pages, and a monthly workflow opens or updates one issue listing pages that changed or could not be read (normalisation in `registry/README.md`).
 - **Contribution:** an issue form and a pull request template asking for the source URL and the date checked. Replies from `tested` requests (with personal details removed) can raise an entry's grade.
 - **Feedback loop:** APP 7.6(e) replies name upstream sources; `ghostsoap reply --source "<name>"` records them, and the README invites users to report new brokers this way.
+- **Overseas people-search sites (M2):** a site that lists Australians but has no Australian presence gets an entry with `exemption_risk = "overseas"` and no ABN. It carries only a `manual_check` page, the site's own web-form opt-out and an effort marker, and no levers or letters; the honesty panel says no Australian law lever applies. The validator accepts a missing ABN only on such entries. Leads may come from Optery's Australian list (names only, as section 9 requires); the priority tiers of the Big Ass Data Broker Opt-Out List and JustDeleteMe's difficulty ratings are the pattern for the effort marker, with no data copied.
+- **Outcome reporting (M3, opt-in):** `ghostsoap report-outcome <id>` writes a summary with personal details removed (entry id, lever, status, days to reply) for the user to review and paste into an issue form; nothing is sent automatically. Reports raise entries to `tested` (as datenanfragen does) and feed a public table of how each entity responded; Consumer Reports measured removal rates once, and no paid service publishes this.
+- **Sharing with datenanfragen (after M1):** offer the Australian entries to datenanfragen (CC0 both ways), mapped to its schema. This is a pull request to another project and needs Ryan's authorisation first.
 
 ## 6a. Threat model and abuse
 
@@ -200,8 +203,8 @@ The checklist is guidance: it links to the official page and records progress; i
 |---|---|---|
 | M0 Scaffold | Repository, licences, README with tagline, CI | CI matrix (`ubuntu-latest`, `windows-latest`) runs `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked`, `cargo build --locked --release` green; `cargo audit` and Dependabot enabled |
 | M1 Register | Schema, validator, 25 to 40 entries, packs | `ghostsoap registry check` passes; CI rejects a fixture entry with no source; every entry has an ABN Lookup check recorded |
-| M2 Letters and drafts | Profile, plan, draft, law table | Snapshot tests for every lever letter; tests show a letter contains only the entry's identity fields; deadline values verified against primary sources and cited in the law table |
-| M3 Tracker | Encrypted state, statuses, deadlines, reminders, OAIC pack | Unit tests for every status transition and deadline; plaintext-leak test on the state file; export and forget round-trip test |
+| M2 Letters and drafts | Profile, plan, draft, law table; overseas people-search entries (section 6) | Snapshot tests for every lever letter; tests show a letter contains only the entry's identity fields; deadline values verified against primary sources and cited in the law table |
+| M3 Tracker | Encrypted state, statuses, deadlines, reminders, OAIC pack; re-check reminders by kind (defaults of 60 days for people-search and 90 days for other kinds, after Scrubbr) to catch re-listing; opt-in `report-outcome` | Unit tests for every status transition and deadline; plaintext-leak test on the state file; export and forget round-trip test |
 | M4 Checklist | Checklist data and command | Each item links to an official page checked within the release month |
 | v0.1 | First release candidate | Security audit skill run, Calvino final review, letters reviewed against the statute; release gates per the house binary-release decision when Ryan authorises a release |
 | M5 SMTP | Optional sending | Review step, rate limit and keyring-only credentials, with tests against a local SMTP test server |
