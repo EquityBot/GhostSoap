@@ -38,7 +38,7 @@ A pack has `id` (equal to the file name), `name`, `description` and `entries`, a
 
 ## Evidence hashes and drift
 
-Each `[[evidence]]` table records a source page's state when the entry was verified. A scheduled workflow (`.github/workflows/evidence-drift.yml`) re-fetches every evidence page on the first of each month and opens or updates one issue, 'Register evidence drift', listing pages that changed or could not be read. It never commits. When a page changes, recheck the entry against it and update the hash and `checked_at`.
+Each `[[evidence]]` table records a source page's state when the entry was verified. A scheduled workflow (`.github/workflows/evidence-drift.yml`) re-fetches every evidence page on the first of each month and opens or updates one issue, 'Register evidence drift', listing pages that changed or could not be read within 30 seconds, and closes that issue once every page matches again. It never commits. When a page changes, recheck the entry against it and update the hash and `checked_at`.
 
 `cargo run -p xtask -- evidence-hash <url>` prints a page's hash, computed as follows:
 

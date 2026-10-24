@@ -10,6 +10,7 @@ mod text;
 
 use std::path::Path;
 use std::process::ExitCode;
+use std::time::Duration;
 
 use ghostsoap::core::register::Entry;
 use sha2::{Digest, Sha256};
@@ -17,11 +18,21 @@ use sha2::{Digest, Sha256};
 /// Pages with less main text than this are bot checks or script-only shells.
 const MIN_TEXT: usize = 500;
 const USER_AGENT: &str = "GhostSoap-evidence-check/0.1 (+https://github.com/ryanduguid/GhostSoap)";
+/// Whole-request limit, so one slow or silent site fails instead of stalling the check.
+const TIMEOUT: Duration = Duration::from_secs(30);
+
+fn agent(timeout: Duration) -> ureq::Agent {
+    ureq::Agent::config_builder()
+        .timeout_global(Some(timeout))
+        .build()
+        .into()
+}
 
 /// The evidence hash of `url`: SHA-256 of its normalised main text, or of the raw bytes
 /// for a non-HTML response.
-fn evidence_hash(url: &str) -> Result<String, String> {
-    let mut response = ureq::get(url)
+fn evidence_hash(agent: &ureq::Agent, url: &str) -> Result<String, String> {
+    let mut response = agent
+        .get(url)
         .header("User-Agent", USER_AGENT)
         .call()
         .map_err(|e| e.to_string())?;
@@ -52,9 +63,10 @@ fn evidence_hash(url: &str) -> Result<String, String> {
 }
 
 fn hash(urls: &[String]) -> ExitCode {
+    let agent = agent(TIMEOUT);
     let mut failed = false;
     for url in urls {
-        match evidence_hash(url) {
+        match evidence_hash(&agent, url) {
             Ok(sha) => println!("{sha}  {url}"),
             Err(e) => {
                 failed = true;
@@ -79,6 +91,7 @@ fn drift(dir: &Path) -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
+    let agent = agent(TIMEOUT);
     let mut changed = Vec::new();
     let mut failing = Vec::new();
     for file in &files.entries {
@@ -90,7 +103,7 @@ fn drift(dir: &Path) -> ExitCode {
             }
         };
         for evidence in &entry.evidence {
-            match evidence_hash(&evidence.url) {
+            match evidence_hash(&agent, &evidence.url) {
                 Ok(sha) if sha == evidence.sha256 => {}
                 Ok(_) => changed.push(format!(
                     "- `{}`: {} (checked {})",
@@ -131,5 +144,28 @@ fn main() -> ExitCode {
             eprintln!("usage: xtask evidence-hash <url>... | xtask evidence-drift [registry dir]");
             ExitCode::from(2)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::TcpListener;
+    use std::time::Instant;
+
+    #[test]
+    fn silent_server_times_out() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        // Accept the connection and hold it open without replying.
+        let server = std::thread::spawn(move || listener.accept().map(|(stream, _)| stream));
+        let start = Instant::now();
+        let result = evidence_hash(&agent(Duration::from_millis(300)), &url);
+        assert!(
+            result.as_ref().is_err_and(|e| e.contains("timeout")),
+            "{result:?}"
+        );
+        assert!(start.elapsed() < Duration::from_secs(10));
+        drop(server.join());
     }
 }

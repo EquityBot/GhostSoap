@@ -26,18 +26,22 @@ jobs:
       # rustup reads the pinned version from rust-toolchain.toml.
       - run: rustup toolchain install
       - run: cargo run --locked -p xtask -- evidence-drift registry/au > drift.md
-      - name: Open or update the drift issue
+      - name: Open, update or close the drift issue
         env:
           GH_TOKEN: ${{ github.token }}
           TITLE: Register evidence drift
         run: |
-          if [ ! -s drift.md ]; then
-            echo "Every evidence page matches."
-            exit 0
-          fi
           number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
             --search "\"$TITLE\" in:title" --json number,title \
             --jq "map(select(.title == env.TITLE)) | .[0].number // empty")
+          if [ ! -s drift.md ]; then
+            echo "Every evidence page matches."
+            if [ -n "$number" ]; then
+              gh issue close "$number" --repo "$GITHUB_REPOSITORY" \
+                --comment "Every evidence page matches as of $(date -u +%Y-%m-%d)."
+            fi
+            exit 0
+          fi
           if [ -n "$number" ]; then
             gh issue edit "$number" --repo "$GITHUB_REPOSITORY" --body-file drift.md
           else
