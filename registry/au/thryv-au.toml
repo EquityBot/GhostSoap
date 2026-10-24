@@ -1,0 +1,29 @@
+id = "thryv-au"
+name = "Thryv Australia (White Pages, Yellow Pages)"
+legal_entity = "Thryv Australia Pty Ltd"
+abn = "30 007 423 912"
+kinds = ["directory", "marketing-list"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.thryv.com/privacy/", "https://www.sensisdata.com.au/", "https://www.whitepages.com.au/"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "phone", "address", "email"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "ThryvPrivacy_au@thryv.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
+
+[manual_check]
+url = "https://www.whitepages.com.au/"
+
+[[evidence]]
+url = "https://www.sensisdata.com.au/"
+checked_at = 2026-10-24
+sha256 = "f2ecfde65f723c39e9879a65cf2910bec4be958a6294f21c5bd6cb3fa68e2f84"

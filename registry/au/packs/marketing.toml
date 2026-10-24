@@ -1,0 +1,15 @@
+id = "marketing"
+name = "Marketing data and lists"
+description = "Data brokers, list owners and audience firms that supply personal information for others' marketing."
+entries = [
+  "equifax-marketing-au",
+  "experian-marketing-au",
+  "liveramp-au",
+  "conexum-au",
+  "winr-alchemist-au",
+  "smrtr-au",
+  "list-factory-au",
+  "lead-lists-au",
+  "australia-post-au",
+  "thryv-au",
+]

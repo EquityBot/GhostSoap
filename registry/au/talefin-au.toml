@@ -1,0 +1,46 @@
+id = "talefin-au"
+name = "TaleFin"
+legal_entity = "TaleFin CRB Australia Pty Ltd"
+abn = "68 644 262 742"
+kinds = ["credit-reporting-body"]
+priority = "crucial"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.talefin.com/legal/policies/credit-reporting", "https://www.talefin.com/consumer-portal/", "https://app.talefin.com/consumer", "https://www.talefin.com/consumer-portal/consumer-support", "https://www.talefin.com/legal/policies/privacy"]
+levers = ["s20t-correction"]
+opt_in_levers = ["s20r-access", "s20k-ban"]
+identity_fields = ["full_name", "alias_names", "date_of_birth", "address", "previous_addresses", "email"]
+exemption_risk = "none"
+escalation = ["afca", "oaic"]
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://app.talefin.com/consumer"
+levers = ["s20t-correction", "s20r-access", "s20k-ban"]
+preferred = true
+
+[[channels]]
+kind = "email"
+address = "info@talefin.com"
+levers = []
+
+[[evidence]]
+url = "https://www.talefin.com/legal/policies/credit-reporting"
+checked_at = 2026-10-24
+sha256 = "88ac4192042743bddb05c069d9b88c36d5804e14e569a8d29ce068f00f64a0be"
+
+[[evidence]]
+url = "https://www.talefin.com/consumer-portal/"
+checked_at = 2026-10-24
+sha256 = "e6b8c98b8068850e88f79a7c999a69a0add383fa27d2abb9b92be9a05339d4db"
+
+[[evidence]]
+url = "https://www.talefin.com/consumer-portal/consumer-support"
+checked_at = 2026-10-24
+sha256 = "57d1c22b035b4eef5064ddeee8067940038b91cc8163b3ec731e438cf96385d4"
+
+[[evidence]]
+url = "https://www.talefin.com/legal/policies/privacy"
+checked_at = 2026-10-24
+sha256 = "5bfe3091c9238bee128ec36c9e32fdc2ea6575c391d8d4c823e88577988322d7"

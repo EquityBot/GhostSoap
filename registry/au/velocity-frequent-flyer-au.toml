@@ -1,0 +1,41 @@
+id = "velocity-frequent-flyer-au"
+name = "Velocity Frequent Flyer"
+legal_entity = "Velocity Rewards Pty Ltd"
+abn = "98 116 089 448"
+kinds = ["loyalty"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.velocityfrequentflyer.com/member-support/privacy/privacy-statement", "https://www.virginaustralia.com/au/en/about-us/policies/privacy/privacy-policy/", "https://www.virginaustralia.com/au/en/about-us/policies/privacy/"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@virginaustralia.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
+
+[[channels]]
+kind = "post"
+address = "Privacy Officer, Legal department, PO Box 1034, Spring Hill QLD 4004"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.velocityfrequentflyer.com/member-support/privacy/privacy-statement"
+checked_at = 2026-10-24
+sha256 = "db11297426625b60a24c291b81167691553bc08b3fd5376049ab681f715af316"
+
+[[evidence]]
+url = "https://www.virginaustralia.com/au/en/about-us/policies/privacy/privacy-policy/"
+checked_at = 2026-10-24
+sha256 = "26a85f25a82de5436318fa5dc7999407f811709463923ef9bbd51407053e7613"
+
+[[evidence]]
+url = "https://www.virginaustralia.com/au/en/about-us/policies/privacy/"
+checked_at = 2026-10-24
+sha256 = "879d32fddf79411c3b23f2d1267a8510e04ba5394fa90f70c60ea3afe1ae64da"

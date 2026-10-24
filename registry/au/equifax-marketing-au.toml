@@ -1,0 +1,41 @@
+id = "equifax-marketing-au"
+name = "Equifax Data-driven Marketing"
+legal_entity = "Equifax Australia Marketing Services Pty Limited"
+abn = "88 071 215 328"
+kinds = ["marketing-list"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.equifax.com.au/privacy", "https://www.donotcontact.com.au/"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "customercomplaintsAU@equifax.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
+
+[[channels]]
+kind = "post"
+address = "Equifax Australia Marketing Services Pty Limited, GPO Box 13294, Brisbane QLD 4001"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "web-form"
+address = "https://www.donotcontact.com.au/"
+levers = ["app7-no-marketing", "app7-no-facilitation"]
+
+[[evidence]]
+url = "https://www.equifax.com.au/privacy"
+checked_at = 2026-10-24
+sha256 = "aaeaf4225ee4cbade081ece48db356b14608b81ff2148ae93b5b8f705ff04257"
+
+[[evidence]]
+url = "https://www.donotcontact.com.au/"
+checked_at = 2026-10-24
+sha256 = "3acc7039a6121135ee06d56a54aad9a5a811181d2eabd699947fccdc86ba996b"

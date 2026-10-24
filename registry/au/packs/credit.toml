@@ -1,0 +1,8 @@
+id = "credit"
+name = "Credit reporting bodies"
+description = "The credit reporting bodies the OAIC lists. Correct errors in your credit report; choose access to the report itself per body."
+entries = [
+  "equifax-au",
+  "experian-au",
+  "talefin-au",
+]

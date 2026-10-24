@@ -1,0 +1,13 @@
+id = "start-here"
+name = "Start here"
+description = "A short first round: the brokers most likely to hold and share your details."
+entries = [
+  "equifax-marketing-au",
+  "experian-marketing-au",
+  "liveramp-au",
+  "cotality-au",
+  "thryv-au",
+  "acceleon-au",
+  "id4me-au",
+  "conexum-au",
+]

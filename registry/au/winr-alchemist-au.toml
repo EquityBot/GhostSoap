@@ -1,0 +1,41 @@
+id = "winr-alchemist-au"
+name = "WINR Data"
+legal_entity = "WINR Alchemist Pty Ltd"
+abn = "57 697 222 129"
+kinds = ["ad-tech"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.winrdata.com/privacy-policy/alchemist/", "https://privacy.winrcorp.com/", "https://www.winrdata.com/privacy-policy/corporate/"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "postcode"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "Privacy@winrdata.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
+
+[[channels]]
+kind = "post"
+address = "56 Berry Street, North Sydney NSW 2060"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "web-form"
+address = "https://privacy.winrcorp.com/"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.winrdata.com/privacy-policy/alchemist/"
+checked_at = 2026-10-24
+sha256 = "5ec5b9f176351991cabdcd2d860b15d5892e2a4836e29ce37bbd24c398abd435"
+
+[[evidence]]
+url = "https://www.winrdata.com/privacy-policy/corporate/"
+checked_at = 2026-10-24
+sha256 = "df3d59380612e18eae88ea98772f8fb97510bcf84ce7874cd5ca5a7d3d0f6ed0"

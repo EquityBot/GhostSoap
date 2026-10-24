@@ -2,7 +2,7 @@
 
 _GhostSoap at no Price._
 
-Draft 2, 24 October 2026. Status: approved (section 12); M0 scaffolded locally; nothing is published.
+Draft 2, 24 October 2026. Status: approved (section 12); M0 complete; M1 (register) delivered on 24 October 2026; nothing is public.
 
 GhostSoap is a free, local-first Rust tool that helps people in Australia reclaim their privacy. It sends Australian Privacy Act requests to data brokers and other businesses from the user's own mailbox, tracks every deadline and reply, builds an escalation file for the Office of the Australian Information Commissioner (OAIC), and walks the user through the wider data hygiene steps that email cannot fix.
 
@@ -65,7 +65,7 @@ A future `au-erasure` letter waits for passed legislation; the law table design 
 
 **Later (M5 to M7):** SMTP sending, read-only IMAP reply queue, an interface for non-technical users.
 
-**Out of scope:** non-Australian brokers (the user can use other tools; GhostSoap may link to them), account creation on brokers, automated web forms, people-search scanning, any hosted service.
+**Out of scope:** non-Australian brokers (the user can use other tools; GhostSoap may link to them), except overseas people-search sites that list Australians, which get manual opt-out entries only (section 6), account creation on brokers, automated web forms, people-search scanning, any hosted service.
 
 ## 5. Architecture
 
@@ -107,7 +107,7 @@ url = "https://example.com.au/search"   # the broker's own page; GhostSoap only 
 # obsolete = { reason = "merged", replaced_by = "other-id" }
 ```
 
-Quality grades follow datenanfragen: `tested` means a GhostSoap request got a reply; `verified` means a person checked the contact against the entity's own privacy policy; `imported` means taken from a licence-compatible dataset; `lead` means named in a non-reusable source and not yet checked. Only `tested` and `verified` entries enter packs by default.
+Quality grades follow datenanfragen: `tested` means a GhostSoap request got a reply; `verified` means the contact was checked against the entity's own privacy policy or contact pages, by a person or an AI agent, with the evidence recorded in `docs/provenance.md`; `imported` means taken from a licence-compatible dataset; `lead` means named in a non-reusable source and not yet checked. Only `tested` and `verified` entries enter packs by default.
 
 **Packs** (`registry/au/packs/*.toml`) group entries: `credit` (Equifax, Experian, which now includes illion, and any other credit reporting body), `property`, `marketing`, `people-search`, `loyalty`, plus `start-here` for users with little time.
 
@@ -162,9 +162,12 @@ Every command supports `--json`; output honours `NO_COLOR`, and no status is sho
 
 - **Seed:** the 3 credit reporting bodies; the firms in the ACCC's 2024 data broker report (CoreLogic, PropTrack, Quantium, LiveRamp, Nielsen, Oracle and others named there); Australian people-search sites (leads from the Optery list such as Reverse Australia, verified independently); marketing-list firms; directories; the large loyalty programmes as APP 7 targets. Target for v0.1: 25 to 40 entries at `verified` or better. Small and correct beats large and stale.
 - **Data licence:** CC0-1.0 for `registry/` and `checklist/`, so other projects (datenanfragen, eraseme) can reuse it; code under Apache-2.0.
-- **Freshness:** CI fails an entry with no source, an unknown lever or a malformed ABN, and warns when `verified_at` is older than 12 months. A scheduled workflow opens one issue a quarter listing stale entries.
+- **Freshness:** CI fails an entry with no source, an unknown lever or a malformed ABN, and warns when `verified_at` is older than 12 months. A scheduled workflow opens one issue a quarter listing stale entries. Since M1, entries carry `[[evidence]]` hashes of their source pages, and a monthly workflow opens or updates one issue listing pages that changed or could not be read, and closes it when every page matches again (normalisation in `registry/README.md`).
 - **Contribution:** an issue form and a pull request template asking for the source URL and the date checked. Replies from `tested` requests (with personal details removed) can raise an entry's grade.
 - **Feedback loop:** APP 7.6(e) replies name upstream sources; `ghostsoap reply --source "<name>"` records them, and the README invites users to report new brokers this way.
+- **Overseas people-search sites (M2):** a site that lists Australians but has no Australian presence gets an entry with `exemption_risk = "overseas"` and no ABN. It carries only a `manual_check` page, the site's own web-form opt-out and an effort marker, and no levers or letters; the honesty panel says no Australian law lever applies. The validator accepts a missing ABN only on such entries. Leads may come from Optery's Australian list (names only, as section 9 requires); the priority tiers of the Big Ass Data Broker Opt-Out List and JustDeleteMe's difficulty ratings are the pattern for the effort marker, with no data copied.
+- **Outcome reporting (M3, opt-in):** `ghostsoap report-outcome <id>` writes a summary with personal details removed (entry id, lever, status, days to reply) for the user to review and paste into an issue form; nothing is sent automatically. Reports raise entries to `tested` (as datenanfragen does) and feed a public table of how each entity responded; Consumer Reports measured removal rates once, and no paid service publishes this.
+- **Sharing with datenanfragen (after M1):** offer the Australian entries to datenanfragen (CC0 both ways), mapped to its schema. This is a pull request to another project and needs Ryan's authorisation first.
 
 ## 6a. Threat model and abuse
 
@@ -200,8 +203,8 @@ The checklist is guidance: it links to the official page and records progress; i
 |---|---|---|
 | M0 Scaffold | Repository, licences, README with tagline, CI | CI matrix (`ubuntu-latest`, `windows-latest`) runs `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked`, `cargo build --locked --release` green; `cargo audit` and Dependabot enabled |
 | M1 Register | Schema, validator, 25 to 40 entries, packs | `ghostsoap registry check` passes; CI rejects a fixture entry with no source; every entry has an ABN Lookup check recorded |
-| M2 Letters and drafts | Profile, plan, draft, law table | Snapshot tests for every lever letter; tests show a letter contains only the entry's identity fields; deadline values verified against primary sources and cited in the law table |
-| M3 Tracker | Encrypted state, statuses, deadlines, reminders, OAIC pack | Unit tests for every status transition and deadline; plaintext-leak test on the state file; export and forget round-trip test |
+| M2 Letters and drafts | Profile, plan, draft, law table; overseas people-search entries (section 6) | Snapshot tests for every lever letter; tests show a letter contains only the entry's identity fields; deadline values verified against primary sources and cited in the law table |
+| M3 Tracker | Encrypted state, statuses, deadlines, reminders, OAIC pack; re-check reminders by kind (defaults of 60 days for people-search and 90 days for other kinds, after Scrubbr) to catch re-listing; opt-in `report-outcome` | Unit tests for every status transition and deadline; plaintext-leak test on the state file; export and forget round-trip test |
 | M4 Checklist | Checklist data and command | Each item links to an official page checked within the release month |
 | v0.1 | First release candidate | Security audit skill run, Alcuin final review, letters reviewed against the statute; release gates per the house binary-release decision when Ryan authorises a release |
 | M5 SMTP | Optional sending | Review step, rate limit and keyring-only credentials, with tests against a local SMTP test server |
@@ -247,6 +250,8 @@ Ryan approved draft 2 on 24 October 2026 and decided:
 2. **Visibility:** the repository stays private until M1.
 3. **Interface:** decided at M7, from a static WebAssembly web app (no install; data in the browser, like datenanfragen), a local web UI served by the CLI, or a desktop app.
 4. **Branding:** the name and tagline only; no Call of Duty art, logos or fonts; the README disclaims any affiliation.
+5. **Register quality (24 October 2026, at M1):** `verified` covers a check against the entity's own pages with recorded evidence, made by a person or an AI agent; provenance says which.
+6. **Evidence coverage (24 October 2026, at M1):** an entry records `[[evidence]]` for each source page that gives the same hash on 2 fetches and a hash no other source shares. Pages that return bot checks, errors or browser-only content stay untracked, and provenance lists them; at M1, 22 of 29 entries carry evidence and 7 have none.
 
 ## 13. Risks
 
@@ -267,6 +272,7 @@ Ryan approved draft 2 on 24 October 2026 and decided:
 - **Alcuin:** not done. Three attempts on 24 October 2026 stopped before dispatch: a ChatGPT sign-in timeout, a 20-minute wait for a browser slot (one slot held by a stale lease from 21 October), and 'Picker selection is unverified'. Rerun before v0.1, and before M2 if it becomes available.
 - **Independent Opus review** (24 October 2026, read-only, against OAIC guidance and the Privacy Act): verdict 'sound enough to start M0'. Accepted and applied: the APP 7 split and APP 7.8, APP 12 charges and refusals, APP 13 grounds and levers, the escalation order (EDR, then OAIC; ACMA for spam), the 2024 Act, the storage changes, the draft usability fixes, the threat model, accessibility, the agent wording, and the chrono `clock` feature. Its eraseme findings were checked locally (13 CAPTCHA-solver matches in that repository's code search).
 - **Statute check:** ss 6D, 20K, 20R, 20T, 21T, 21V and 40 read on AustLII on 24 October 2026.
+- **Alcuin M1 final review** (24 October 2026, GPT-6 Pro at Extra High tier): verdict 'request changes'. Applied: access levers opt-in only, stricter date, URL and obsolete checks, an empty register rejected, entity names narrowed, every channel matched to the entity's pages. Its finding that agent checks did not meet the `verified` definition was settled by decision 5 in section 12.
 
 ## Sources
 

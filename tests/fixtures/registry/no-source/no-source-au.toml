@@ -1,0 +1,19 @@
+# Fails `ghostsoap registry check`: the entry has no source.
+id = "no-source-au"
+name = "No Source"
+legal_entity = "No Source Pty Ltd"
+abn = "51 824 753 556"
+kinds = ["marketing-list"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-24
+levers = ["app7-no-marketing"]
+identity_fields = ["full_name", "email"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@example.com.au"
+levers = ["app7-no-marketing"]

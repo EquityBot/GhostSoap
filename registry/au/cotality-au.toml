@@ -1,0 +1,36 @@
+id = "cotality-au"
+name = "Cotality (formerly CoreLogic Australia; brands include RP Data, Cordell, onthehouse.com.au)"
+legal_entity = "RP Data Pty Ltd"
+abn = "67 087 759 171"
+kinds = ["property-data", "marketing-list"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.cotality.com/au/legal/privacy-policy"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "address", "email", "phone"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "AU-Privacy@Cotality.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
+
+[[channels]]
+kind = "post"
+address = "Privacy Officer, Cotality, Level 7, 388 George Street, Sydney NSW 2000"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "phone"
+address = "1300 734 318"
+levers = []
+
+[[evidence]]
+url = "https://www.cotality.com/au/legal/privacy-policy"
+checked_at = 2026-10-24
+sha256 = "cf84cd07ed7f075e50ed1a774eb9cbb347e4a20f9bd4a8e84c89af754a896ba9"
