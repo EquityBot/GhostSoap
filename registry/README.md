@@ -2,11 +2,13 @@
 
 One TOML file per Australian entity in `au/`, named after its `id`, and packs in `au/packs/`. The data is dedicated to the public domain under [CC0-1.0](../LICENSE-DATA). Where each entry's lead came from and what verified it is recorded in [docs/provenance.md](../docs/provenance.md).
 
-Check the register before opening a pull request:
+The register is built into the `ghostsoap` binary at compile time (`build.rs`), so an installed copy needs no register files. Check a working copy before opening a pull request:
 
 ```bash
-cargo run -- registry check
+cargo run -- registry check --path registry/au
 ```
+
+Without `--path`, `registry check` validates the register built into the binary.
 
 ## Entry fields
 

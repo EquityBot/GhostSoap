@@ -24,6 +24,29 @@ fn shipped_register_passes() {
 }
 
 #[test]
+fn built_in_register_passes() {
+    let out = Command::new(env!("CARGO_BIN_EXE_ghostsoap"))
+        .args(["registry", "check"])
+        .current_dir(env!("CARGO_TARGET_TMPDIR"))
+        .output()
+        .expect("run ghostsoap");
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    assert!(text(&out.stdout).contains("Checked 29 entries and 6 packs; errors: 0,"));
+}
+
+#[test]
+fn built_in_register_matches_the_files() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("registry/au");
+    let files = io::register::load(&dir).expect("read register");
+    let built_in = ghostsoap::core::embedded::register();
+    let pairs = |f: &[register::SourceFile]| -> Vec<(String, String)> {
+        f.iter().map(|s| (s.name.clone(), s.text.clone())).collect()
+    };
+    assert_eq!(pairs(&built_in.entries), pairs(&files.entries));
+    assert_eq!(pairs(&built_in.packs), pairs(&files.packs));
+}
+
+#[test]
 fn shipped_register_meets_the_m1_targets() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("registry/au");
     let files = io::register::load(&dir).expect("read register");

@@ -208,7 +208,14 @@ pub struct Pack {
     pub entries: Vec<String>,
 }
 
-/// A register file as read from disk: its file name and contents.
+/// Entry files and pack files, each sorted by name.
+#[derive(Debug, Clone)]
+pub struct RegisterFiles {
+    pub entries: Vec<SourceFile>,
+    pub packs: Vec<SourceFile>,
+}
+
+/// A register file: its file name and contents.
 #[derive(Debug, Clone)]
 pub struct SourceFile {
     pub name: String,

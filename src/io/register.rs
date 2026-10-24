@@ -4,13 +4,7 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-use crate::core::register::SourceFile;
-
-/// Entry files in `dir` and pack files in `dir/packs`, each sorted by name.
-pub struct RegisterFiles {
-    pub entries: Vec<SourceFile>,
-    pub packs: Vec<SourceFile>,
-}
+use crate::core::register::{RegisterFiles, SourceFile};
 
 /// Read the register at `dir`. A missing `packs` directory means no packs.
 pub fn load(dir: &Path) -> io::Result<RegisterFiles> {

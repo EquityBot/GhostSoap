@@ -1,11 +1,12 @@
 //! Command-line interface.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{CommandFactory, Parser, Subcommand};
 
-use crate::core::register::{self, Severity};
+use crate::core::embedded;
+use crate::core::register::{self, RegisterFiles, Severity};
 use crate::io;
 
 /// Prepare Australian Privacy Act requests to data brokers and track the replies.
@@ -29,9 +30,10 @@ pub enum Command {
 pub enum RegistryCommand {
     /// Validate register entries and packs.
     Check {
-        /// Register directory; packs are read from its `packs` subdirectory.
-        #[arg(long, default_value = "registry/au")]
-        path: PathBuf,
+        /// Check a register directory, such as a working copy's `registry/au`, instead of
+        /// the register built into this binary. Packs are read from its `packs` subdirectory.
+        #[arg(long)]
+        path: Option<PathBuf>,
     },
 }
 
@@ -44,18 +46,20 @@ pub fn run(cli: Cli) -> ExitCode {
         },
         Some(Command::Registry {
             command: RegistryCommand::Check { path },
-        }) => registry_check(&path),
+        }) => match path {
+            None => registry_check(&embedded::register(), "built-in register"),
+            Some(dir) => match io::register::load(&dir) {
+                Ok(files) => registry_check(&files, &dir.display().to_string()),
+                Err(e) => {
+                    eprintln!("error: cannot read {}: {e}", dir.display());
+                    ExitCode::FAILURE
+                }
+            },
+        },
     }
 }
 
-fn registry_check(dir: &Path) -> ExitCode {
-    let files = match io::register::load(dir) {
-        Ok(files) => files,
-        Err(e) => {
-            eprintln!("error: cannot read {}: {e}", dir.display());
-            return ExitCode::FAILURE;
-        }
-    };
+fn registry_check(files: &RegisterFiles, place_name: &str) -> ExitCode {
     let today = chrono::Local::now().date_naive();
     let report = register::check(&files.entries, &files.packs, today);
     for finding in &report.findings {
@@ -64,9 +68,9 @@ fn registry_check(dir: &Path) -> ExitCode {
             Severity::Warning => "warning",
         };
         let place = if finding.file.is_empty() {
-            dir.display().to_string()
+            place_name.to_owned()
         } else {
-            format!("{}/{}", dir.display(), finding.file)
+            format!("{place_name}/{}", finding.file)
         };
         eprintln!("{label}: {place}: {}", finding.message);
     }
