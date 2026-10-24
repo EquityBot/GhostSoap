@@ -1,0 +1,35 @@
+id = "myer-one-au"
+name = "MYER one"
+legal_entity = "Myer Pty Ltd"
+abn = "83 004 143 239"
+kinds = ["loyalty"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.myer.com.au/content/privacy"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "myer.privacy@myer.com.au"
+
+[[channels]]
+kind = "email"
+address = "privacy.accessrequests@myer.com.au"
+
+[[channels]]
+kind = "email"
+address = "privacy@myer.com.au"
+
+[[channels]]
+kind = "post"
+address = "Privacy Officer, Myer Pty Ltd, Level 7, 1000 La Trobe St, Docklands VIC 3008"
+
+[[channels]]
+kind = "phone"
+address = "13MYER (13 69 37)"

@@ -1,0 +1,35 @@
+id = "experian-au"
+name = "Experian"
+legal_entity = "Experian Data Registries Pty Ltd"
+abn = "38 101 620 446"
+kinds = ["credit-reporting-body"]
+priority = "crucial"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.experian.com.au/privacy-policy-terms-conditions/experian-australia-credit-reporting-policy", "https://www.experian.com.au/consumer/order-credit-report", "https://www.experian.com.au/consumer/correction-process", "https://www.experian.com.au/consumer/request-a-ban", "https://experian-apac-acb.my.site.com/banrequest/s/lodge-a-complaint", "https://www.experian.com.au/contact-us"]
+levers = ["s20r-access", "s20t-correction"]
+opt_in_levers = ["s20k-ban"]
+identity_fields = ["full_name", "alias_names", "date_of_birth", "address", "previous_addresses", "email"]
+exemption_risk = "none"
+escalation = ["afca", "oaic"]
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.experian.com.au/consumer/order-credit-report"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.experian.com.au/consumer/correction-process"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.experian.com.au/consumer/request-a-ban"
+
+[[channels]]
+kind = "post"
+address = "Experian, PO Box 7405, St Kilda Road, Melbourne VIC 3004"
+
+[[channels]]
+kind = "phone"
+address = "1300 783 684"

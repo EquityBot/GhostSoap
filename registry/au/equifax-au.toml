@@ -1,0 +1,39 @@
+id = "equifax-au"
+name = "Equifax"
+legal_entity = "Equifax Australia Information Services and Solutions Pty Limited"
+abn = "26 000 602 862"
+kinds = ["credit-reporting-body"]
+priority = "crucial"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.equifax.com.au/credit-reporting-policy", "https://www.equifax.com.au/contact", "https://www.equifax.com.au/personal/products/credit-and-identity-products", "https://www.equifax.com.au/personal/corrections-portal", "https://www.equifax.com.au/eform/submit/credit-ban", "https://www.equifax.com.au/eform/submit/complaints-form"]
+levers = ["s20r-access", "s20t-correction"]
+opt_in_levers = ["s20k-ban"]
+identity_fields = ["full_name", "alias_names", "date_of_birth", "address", "previous_addresses", "email"]
+exemption_risk = "none"
+escalation = ["afca", "oaic"]
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.equifax.com.au/personal/products/credit-and-identity-products"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.equifax.com.au/personal/corrections-portal"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.equifax.com.au/eform/submit/credit-ban"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.equifax.com.au/contact"
+
+[[channels]]
+kind = "post"
+address = "Equifax - Public Access, Equifax Australia Information Services and Solutions Pty Limited, GPO Box 964, North Sydney NSW 2059"
+
+[[channels]]
+kind = "phone"
+address = "13 8332"

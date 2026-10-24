@@ -4,7 +4,7 @@ _GhostSoap at no Price._
 
 GhostSoap is a free, local-first tool that helps people in Australia reclaim their privacy. It prepares Privacy Act requests to data brokers for you to send from your own mailbox, tracks every deadline and reply, builds an escalation file when a business does not respond, and walks you through the data hygiene steps email cannot fix.
 
-**Status: milestone M0.** The repository, licences and checks are in place; GhostSoap has no commands yet. The [plan](docs/plan.md) sets out what comes next.
+**Status: milestone M1.** GhostSoap has a sourced [register](registry/README.md) of Australian entities and one command, `ghostsoap registry check`, which validates it. It cannot prepare requests yet. The [plan](docs/plan.md) sets out what comes next.
 
 ## What it will do
 
@@ -33,6 +33,6 @@ cargo build --release
 ## Licences
 
 - Code: [Apache-2.0](LICENSE).
-- Register and checklist data (`registry/` and `checklist/`, from milestone M1): [CC0-1.0](LICENSE-DATA), so other privacy projects can reuse it.
+- Register and checklist data (`registry/` and, from milestone M4, `checklist/`): [CC0-1.0](LICENSE-DATA), so other privacy projects can reuse it.
 
 GhostSoap is not affiliated with, endorsed by or connected to Activision or the Call of Duty franchise. The name is a nod to it, nothing more.
