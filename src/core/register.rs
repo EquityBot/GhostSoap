@@ -603,6 +603,9 @@ fn is_domain(host: &str) -> bool {
 fn is_email(address: &str) -> bool {
     address.split_once('@').is_some_and(|(local, domain)| {
         !local.is_empty()
+            && local
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || "!#$%&'*+-/=?^_`{|}~.".contains(c))
             && !local.starts_with('.')
             && !local.ends_with('.')
             && !local.contains("..")
@@ -910,6 +913,7 @@ entries = ["example-au"]
             "privacy@-bad.example",
             "privacy..team@example.com.au",
             ".privacy@example.com.au",
+            "privacy,team@example.com.au",
         ] {
             let report = check_one(|t| t.replace("privacy@example.com.au", email));
             assert_error(&report, "is not an email address");
@@ -919,6 +923,7 @@ entries = ["example-au"]
                 "https://example.com.au/privacy",
                 "https://example.com.au:443/privacy?x=1#y",
             )
+            .replace("privacy@example.com.au", "privacy.team+au@example.com.au")
         });
         assert_eq!(report.findings, []);
     }

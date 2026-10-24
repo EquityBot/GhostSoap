@@ -151,7 +151,7 @@ pub fn main_text(html: &str) -> String {
 
 /// The index just past the end of the skipped element that `start` opens, or the end of
 /// the document. Raw-text elements end at their first end tag; `template` and `svg` nest,
-/// and `<svg/>` closes itself.
+/// skipping comments and CDATA sections, and `<svg/>` closes itself.
 fn skip_element(lower: &str, start: &Tag) -> usize {
     let name = start.name.as_str();
     if RAW_TEXT.contains(&name) {
@@ -165,6 +165,10 @@ fn skip_element(lower: &str, start: &Tag) -> usize {
     while let Some(j) = lower[i..].find('<').map(|j| i + j) {
         if lower[j..].starts_with("<!--") {
             i = after(lower, j, "-->");
+            continue;
+        }
+        if lower[j..].starts_with("<![cdata[") {
+            i = after(lower, j, "]]>");
             continue;
         }
         let Some(tag) = tag_at(lower, j) else {
@@ -196,7 +200,7 @@ fn raw_text_end(lower: &str, from: usize, name: &str) -> usize {
     while let Some(j) = lower[i..].find(&close).map(|j| i + j + close.len()) {
         let boundary = lower.as_bytes().get(j);
         if boundary.is_none_or(|&b| b.is_ascii_whitespace() || b == b'/' || b == b'>') {
-            return after(lower, j, ">");
+            return tag_end(lower, j - close.len());
         }
         i = j;
     }
@@ -326,6 +330,23 @@ mod tests {
     }
 
     #[test]
+    fn cdata_and_quoted_end_tags_do_not_end_skipped_elements() {
+        for skipped in [
+            "<svg><![CDATA[x > </svg><main>Decoy</main>]]></svg>",
+            "<script>x</script title=\"><main>Decoy</main>\">",
+        ] {
+            let html = format!("<body>{skipped}<main>Actual</main></body>");
+            assert_eq!(main_text(&html), "Actual");
+        }
+        for html in [
+            "<body><script>x</script >Text",
+            "<body>Text<script>x</script",
+        ] {
+            assert_eq!(main_text(html), "Text");
+        }
+    }
+
+    #[test]
     fn a_self_closing_svg_skips_only_itself() {
         for svg in ["<svg/>", "<svg aria-label=\"a > b\"/>"] {
             let html = format!("<body>{svg}<main>Actual policy</main></body>");
@@ -361,6 +382,8 @@ mod tests {
             main_text("A&amp;B &lt;x&gt; &#39;q&#x27; a&nbsp;b &bogus; & c"),
             "A&B <x> 'q' a b &bogus; & c"
         );
+        // The `;` must be at most 10 bytes after the `&`.
+        assert_eq!(main_text("&#00000065; &#000000065;"), "A &#000000065;");
     }
 
     #[test]
