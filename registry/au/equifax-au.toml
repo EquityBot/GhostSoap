@@ -46,3 +46,28 @@ levers = ["s20t-correction", "s20r-access", "s20k-ban"]
 kind = "phone"
 address = "13 8332"
 levers = []
+
+[[evidence]]
+url = "https://www.equifax.com.au/credit-reporting-policy"
+checked_at = 2026-10-24
+sha256 = "7778d413ce89cada85159267cb40976f9189b088cd77cbf0dee865e5ea7dfd72"
+
+[[evidence]]
+url = "https://www.equifax.com.au/contact"
+checked_at = 2026-10-24
+sha256 = "b3859a399f75a35d75fe8c2041cf4eb57b4dd0bf6511489db51136c62102bf81"
+
+[[evidence]]
+url = "https://www.equifax.com.au/personal/products/credit-and-identity-products"
+checked_at = 2026-10-24
+sha256 = "9e2de5881aa2f8b14c61962dda63deed103633bb5f943e16919e29350c090c0b"
+
+[[evidence]]
+url = "https://www.equifax.com.au/personal/corrections-portal"
+checked_at = 2026-10-24
+sha256 = "a59e502c73dc52851831e5553e8ee57dccb653459cdb8896271b7f6ae635fa56"
+
+[[evidence]]
+url = "https://www.equifax.com.au/eform/submit/credit-ban"
+checked_at = 2026-10-24
+sha256 = "52c91f70960defd41b361559e6b4921439daec6794386499dd552532e0db8f4f"

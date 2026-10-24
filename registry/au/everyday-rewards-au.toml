@@ -29,3 +29,18 @@ levers = []
 kind = "post"
 address = "Privacy Office, Woolworths Group Limited, PO Box 8000, Baulkham Hills NSW 2153"
 levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.woolworthsgroup.com.au/au/en/privacy/privacy-policy.html"
+checked_at = 2026-10-24
+sha256 = "b8576c3fc5c782d92d4353353e345bb37a8ce15311a31f633d53fd0859071690"
+
+[[evidence]]
+url = "https://www.woolworthsgroup.com.au/content/dam/wwg/privacy/2026/FINAL_Woolworths-Group-Privacy-Policy-August-2026.pdf"
+checked_at = 2026-10-24
+sha256 = "70408cddb998cbffabe6b110d3deccf7cb7b84595f41f5f9e6e74dd2984f8e0b"
+
+[[evidence]]
+url = "https://www.woolworthsgroup.com.au/au/en/privacy.html"
+checked_at = 2026-10-24
+sha256 = "3b62e540f1f292406fa6f210ab37f92f6fb37340d9a1e64c4a380fd0ecbee2ca"

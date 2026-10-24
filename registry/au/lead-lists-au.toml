@@ -24,3 +24,8 @@ preferred = true
 kind = "phone"
 address = "(03) 9007 0355"
 levers = []
+
+[[evidence]]
+url = "https://leadlists.com.au/privacy-policy/"
+checked_at = 2026-10-24
+sha256 = "910c2ea7301eec5d996d78b3a6acc4c3ecd17853b7509498eee8c710daa39fc2"

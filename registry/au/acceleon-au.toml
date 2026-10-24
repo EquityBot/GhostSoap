@@ -19,3 +19,13 @@ kind = "email"
 address = "privacy@acceleon.com.au"
 levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
 preferred = true
+
+[[evidence]]
+url = "https://www.acceleon.com.au/legal/privacy"
+checked_at = 2026-10-24
+sha256 = "e75e319857334090bfc0c9d2084732e24b57bf074e5cee1f793701d8caf756d4"
+
+[[evidence]]
+url = "https://www.acceleon.com.au/#contact"
+checked_at = 2026-10-24
+sha256 = "cc99987e7dfd935893b87874177fc9eb90a75774fca7e71720ca2c3f981b3b33"

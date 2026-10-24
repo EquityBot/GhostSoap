@@ -30,7 +30,25 @@ Without `--path`, `registry check` validates the register built into the binary.
 | `effort` | `easy`, `medium`, `hard`, `impossible` |
 | `[[channels]]` | `kind` (`email`, `web-form`, `post`, `phone`), `address`, `levers` (the entry's levers this channel can carry; `[]` for a contact-only channel such as a phone line) and optional `preferred = true`. Every lever in `levers` and `opt_in_levers` needs at least one channel; a channel may list only the entry's levers; at most one channel is preferred for each lever |
 | `[manual_check]` | `url` of the entity's own search or opt-out page; GhostSoap only opens it |
+| `[[evidence]]` | Optional, one per tracked source page: `url` (one of `sources`), `checked_at` (date) and `sha256` (64 lowercase hex digits; see below) |
 
 ## Packs
 
 A pack has `id` (equal to the file name), `name`, `description` and `entries`, a list of entry ids at `tested` or `verified` quality. Packs choose entities, not levers. When the user plans a round from a pack, the planner offers each entry's `levers` and checks each lever's prerequisites: a correction (`app13`, `s20t-correction`) needs the user to say what is wrong, `app13-notify-recipients` follows a correction and `app13-statement` follows a refusal to correct. Pack membership never selects an `opt_in_levers` lever; the user chooses those per entity.
+
+## Evidence hashes and drift
+
+Each `[[evidence]]` table records a source page's state when the entry was verified. A scheduled workflow (`.github/workflows/evidence-drift.yml`) re-fetches every evidence page on the first of each month and opens or updates one issue, 'Register evidence drift', listing pages that changed or could not be read. It never commits. When a page changes, recheck the entry against it and update the hash and `checked_at`.
+
+`cargo run -p xtask -- evidence-hash <url>` prints a page's hash, computed as follows:
+
+1. GET the URL, following redirects, with the user agent `GhostSoap-evidence-check/0.1`.
+2. If the response's `Content-Type` does not contain `html` (for example a PDF), hash the response bytes as they are.
+3. Otherwise, decode the body as UTF-8 (invalid bytes replaced) and take the content of the first `<main>` element, or else `<body>`, or else the whole document.
+4. Remove comments and the content of `script`, `style`, `noscript`, `template`, `svg` and `iframe` elements, and replace every tag with a space.
+5. Decode `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&nbsp;` and numeric character references; leave any other `&` as it is.
+6. Collapse every run of whitespace to one space and trim both ends.
+7. If fewer than 500 characters remain, the page is a bot check or needs a browser: record no evidence for it.
+8. Hash the text's UTF-8 bytes with SHA-256 and write the digest as lowercase hex.
+
+Record evidence only for a page that gives the same hash on two fetches and a hash no other source shares (several URLs returning one bot-check page share a hash).

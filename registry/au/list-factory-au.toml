@@ -29,3 +29,8 @@ levers = []
 kind = "post"
 address = "The Privacy Officer, List Factory Pty Ltd, PO Box 7160, Richmond VIC 3121"
 levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://listfactory.com.au/privacy-policy/"
+checked_at = 2026-10-24
+sha256 = "11aa533956d8fdd0d3200c60fa59747303e99794e13fa277b363e2fb9c1ba2e2"

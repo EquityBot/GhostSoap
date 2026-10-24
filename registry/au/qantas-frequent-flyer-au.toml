@@ -24,3 +24,8 @@ preferred = true
 kind = "post"
 address = "Group Privacy Officer, C/- Qantas Customer Care, Qantas Airways Limited, 10 Bourke Road, Mascot NSW 2020"
 levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.qantas.com/au/en/support/privacy-and-security.html"
+checked_at = 2026-10-24
+sha256 = "11f5276dcfed4873043dc13344f60ac3119567e601146b2bec20a81b36899019"

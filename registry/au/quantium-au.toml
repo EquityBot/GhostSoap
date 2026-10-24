@@ -29,3 +29,13 @@ levers = ["app13", "app13-notify-recipients", "app13-statement", "app12"]
 kind = "phone"
 address = "+61 2 9292 6400"
 levers = []
+
+[[evidence]]
+url = "https://quantium.com/privacy/"
+checked_at = 2026-10-24
+sha256 = "efccb07e0a59a239f41b2e49f457ba9b36da3c9407c7a632119c08979f27ee4f"
+
+[[evidence]]
+url = "https://quantium.com/wp-content/uploads/2024/05/Quantium-Privacy-Policy-update-May-2024.pdf"
+checked_at = 2026-10-24
+sha256 = "f4937f5afbc32ffb6542ff66e9a9c722ffa7d48d340a31bd644e3c24d2f404b6"

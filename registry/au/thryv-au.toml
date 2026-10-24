@@ -22,3 +22,8 @@ preferred = true
 
 [manual_check]
 url = "https://www.whitepages.com.au/"
+
+[[evidence]]
+url = "https://www.sensisdata.com.au/"
+checked_at = 2026-10-24
+sha256 = "f2ecfde65f723c39e9879a65cf2910bec4be958a6294f21c5bd6cb3fa68e2f84"

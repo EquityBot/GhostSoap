@@ -50,6 +50,13 @@ Every entry was checked on 24 October 2026 by AI research agents working for the
 | `velocity-frequent-flyer-au` | Known Australian firm | Privacy policy and contact pages on www.velocityfrequentflyer.com | 98 116 089 448: VELOCITY REWARDS PTY LTD, active from 15 Oct 2005 |
 | `winr-alchemist-au` | ACCC data broker report (2024) | Privacy policy and contact pages on www.winrdata.com | 57 697 222 129: WINR ALCHEMIST PTY LTD, active from 17 Apr 2026 |
 
+### Evidence hashes
+
+42 of the 71 source pages have an `[[evidence]]` hash, taken on 24 October 2026 with `cargo run -p xtask -- evidence-hash` and confirmed by a second fetch. The other pages are not tracked by the monthly drift check, because a plain HTTP fetch gets an error, a bot check or a page that needs a browser:
+
+- whole entries: `domain-au` (CoStar returns 403), `experian-au` and `experian-marketing-au` (every page returns the same bot-check page), `flybuys-au` (script-only page and a malformed response), `liveramp-au` (its domains did not resolve from the checking machine; the TrustArc form needs a browser), `priceline-pulse-rewards-au` (script-only pages) and `rea-group-au` (429 and 403);
+- single pages: the Equifax complaints form, the Lead Lists and List Factory contact forms, the TaleFin portal, InfoTrack's policy URL that redirects to the tracked PDF, Thryv's privacy policy and White Pages (403), and the WINR request form.
+
 ### Notes on individual entries
 
 - `acceleon-au`, `conexum-au`, `list-factory-au`: the ABN the entity publishes, or the one ABN Lookup gives for its business name, belongs to a trust, so ABN Lookup shows the trustee. The entity's own pages do not say whether the company named in its privacy policy is that trustee; an ASIC check would settle it. Letters use the company name in the privacy policy.

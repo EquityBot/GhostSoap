@@ -29,3 +29,13 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "
 kind = "web-form"
 address = "https://www.donotcontact.com.au/"
 levers = ["app7-no-marketing", "app7-no-facilitation"]
+
+[[evidence]]
+url = "https://www.equifax.com.au/privacy"
+checked_at = 2026-10-24
+sha256 = "aaeaf4225ee4cbade081ece48db356b14608b81ff2148ae93b5b8f705ff04257"
+
+[[evidence]]
+url = "https://www.donotcontact.com.au/"
+checked_at = 2026-10-24
+sha256 = "3acc7039a6121135ee06d56a54aad9a5a811181d2eabd699947fccdc86ba996b"

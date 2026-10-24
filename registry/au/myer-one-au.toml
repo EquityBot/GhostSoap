@@ -40,3 +40,8 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "
 kind = "phone"
 address = "13MYER (13 69 37)"
 levers = []
+
+[[evidence]]
+url = "https://www.myer.com.au/content/privacy"
+checked_at = 2026-10-24
+sha256 = "1624af7d66b2db0b9a49877327151071f1cb4347e0e4d399d5166229ec9746ed"

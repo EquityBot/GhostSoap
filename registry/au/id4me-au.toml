@@ -37,3 +37,18 @@ levers = []
 
 [manual_check]
 url = "https://admin.id4me.me/remove"
+
+[[evidence]]
+url = "https://id4me.biz/privacy-policy"
+checked_at = 2026-10-24
+sha256 = "d3434777f9f7ec517301e6c8be752adf8c123c77b56b43eef129a7d5d4e05557"
+
+[[evidence]]
+url = "https://admin.id4me.me/remove"
+checked_at = 2026-10-24
+sha256 = "62ed54650e34632ced78c0f3b512ff42a93e56907789d244bea00927519236bb"
+
+[[evidence]]
+url = "https://id4me.biz/find"
+checked_at = 2026-10-24
+sha256 = "8cecee69c73f6dcb9718355498a45e8235734695af75fcf1c6332114c92a728b"
