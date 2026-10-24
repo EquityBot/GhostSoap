@@ -44,10 +44,10 @@ Each `[[evidence]]` table records a source page's state when the entry was verif
 
 1. GET the URL, following redirects, with the user agent `GhostSoap-evidence-check/0.1 (+https://github.com/ryanduguid/GhostSoap)` and a 30-second limit for the whole request.
 2. The response is HTML if its `Content-Type` contains `html` in any letter case or, when it has no `Content-Type`, if its body starts (after any byte order mark and whitespace) with `<!doctype html` or `<html` in any letter case. Hash any other response (for example a PDF) as its raw bytes.
-3. Decode an HTML body as UTF-8 (invalid bytes replaced). Ignoring comments and the content of `script`, `style`, `noscript`, `template`, `svg` and `iframe` elements, take the content of the first `<main>` element (including any `<main>` nested in it), or else `<body>`, or else the whole document. Markup starts with `<` followed by a letter, `/` and a letter, `!` or `?`; any other `<` is text. A `>` inside a quoted attribute value does not end a tag. `script`, `style`, `noscript` and `iframe` end at their first end tag (so `</scripture>` does not end a script); `template` and `svg` nest, and `<svg/>` closes itself.
+3. Decode an HTML body as UTF-8 (invalid bytes replaced). Ignoring comments and the content of `script`, `style`, `noscript`, `template`, `svg` and `iframe` elements, take the content of the first `<main>` element (including any `<main>` nested in it), or else `<body>`, or else the whole document. Markup starts with `<` followed by an ASCII letter, `/` and an ASCII letter, `!` or `?`; any other `<` is text. Inside `template` and `svg`, CDATA sections are skipped too. A `>` inside a quoted attribute value does not end a tag. `script`, `style`, `noscript` and `iframe` end at their first end tag (so `</scripture>` does not end a script); `template` and `svg` nest, and `<svg/>` closes itself.
 4. Replace every tag in that content with a space.
-5. Decode `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&nbsp;` and numeric character references; leave any other `&` as it is.
-6. Collapse every run of whitespace to one space and trim both ends.
+5. Decode `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&nbsp;` and numeric character references (`&#` and decimal digits, or `&#x` or `&#X` and hex digits, naming a valid character), each only when its `;` is at most 10 bytes after the `&`; leave any other `&` as it is.
+6. Collapse every run of Unicode whitespace (the `White_Space` property, as Rust's `split_whitespace` uses) to one space and trim both ends.
 7. If fewer than 500 characters remain, the page is a bot check or needs a browser: record no evidence for it.
 8. Hash the text's UTF-8 bytes with SHA-256 and write the digest as lowercase hex.
 
