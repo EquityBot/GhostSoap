@@ -36,18 +36,17 @@ fn evidence_hash(agent: &ureq::Agent, url: &str) -> Result<String, String> {
         .header("User-Agent", USER_AGENT)
         .call()
         .map_err(|e| e.to_string())?;
-    let html = response
+    let content_type = response
         .headers()
         .get("content-type")
-        .and_then(|v| v.to_str().ok())
-        .is_some_and(|v| v.contains("html"));
+        .map(|v| v.to_str().unwrap_or_default().to_owned());
     let bytes = response
         .body_mut()
         .with_config()
         .limit(20 * 1024 * 1024)
         .read_to_vec()
         .map_err(|e| e.to_string())?;
-    let digest = if html {
+    let digest = if text::is_html(content_type.as_deref(), &bytes) {
         let text = text::main_text(&String::from_utf8_lossy(&bytes));
         if text.chars().count() < MIN_TEXT {
             return Err(format!(

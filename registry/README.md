@@ -42,10 +42,10 @@ Each `[[evidence]]` table records a source page's state when the entry was verif
 
 `cargo run -p xtask -- evidence-hash <url>` prints a page's hash, computed as follows:
 
-1. GET the URL, following redirects, with the user agent `GhostSoap-evidence-check/0.1`.
-2. If the response's `Content-Type` does not contain `html` (for example a PDF), hash the response bytes as they are.
-3. Otherwise, decode the body as UTF-8 (invalid bytes replaced) and take the content of the first `<main>` element, or else `<body>`, or else the whole document.
-4. Remove comments and the content of `script`, `style`, `noscript`, `template`, `svg` and `iframe` elements, and replace every tag with a space.
+1. GET the URL, following redirects, with the user agent `GhostSoap-evidence-check/0.1 (+https://github.com/ryanduguid/GhostSoap)` and a 30-second limit for the whole request.
+2. The response is HTML if its `Content-Type` contains `html` in any letter case or, when it has no `Content-Type`, if its body starts (after any byte order mark and whitespace) with `<!doctype html` or `<html` in any letter case. Hash any other response (for example a PDF) as its raw bytes.
+3. Decode an HTML body as UTF-8 (invalid bytes replaced). Ignoring comments and the content of `script`, `style`, `noscript`, `template`, `svg` and `iframe` elements, take the content of the first `<main>` element, or else `<body>`, or else the whole document. A `>` inside a quoted attribute value does not end a tag.
+4. Replace every tag in that content with a space.
 5. Decode `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&nbsp;` and numeric character references; leave any other `&` as it is.
 6. Collapse every run of whitespace to one space and trim both ends.
 7. If fewer than 500 characters remain, the page is a bot check or needs a browser: record no evidence for it.

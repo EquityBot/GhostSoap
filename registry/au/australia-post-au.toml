@@ -33,9 +33,9 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "
 [[evidence]]
 url = "https://auspost.com.au/privacy"
 checked_at = 2026-10-24
-sha256 = "05f14a60d7d91a3dcedf4349825118837a1c435053f24e5e466bb7069238b288"
+sha256 = "1894b8ed31c0a76dba5dce15ea86a646d3e5c136c566119f20bc32be180045d9"
 
 [[evidence]]
 url = "https://auspost.com.au/business/services/data-services/contact-data-quality"
 checked_at = 2026-10-24
-sha256 = "d61547187f0914806d5ee7a028b6de7dd103a942d0fa076792fa2378bdc4d7d3"
+sha256 = "1b900782e64a2da3279a7f2c509c3501e6721a92e9bb161849df89152e900baf"

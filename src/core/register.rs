@@ -456,9 +456,6 @@ fn check_channel_levers(entry: &Entry, errors: &mut Vec<String>) {
             ));
         }
     }
-    if entry.obsolete.is_some() {
-        return;
-    }
     for lever in listed() {
         let serving: Vec<&Channel> = entry
             .channels
@@ -478,8 +475,12 @@ fn check_channel_levers(entry: &Entry, errors: &mut Vec<String>) {
 }
 
 fn check_evidence(entry: &Entry, today: NaiveDate, errors: &mut Vec<String>) {
+    let mut seen = BTreeSet::new();
     for evidence in &entry.evidence {
         let url = &evidence.url;
+        if !seen.insert(url) {
+            errors.push(format!("evidence url `{url}` is listed twice"));
+        }
         if !entry.sources.contains(url) {
             errors.push(format!("evidence url `{url}` is not one of the sources"));
         }
@@ -819,6 +820,19 @@ entries = ["example-au"]
     }
 
     #[test]
+    fn checks_channel_levers_on_obsolete_entries() {
+        let obsolete = "\n[obsolete]\nreason = \"closed\"\n";
+        let second = "\n[[channels]]\nkind = \"post\"\naddress = \"PO Box 1\"\nlevers = [\"app13\"]\npreferred = true\n";
+        let report = check_one(|t| format!("{t}{second}{obsolete}"));
+        assert_error(&report, "more than one channel is preferred for `app13`");
+        let report = check_one(|t| {
+            let t = t.replace(CHANNEL_LEVERS, "[\"app12\", \"app7-no-marketing\"]");
+            format!("{t}{obsolete}")
+        });
+        assert_error(&report, "no channel serves `app13`");
+    }
+
+    #[test]
     fn checks_evidence() {
         let sha = "a".repeat(64);
         let evidence = |url: &str, date: &str, sha: &str| {
@@ -851,6 +865,8 @@ entries = ["example-au"]
             )
         });
         assert_error(&report, "not in the future");
+        let report = check_one(|t| format!("{t}{good}{good}"));
+        assert_error(&report, "is listed twice");
     }
 
     #[test]
