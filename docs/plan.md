@@ -107,7 +107,7 @@ url = "https://example.com.au/search"   # the broker's own page; GhostSoap only 
 # obsolete = { reason = "merged", replaced_by = "other-id" }
 ```
 
-Quality grades follow datenanfragen: `tested` means a GhostSoap request got a reply; `verified` means a person checked the contact against the entity's own privacy policy; `imported` means taken from a licence-compatible dataset; `lead` means named in a non-reusable source and not yet checked. Only `tested` and `verified` entries enter packs by default.
+Quality grades follow datenanfragen: `tested` means a GhostSoap request got a reply; `verified` means the contact was checked against the entity's own privacy policy or contact pages, by a person or an AI agent, with the evidence recorded in `docs/provenance.md`; `imported` means taken from a licence-compatible dataset; `lead` means named in a non-reusable source and not yet checked. Only `tested` and `verified` entries enter packs by default.
 
 **Packs** (`registry/au/packs/*.toml`) group entries: `credit` (Equifax, Experian, which now includes illion, and any other credit reporting body), `property`, `marketing`, `people-search`, `loyalty`, plus `start-here` for users with little time.
 
@@ -247,6 +247,7 @@ Ryan approved draft 2 on 24 October 2026 and decided:
 2. **Visibility:** the repository stays private until M1.
 3. **Interface:** decided at M7, from a static WebAssembly web app (no install; data in the browser, like datenanfragen), a local web UI served by the CLI, or a desktop app.
 4. **Branding:** the name and tagline only; no Call of Duty art, logos or fonts; the README disclaims any affiliation.
+5. **Register quality (24 October 2026, at M1):** `verified` covers a check against the entity's own pages with recorded evidence, made by a person or an AI agent; provenance says which.
 
 ## 13. Risks
 
@@ -267,6 +268,7 @@ Ryan approved draft 2 on 24 October 2026 and decided:
 - **Calvino:** not done. Three attempts on 24 October 2026 stopped before dispatch: a ChatGPT sign-in timeout, a 20-minute wait for a browser slot (one slot held by a stale lease from 21 October), and 'Picker selection is unverified'. Rerun before v0.1, and before M2 if it becomes available.
 - **Independent Opus review** (24 October 2026, read-only, against OAIC guidance and the Privacy Act): verdict 'sound enough to start M0'. Accepted and applied: the APP 7 split and APP 7.8, APP 12 charges and refusals, APP 13 grounds and levers, the escalation order (EDR, then OAIC; ACMA for spam), the 2024 Act, the storage changes, the draft usability fixes, the threat model, accessibility, the agent wording, and the chrono `clock` feature. Its eraseme findings were checked locally (13 CAPTCHA-solver matches in that repository's code search).
 - **Statute check:** ss 6D, 20K, 20R, 20T, 21T, 21V and 40 read on AustLII on 24 October 2026.
+- **Calvino M1 final review** (24 October 2026, GPT-6 Pro at Extra High tier): verdict 'request changes'. Applied: access levers opt-in only, stricter date, URL and obsolete checks, an empty register rejected, entity names narrowed, every channel matched to the entity's pages. Its finding that agent checks did not meet the `verified` definition was settled by decision 5 in section 12.
 
 ## Sources
 

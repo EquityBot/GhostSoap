@@ -34,7 +34,8 @@ pub enum Priority {
 pub enum Quality {
     /// A GhostSoap request got a reply.
     Tested,
-    /// A person checked the contact against the entity's own privacy policy.
+    /// The contact was checked against the entity's own pages, by a person or an AI agent,
+    /// with the evidence recorded in `docs/provenance.md`.
     Verified,
     /// Taken from a licence-compatible dataset.
     Imported,
