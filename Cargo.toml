@@ -1,0 +1,18 @@
+[package]
+name = "ghostsoap"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+description = "Prepare Australian Privacy Act requests to data brokers and track the replies"
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+clap = { version = "4.6.7", features = ["derive"] }
+
+[lints.clippy]
+too_many_lines = "warn"
+
+[profile.release]
+lto = true
+codegen-units = 1
