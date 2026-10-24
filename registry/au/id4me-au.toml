@@ -17,18 +17,23 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "customersupport@id4me.me"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "web-form"
 address = "https://admin.id4me.me/remove"
+levers = ["app7-no-marketing", "app7-no-facilitation"]
 
 [[channels]]
 kind = "post"
 address = "Privacy Officer, iD4me, Unit L5/11-15 Bank Pl, Melbourne VIC 3000"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
 
 [[channels]]
 kind = "phone"
 address = "(03) 9961 2908"
+levers = []
 
 [manual_check]
 url = "https://admin.id4me.me/remove"

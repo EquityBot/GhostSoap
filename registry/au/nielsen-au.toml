@@ -17,7 +17,10 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "privacy.department@nielsen.com"
+levers = ["app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "email"
 address = "australia.panelsupport@nielsen.com"
+levers = []

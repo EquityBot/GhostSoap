@@ -17,7 +17,10 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "suppression@leadlists.com.au"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "phone"
 address = "(03) 9007 0355"
+levers = []

@@ -17,23 +17,32 @@ effort = "medium"
 [[channels]]
 kind = "web-form"
 address = "https://www.equifax.com.au/personal/products/credit-and-identity-products"
+levers = ["s20r-access"]
+preferred = true
 
 [[channels]]
 kind = "web-form"
 address = "https://www.equifax.com.au/personal/corrections-portal"
+levers = ["s20t-correction"]
+preferred = true
 
 [[channels]]
 kind = "web-form"
 address = "https://www.equifax.com.au/eform/submit/credit-ban"
+levers = ["s20k-ban"]
+preferred = true
 
 [[channels]]
 kind = "web-form"
 address = "https://www.equifax.com.au/contact"
+levers = []
 
 [[channels]]
 kind = "post"
 address = "Equifax - Public Access, Equifax Australia Information Services and Solutions Pty Limited, GPO Box 964, North Sydney NSW 2059"
+levers = ["s20t-correction", "s20r-access", "s20k-ban"]
 
 [[channels]]
 kind = "phone"
 address = "13 8332"
+levers = []

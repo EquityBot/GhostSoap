@@ -17,7 +17,10 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "privacy@virginaustralia.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "post"
 address = "Privacy Officer, Legal department, PO Box 1034, Spring Hill QLD 4004"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]

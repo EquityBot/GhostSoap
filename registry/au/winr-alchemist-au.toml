@@ -17,11 +17,15 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "Privacy@winrdata.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "post"
 address = "56 Berry Street, North Sydney NSW 2060"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
 
 [[channels]]
 kind = "web-form"
 address = "https://privacy.winrcorp.com/"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]

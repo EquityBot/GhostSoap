@@ -17,11 +17,15 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "DataProtection.AU@DyeDurham.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "post"
 address = "The Data Protection Officer, Dye & Durham Australia Property Limited, 680 George Street, Sydney"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
 
 [[channels]]
 kind = "phone"
 address = "+61 (02) 8206 6000"
+levers = []
