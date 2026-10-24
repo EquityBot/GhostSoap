@@ -40,7 +40,7 @@ levers = []
 [[channels]]
 kind = "post"
 address = "Equifax - Public Access, Equifax Australia Information Services and Solutions Pty Limited, GPO Box 964, North Sydney NSW 2059"
-levers = ["s20t-correction", "s20r-access", "s20k-ban"]
+levers = ["s20t-correction", "s20r-access"]
 
 [[channels]]
 kind = "phone"

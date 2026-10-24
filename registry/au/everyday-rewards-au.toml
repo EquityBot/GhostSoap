@@ -33,7 +33,7 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "
 [[evidence]]
 url = "https://www.woolworthsgroup.com.au/au/en/privacy/privacy-policy.html"
 checked_at = 2026-10-24
-sha256 = "b8576c3fc5c782d92d4353353e345bb37a8ce15311a31f633d53fd0859071690"
+sha256 = "3d937e82f1c70a519fdf63dcb421ea14eb0aef3ceba370f5b79695c90c99d99b"
 
 [[evidence]]
 url = "https://www.woolworthsgroup.com.au/content/dam/wwg/privacy/2026/FINAL_Woolworths-Group-Privacy-Policy-August-2026.pdf"
@@ -43,4 +43,4 @@ sha256 = "70408cddb998cbffabe6b110d3deccf7cb7b84595f41f5f9e6e74dd2984f8e0b"
 [[evidence]]
 url = "https://www.woolworthsgroup.com.au/au/en/privacy.html"
 checked_at = 2026-10-24
-sha256 = "3b62e540f1f292406fa6f210ab37f92f6fb37340d9a1e64c4a380fd0ecbee2ca"
+sha256 = "859fb2ef90dadea90d7f6d149580c5d53bd796c562528eea6d89ebcab7ac4a3a"
