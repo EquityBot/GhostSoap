@@ -1,0 +1,15 @@
+id = "start-here"
+name = "Start here"
+description = "A short first round: your credit reports from the two largest credit reporting bodies, and the brokers most likely to hold and share your details."
+entries = [
+  "equifax-au",
+  "experian-au",
+  "equifax-marketing-au",
+  "experian-marketing-au",
+  "liveramp-au",
+  "cotality-au",
+  "thryv-au",
+  "acceleon-au",
+  "id4me-au",
+  "conexum-au",
+]

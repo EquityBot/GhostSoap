@@ -1,0 +1,11 @@
+id = "loyalty"
+name = "Loyalty programmes"
+description = "Large loyalty programmes that share member data with partners for marketing."
+entries = [
+  "flybuys-au",
+  "everyday-rewards-au",
+  "qantas-frequent-flyer-au",
+  "velocity-frequent-flyer-au",
+  "myer-one-au",
+  "priceline-pulse-rewards-au",
+]

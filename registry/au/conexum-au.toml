@@ -1,0 +1,27 @@
+id = "conexum-au"
+name = "Conexum"
+legal_entity = "Conexum Pty Ltd"
+abn = "90 334 495 647"
+kinds = ["marketing-list"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://conexum.com.au/privacy/"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "consumeroptout@conexum.com.au"
+
+[[channels]]
+kind = "post"
+address = "Consumer Care Officer, Conexum Pty Ltd, Reply Paid 86100, Double Bay NSW 1360"
+
+[[channels]]
+kind = "phone"
+address = "0433 185 315"

@@ -8,7 +8,10 @@ license = "Apache-2.0"
 publish = false
 
 [dependencies]
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 clap = { version = "4.6.7", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.1.8"
 
 [lints.clippy]
 too_many_lines = "warn"

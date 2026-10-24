@@ -6,9 +6,9 @@
 - Material under MIT, Apache-2.0 or CC0 may be reused with its notice; list it in [docs/provenance.md](docs/provenance.md).
 - Write letters from the Privacy Act and the OAIC guidelines, citing the provision.
 
-## Register entries (from milestone M1)
+## Register entries
 
-Each entry needs at least one source URL from the entity itself and the date you checked it. Register and checklist contributions are released under CC0-1.0.
+Each entry needs at least one source URL from the entity itself, an ABN checked on ABN Lookup and the date you checked it; add a row to [docs/provenance.md](docs/provenance.md) saying where the lead came from and what verified it. [registry/README.md](registry/README.md) lists the fields, and `cargo run -- registry check` validates them. Register and checklist contributions are released under CC0-1.0.
 
 ## Checks
 
@@ -19,4 +19,5 @@ cargo fmt --check
 cargo clippy --locked --all-targets -- -D warnings
 cargo test --locked
 cargo build --locked --release
+cargo run -- registry check
 ```
