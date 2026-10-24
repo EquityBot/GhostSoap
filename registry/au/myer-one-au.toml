@@ -17,19 +17,26 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "myer.privacy@myer.com.au"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
 
 [[channels]]
 kind = "email"
 address = "privacy.accessrequests@myer.com.au"
+levers = ["app12"]
+preferred = true
 
 [[channels]]
 kind = "email"
 address = "privacy@myer.com.au"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+preferred = true
 
 [[channels]]
 kind = "post"
 address = "Privacy Officer, Myer Pty Ltd, Level 7, 1000 La Trobe St, Docklands VIC 3008"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
 
 [[channels]]
 kind = "phone"
 address = "13MYER (13 69 37)"
+levers = []

@@ -17,7 +17,10 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "dataprivacy@smrtr.com.au"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "web-form"
 address = "https://smrtr.com.au/opt-out-form/"
+levers = ["app7-no-marketing", "app7-no-facilitation"]

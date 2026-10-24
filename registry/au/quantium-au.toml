@@ -17,11 +17,15 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "privacy@quantium.com.au"
+levers = ["app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "post"
 address = "Privacy Officer, The Quantium Group, Bay 12, 2 Locomotive Street, Eveleigh NSW 2015"
+levers = ["app13", "app13-notify-recipients", "app13-statement", "app12"]
 
 [[channels]]
 kind = "phone"
 address = "+61 2 9292 6400"
+levers = []

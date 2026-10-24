@@ -26,7 +26,7 @@ cargo run -- registry check
 | `exemption_risk` | `none`, `small-business-possible`, `overseas` |
 | `escalation` | Ordered: `afca`, `acma`, `oaic` |
 | `effort` | `easy`, `medium`, `hard`, `impossible` |
-| `[[channels]]` | `kind` (`email`, `web-form`, `post`, `phone`) and `address` |
+| `[[channels]]` | `kind` (`email`, `web-form`, `post`, `phone`), `address`, `levers` (the entry's levers this channel can carry; `[]` for a contact-only channel such as a phone line) and optional `preferred = true`. Every lever in `levers` and `opt_in_levers` needs at least one channel; a channel may list only the entry's levers; at most one channel is preferred for each lever |
 | `[manual_check]` | `url` of the entity's own search or opt-out page; GhostSoap only opens it |
 
 ## Packs

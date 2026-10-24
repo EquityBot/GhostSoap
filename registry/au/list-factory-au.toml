@@ -17,11 +17,15 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "privacy@listfactory.com.au"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "phone"
 address = "03 9014 8493"
+levers = []
 
 [[channels]]
 kind = "post"
 address = "The Privacy Officer, List Factory Pty Ltd, PO Box 7160, Richmond VIC 3121"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]

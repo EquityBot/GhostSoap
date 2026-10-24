@@ -16,3 +16,4 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "privacy@example.com.au"
+levers = ["app7-no-marketing"]

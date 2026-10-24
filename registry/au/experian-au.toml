@@ -17,19 +17,27 @@ effort = "medium"
 [[channels]]
 kind = "web-form"
 address = "https://www.experian.com.au/consumer/order-credit-report"
+levers = ["s20r-access"]
+preferred = true
 
 [[channels]]
 kind = "web-form"
 address = "https://www.experian.com.au/consumer/correction-process"
+levers = ["s20t-correction"]
+preferred = true
 
 [[channels]]
 kind = "web-form"
 address = "https://www.experian.com.au/consumer/request-a-ban"
+levers = ["s20k-ban"]
+preferred = true
 
 [[channels]]
 kind = "post"
 address = "Experian, PO Box 7405, St Kilda Road, Melbourne VIC 3004"
+levers = ["s20t-correction", "s20r-access", "s20k-ban"]
 
 [[channels]]
 kind = "phone"
 address = "1300 783 684"
+levers = []

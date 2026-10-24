@@ -17,11 +17,15 @@ effort = "medium"
 [[channels]]
 kind = "web-form"
 address = "https://www.experian.com.au/data-and-marketing/consumer-opt-out"
+levers = ["app7-no-marketing", "app7-no-facilitation"]
+preferred = true
 
 [[channels]]
 kind = "post"
 address = "Experian Privacy Complaints, PO Box 7405, St Kilda Road VIC 3004"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
 
 [[channels]]
 kind = "phone"
 address = "1300 783 684"
+levers = []

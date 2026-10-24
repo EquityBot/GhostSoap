@@ -17,7 +17,10 @@ effort = "medium"
 [[channels]]
 kind = "web-form"
 address = "https://submit-irm.trustarc.com/services/validation/5cd95301-1855-4698-8929-3b7e5e14750b"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [[channels]]
 kind = "post"
 address = "LiveRamp Australia Pty Limited, 03W103, WeWork 1 Sussex St, Barangaroo NSW 2000"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]

@@ -70,6 +70,28 @@ pub enum Lever {
     SpamUnsubscribe,
 }
 
+impl Lever {
+    /// The name used in register files.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::App7NoMarketing => "app7-no-marketing",
+            Self::App7NoFacilitation => "app7-no-facilitation",
+            Self::App7Source => "app7-source",
+            Self::App11Destroy => "app11-destroy",
+            Self::App12 => "app12",
+            Self::App13 => "app13",
+            Self::App13NotifyRecipients => "app13-notify-recipients",
+            Self::App13Statement => "app13-statement",
+            Self::S20rAccess => "s20r-access",
+            Self::S20tCorrection => "s20t-correction",
+            Self::S20kBan => "s20k-ban",
+            Self::S21tAccess => "s21t-access",
+            Self::S21vCorrection => "s21v-correction",
+            Self::SpamUnsubscribe => "spam-unsubscribe",
+        }
+    }
+}
+
 /// Identity details a letter may include. Document numbers are deliberately absent.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -124,6 +146,11 @@ pub struct Channel {
     pub kind: ChannelKind,
     /// An email address, form URL, postal address or phone number, by `kind`.
     pub address: String,
+    /// The entry's levers this channel can carry; empty for a contact-only channel.
+    pub levers: Vec<Lever>,
+    /// The channel to use for each of its levers; at most one per lever.
+    #[serde(default)]
+    pub preferred: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -321,6 +348,7 @@ fn check_entry(entry: &Entry, file: &str, today: NaiveDate, report: &mut Report)
     }
     check_levers(entry, &mut errors);
     check_channels(entry, &mut errors);
+    check_channel_levers(entry, &mut errors);
     check_obsolete(entry, &mut errors);
     match date_of(&entry.verified_at) {
         None => errors.push("verified_at must be a date such as 2026-10-24".to_owned()),
@@ -391,6 +419,40 @@ fn check_channels(entry: &Entry, errors: &mut Vec<String>) {
             "manual_check.url `{}` is not an https URL",
             manual.url
         ));
+    }
+}
+
+/// Every lever has a channel, every channel lever belongs to the entry, and no lever has
+/// two preferred channels.
+fn check_channel_levers(entry: &Entry, errors: &mut Vec<String>) {
+    let listed = || entry.levers.iter().chain(&entry.opt_in_levers);
+    for channel in &entry.channels {
+        for lever in channel.levers.iter().filter(|l| !listed().any(|x| x == *l)) {
+            errors.push(format!(
+                "channel `{}` serves `{}`, which the entry does not list",
+                channel.address,
+                lever.name()
+            ));
+        }
+    }
+    if entry.obsolete.is_some() {
+        return;
+    }
+    for lever in listed() {
+        let serving: Vec<&Channel> = entry
+            .channels
+            .iter()
+            .filter(|c| c.levers.contains(lever))
+            .collect();
+        if serving.is_empty() {
+            errors.push(format!("no channel serves `{}`", lever.name()));
+        }
+        if serving.iter().filter(|c| c.preferred).count() > 1 {
+            errors.push(format!(
+                "more than one channel is preferred for `{}`",
+                lever.name()
+            ));
+        }
     }
 }
 
@@ -533,7 +595,11 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "privacy@example.com.au"
+levers = ["app12", "app13", "app7-no-marketing", "app7-source"]
+preferred = true
 "#;
+
+    const CHANNEL_LEVERS: &str = "[\"app12\", \"app13\", \"app7-no-marketing\", \"app7-source\"]";
 
     const PACK: &str = r#"
 id = "marketing"
@@ -664,14 +730,39 @@ entries = ["example-au"]
 
     #[test]
     fn accepts_an_entry_with_only_opt_in_levers() {
-        let report =
-            check_one(|t| t.replace("[\"app7-no-marketing\", \"app7-source\", \"app13\"]", "[]"));
+        let report = check_one(|t| {
+            t.replace("[\"app7-no-marketing\", \"app7-source\", \"app13\"]", "[]")
+                .replace(CHANNEL_LEVERS, "[\"app12\"]")
+        });
         assert_eq!(report.findings, []);
         let report = check_one(|t| {
             t.replace("[\"app7-no-marketing\", \"app7-source\", \"app13\"]", "[]")
                 .replace("[\"app12\"]", "[]")
         });
         assert_error(&report, "at least one lever");
+    }
+
+    #[test]
+    fn rejects_unserved_and_unlisted_channel_levers() {
+        let report = check_one(|t| t.replace(CHANNEL_LEVERS, "[\"app12\", \"app7-no-marketing\"]"));
+        assert_error(&report, "no channel serves `app13`");
+        assert_error(&report, "no channel serves `app7-source`");
+        let report = check_one(|t| {
+            t.replace(
+                "[\"app12\", \"app13\",",
+                "[\"app12\", \"app13\", \"s20k-ban\",",
+            )
+        });
+        assert_error(&report, "serves `s20k-ban`, which the entry does not list");
+    }
+
+    #[test]
+    fn rejects_two_preferred_channels_for_a_lever() {
+        let second = "\n[[channels]]\nkind = \"post\"\naddress = \"PO Box 1\"\nlevers = [\"app13\"]\npreferred = true\n";
+        let report = check_one(|t| format!("{t}{second}"));
+        assert_error(&report, "more than one channel is preferred for `app13`");
+        let report = check_one(|t| format!("{t}{}", second.replace("preferred = true\n", "")));
+        assert_eq!(report.findings, []);
     }
 
     #[test]

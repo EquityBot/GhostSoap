@@ -17,6 +17,8 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "ThryvPrivacy_au@thryv.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
 
 [manual_check]
 url = "https://www.whitepages.com.au/"
