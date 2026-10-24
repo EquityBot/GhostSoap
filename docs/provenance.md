@@ -12,7 +12,7 @@ None yet.
 
 Every entry was checked on 24 October 2026 by AI research agents working for the maintainer, from public pages only: no form was submitted and no account created.
 
-- **Contact:** each channel was taken from the entity's own privacy policy, credit reporting policy or contact page, listed in the entry's `sources`. Every email channel was then matched against the saved text of those pages.
+- **Contact:** each channel was taken from the entity's own privacy policy, credit reporting policy or contact page, listed in the entry's `sources`. Every channel (email, post, phone, web form and manual-check page) was then matched against the saved text of those pages or, for links, a query of the page's links.
 - **ABN:** each ABN was read from the entity's own pages or found on ABN Lookup by name, then re-checked on ABN Lookup; all 29 were active.
 - **Leads:** no shipped entry came from the Optery directory or the Big Ass Data Broker Opt-Out List. Those lists were used only to learn the names of people-search sites, all of which were rejected below. No text, URL or description was copied from any lead source.
 
@@ -52,16 +52,16 @@ Every entry was checked on 24 October 2026 by AI research agents working for the
 
 ### Notes on individual entries
 
-- `acceleon-au`, `conexum-au`, `list-factory-au`: the ABN the entity publishes belongs to a trust, so ABN Lookup shows the trustee. Letters use the company name in the entity's own privacy policy.
+- `acceleon-au`, `conexum-au`, `list-factory-au`: the ABN the entity publishes, or the one ABN Lookup gives for its business name, belongs to a trust, so ABN Lookup shows the trustee. The entity's own pages do not say whether the company named in its privacy policy is that trustee; an ASIC check would settle it. Letters use the company name in the privacy policy.
 - `experian-au`: Experian Data Registries Pty Ltd, formerly illion Data Registries, is the credit reporting body; illion no longer runs a separate one.
 - `equifax-marketing-au`, `experian-marketing-au`: separate legal entities from the credit reporting bodies, with their own policies.
-- `domain-au`: domain.com.au's privacy link redirects to the privacy notice of its owner, CoStar, which has an Australian section. Pricefinder is included because its site links to the same policy.
-- `rea-group-au`: PropTrack shares REA Group's privacy policy; PropTrack Pty Ltd is a separate company.
-- `thryv-au`: White Pages says residential listing removal and silent numbers go through the person's phone provider; the hygiene checklist will cover that route.
-- `talefin-au`: Part IIIA requests go through its consumer portal, which needs an account; the entry lists its general email address.
-- `quantium-au`, `nielsen-au`: their policies say they do not sell personal information, so the entries carry APP 13 levers only and are in no pack.
+- `domain-au`: domain.com.au's privacy link redirects to the privacy notice of its owner, CoStar, which has an Australian section. Pricefinder's site links to the same policy, but its operating entity was not confirmed, so the entry does not claim to cover it.
+- `rea-group-au`: PropTrack shares REA Group's privacy policy, but PropTrack Pty Ltd is a separate company, so the entry does not claim to cover it.
+- `thryv-au`: White Pages says residential listing removal and silent numbers go through the person's phone provider, so the entry is in the marketing pack (for Thryv Data) rather than the people-search pack; the hygiene checklist will cover the phone provider route.
+- `talefin-au`: Part IIIA requests go through its consumer portal, which needs an account. The entry also lists its general email address, which its pages do not name as a channel for Part IIIA requests.
+- `quantium-au`, `nielsen-au`: Quantium's policy says it does not sell personal information and describes only business-to-business direct marketing; Nielsen's panel policy says it will not use identifying data to market to panel members and does not let clients do so. The entries therefore carry APP 13 levers only and are in no pack.
 - `landchecker-au`: the privacy contact is its support inbox; small business exemption possible.
-- `globalx-au`: the policy is dated 1 July 2021.
+- `globalx-au`: the policy is dated 1 July 2021 and is issued by Dye & Durham Australia Pty Ltd for its affiliates; its postal contact is the Data Protection Officer at Dye & Durham Australia Property Limited.
 
 ### Rejected candidates
 

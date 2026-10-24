@@ -241,13 +241,23 @@ struct Known<'a> {
     obsolete: bool,
 }
 
-/// Validate register entries and packs. `today` dates the staleness warning.
+/// Levers that return the user's personal information. An impersonator could use them to
+/// collect a victim's details, so they are opt-in per entity (plan section 6a).
+const ACCESS_LEVERS: [Lever; 3] = [Lever::App12, Lever::S20rAccess, Lever::S21tAccess];
+
+/// Validate register entries and packs. `today` dates the staleness and future-date checks.
+/// Findings about packs name the file as `packs/<name>`; a finding with an empty file name
+/// is about the register as a whole.
 pub fn check(entries: &[SourceFile], packs: &[SourceFile], today: NaiveDate) -> Report {
     let mut report = Report::default();
+    if entries.is_empty() {
+        let message = "the register has no entry files".to_owned();
+        report.push(Severity::Error, "", message);
+    }
     let mut ids: BTreeMap<String, Known> = BTreeMap::new();
     let mut replacements = Vec::new();
     for file in entries {
-        let Some(entry) = parse::<Entry>(file, &mut report) else {
+        let Some(entry) = parse::<Entry>(&file.text, &file.name, &mut report) else {
             continue;
         };
         report.entries += 1;
@@ -277,15 +287,11 @@ pub fn check(entries: &[SourceFile], packs: &[SourceFile], today: NaiveDate) -> 
     report
 }
 
-fn parse<T: DeserializeOwned>(file: &SourceFile, report: &mut Report) -> Option<T> {
-    match toml::from_str(&file.text) {
+fn parse<T: DeserializeOwned>(text: &str, name: &str, report: &mut Report) -> Option<T> {
+    match toml::from_str(text) {
         Ok(value) => Some(value),
         Err(e) => {
-            report.push(
-                Severity::Error,
-                &file.name,
-                e.to_string().trim_end().to_owned(),
-            );
+            report.push(Severity::Error, name, e.to_string().trim_end().to_owned());
             None
         }
     }
@@ -314,8 +320,13 @@ fn check_entry(entry: &Entry, file: &str, today: NaiveDate, report: &mut Report)
     }
     check_levers(entry, &mut errors);
     check_channels(entry, &mut errors);
+    check_obsolete(entry, &mut errors);
     match date_of(&entry.verified_at) {
         None => errors.push("verified_at must be a date such as 2026-10-24".to_owned()),
+        // One day of grace: entries are dated in Australian time, CI may run in UTC.
+        Some(date) if today.succ_opt().is_some_and(|tomorrow| date > tomorrow) => {
+            errors.push(format!("verified_at {date} is in the future"));
+        }
         Some(date) if is_stale(date, today) => {
             let message =
                 format!("verified_at {date} is more than 12 months old; recheck the entry");
@@ -339,11 +350,14 @@ fn check_id(id: &str, file: &str, errors: &mut Vec<String>) {
 }
 
 fn check_levers(entry: &Entry, errors: &mut Vec<String>) {
-    if entry.obsolete.is_none() && entry.levers.is_empty() {
-        errors.push("levers must not be empty".to_owned());
+    if entry.obsolete.is_none() && entry.levers.is_empty() && entry.opt_in_levers.is_empty() {
+        errors.push("an entry must list at least one lever".to_owned());
     }
-    if entry.levers.contains(&Lever::App12) {
-        errors.push("app12 belongs in opt_in_levers only, never in levers".to_owned());
+    if entry.levers.iter().any(|l| ACCESS_LEVERS.contains(l)) {
+        errors.push(
+            "access levers (app12, s20r-access, s21t-access) belong in opt_in_levers only"
+                .to_owned(),
+        );
     }
     if entry.opt_in_levers.iter().any(|l| entry.levers.contains(l)) {
         errors.push("a lever is listed in both levers and opt_in_levers".to_owned());
@@ -379,9 +393,22 @@ fn check_channels(entry: &Entry, errors: &mut Vec<String>) {
     }
 }
 
+fn check_obsolete(entry: &Entry, errors: &mut Vec<String>) {
+    let Some(obsolete) = &entry.obsolete else {
+        return;
+    };
+    if obsolete.reason.trim().is_empty() {
+        errors.push("obsolete.reason must not be empty".to_owned());
+    }
+    if obsolete.replaced_by.as_deref() == Some(entry.id.as_str()) {
+        errors.push("obsolete.replaced_by must name another entry".to_owned());
+    }
+}
+
 fn check_packs(packs: &[SourceFile], ids: &BTreeMap<String, Known>, report: &mut Report) {
     for file in packs {
-        let Some(pack) = parse::<Pack>(file, report) else {
+        let name = format!("packs/{}", file.name);
+        let Some(pack) = parse::<Pack>(&file.text, &name, report) else {
             continue;
         };
         report.packs += 1;
@@ -410,7 +437,7 @@ fn check_packs(packs: &[SourceFile], ids: &BTreeMap<String, Known>, report: &mut
             }
         }
         for message in errors {
-            report.push(Severity::Error, &file.name, message);
+            report.push(Severity::Error, &name, message);
         }
     }
 }
@@ -443,19 +470,25 @@ fn is_slug(id: &str) -> bool {
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
 }
 
+/// An https URL with a dotted host name.
 fn is_https(url: &str) -> bool {
-    url.strip_prefix("https://")
-        .is_some_and(|rest| !rest.is_empty() && !rest.contains(char::is_whitespace))
+    url.strip_prefix("https://").is_some_and(|rest| {
+        let host = rest.split(['/', '?', '#']).next().unwrap_or_default();
+        is_domain(host) && !url.contains(char::is_whitespace)
+    })
+}
+
+fn is_domain(host: &str) -> bool {
+    host.contains('.')
+        && !host.starts_with('.')
+        && !host.ends_with('.')
+        && !host.contains("..")
+        && !host.contains('@')
 }
 
 fn is_email(address: &str) -> bool {
     address.split_once('@').is_some_and(|(local, domain)| {
-        !local.is_empty()
-            && domain.contains('.')
-            && !domain.starts_with('.')
-            && !domain.ends_with('.')
-            && !domain.contains('@')
-            && !address.contains(char::is_whitespace)
+        !local.is_empty() && is_domain(domain) && !address.contains(char::is_whitespace)
     })
 }
 
@@ -620,9 +653,48 @@ entries = ["example-au"]
     }
 
     #[test]
-    fn rejects_app12_outside_opt_in_levers() {
-        let report = check_one(|t| t.replace("\"app13\"]", "\"app13\", \"app12\"]"));
-        assert_error(&report, "app12 belongs in opt_in_levers only");
+    fn rejects_access_levers_outside_opt_in_levers() {
+        for lever in ["app12", "s20r-access", "s21t-access"] {
+            let report =
+                check_one(|t| t.replace("\"app13\"]", &format!("\"app13\", \"{lever}\"]")));
+            assert_error(&report, "belong in opt_in_levers only");
+        }
+    }
+
+    #[test]
+    fn accepts_an_entry_with_only_opt_in_levers() {
+        let report =
+            check_one(|t| t.replace("[\"app7-no-marketing\", \"app7-source\", \"app13\"]", "[]"));
+        assert_eq!(report.findings, []);
+        let report = check_one(|t| {
+            t.replace("[\"app7-no-marketing\", \"app7-source\", \"app13\"]", "[]")
+                .replace("[\"app12\"]", "[]")
+        });
+        assert_error(&report, "at least one lever");
+    }
+
+    #[test]
+    fn rejects_an_empty_register() {
+        let report = check(&[], &[], today());
+        assert_error(&report, "no entry files");
+    }
+
+    #[test]
+    fn rejects_a_future_verified_at() {
+        let report = check_one(|t| t.replace("2026-10-24", "2026-10-25"));
+        assert_eq!(report.findings, [], "one day of grace");
+        let report = check_one(|t| t.replace("2026-10-24", "2026-10-26"));
+        assert_error(&report, "is in the future");
+    }
+
+    #[test]
+    fn rejects_urls_without_a_host_and_bad_domains() {
+        for url in ["https:///", "https://?", "https://example"] {
+            let report = check_one(|t| t.replace("https://example.com.au/privacy", url));
+            assert_error(&report, "is not an https URL");
+        }
+        let report = check_one(|t| t.replace("privacy@example.com.au", "privacy@example..au"));
+        assert_error(&report, "is not an email address");
     }
 
     #[test]
@@ -671,6 +743,36 @@ entries = ["example-au"]
             today(),
         );
         assert_error(&report, "unknown field `levers`");
+    }
+
+    #[test]
+    fn rejects_blank_or_self_obsolete_details() {
+        let report = check_one(|t| {
+            format!(
+                "{t}
+[obsolete]
+reason = \" \"
+replaced_by = \"example-au\"
+"
+            )
+        });
+        assert_error(&report, "obsolete.reason must not be empty");
+        assert_error(&report, "must name another entry");
+    }
+
+    #[test]
+    fn names_pack_findings_by_their_folder() {
+        let pack = PACK.replace("[\"example-au\"]", "[\"nobody\"]");
+        let report = check(
+            &[file("example-au.toml", VALID)],
+            &[file(
+                "example-au.toml",
+                &pack.replace("\"marketing\"", "\"example-au\""),
+            )],
+            today(),
+        );
+        assert_eq!(report.findings.len(), 1);
+        assert_eq!(report.findings[0].file, "packs/example-au.toml");
     }
 
     #[test]

@@ -72,3 +72,13 @@ fn missing_register_directory_is_an_error() {
     assert_eq!(out.status.code(), Some(1));
     assert!(text(&out.stderr).contains("error: cannot read"));
 }
+
+#[test]
+fn empty_register_directory_is_rejected() {
+    let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("empty-register");
+    std::fs::create_dir_all(&dir).expect("create empty register");
+    let out = registry_check(dir.to_str().expect("utf-8 path"));
+    assert_eq!(out.status.code(), Some(1));
+    assert!(text(&out.stderr).contains("the register has no entry files"));
+    assert!(text(&out.stdout).contains("errors: 1,"));
+}

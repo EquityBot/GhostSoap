@@ -18,10 +18,10 @@ cargo run -- registry check
 | `kinds` | `credit-reporting-body`, `property-data`, `people-search`, `marketing-list`, `ad-tech`, `directory`, `loyalty` |
 | `priority` | `crucial`, `high`, `standard` |
 | `quality` | `tested` (a GhostSoap request got a reply), `verified` (contact checked against the entity's own privacy policy), `imported` (licence-compatible dataset), `lead` (not yet checked). Only `tested` and `verified` entries may enter packs |
-| `verified_at` | TOML date of the last check; `registry check` warns after 12 months |
+| `verified_at` | TOML date of the last check; `registry check` warns after 12 months and rejects a date more than a day ahead |
 | `sources` | At least one https URL from the entity itself |
-| `levers` | `app7-no-marketing`, `app7-no-facilitation`, `app7-source`, `app11-destroy`, `app13`, `app13-notify-recipients`, `app13-statement`, `s20r-access`, `s20t-correction`, `s20k-ban`, `s21t-access`, `s21v-correction`, `spam-unsubscribe` |
-| `opt_in_levers` | Levers the user must choose per entity. `app12` (access) is allowed only here, never in `levers` or a pack |
+| `levers` | The requests this entity is eligible for; listing a lever does not mean it is always sent (see below). `app7-no-marketing`, `app7-no-facilitation`, `app7-source`, `app11-destroy`, `app13`, `app13-notify-recipients`, `app13-statement`, `s20r-access`, `s20t-correction`, `s20k-ban`, `s21t-access`, `s21v-correction`, `spam-unsubscribe` |
+| `opt_in_levers` | Levers the user must choose per entity. The access levers `app12`, `s20r-access` and `s21t-access` return personal information, so they are allowed only here |
 | `identity_fields` | `full_name`, `alias_names`, `email`, `phone`, `date_of_birth`, `address`, `previous_addresses`, `postcode`. Document numbers are never collected |
 | `exemption_risk` | `none`, `small-business-possible`, `overseas` |
 | `escalation` | Ordered: `afca`, `acma`, `oaic` |
@@ -31,4 +31,4 @@ cargo run -- registry check
 
 ## Packs
 
-A pack has `id` (equal to the file name), `name`, `description` and `entries`, a list of entry ids at `tested` or `verified` quality. Packs choose entities, not levers: a request uses the entry's `levers`, so APP 12 never goes out from a pack.
+A pack has `id` (equal to the file name), `name`, `description` and `entries`, a list of entry ids at `tested` or `verified` quality. Packs choose entities, not levers. When the user plans a round from a pack, the planner offers each entry's `levers` and checks each lever's prerequisites: a correction (`app13`, `s20t-correction`) needs the user to say what is wrong, `app13-notify-recipients` follows a correction and `app13-statement` follows a refusal to correct. Pack membership never selects an `opt_in_levers` lever; the user chooses those per entity.

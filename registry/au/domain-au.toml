@@ -1,5 +1,5 @@
 id = "domain-au"
-name = "Domain (Allhomes, Pricefinder)"
+name = "Domain (Allhomes)"
 legal_entity = "Domain Holdings Australia Pty Limited"
 abn = "43 094 154 364"
 kinds = ["property-data"]

@@ -63,17 +63,12 @@ fn registry_check(dir: &Path) -> ExitCode {
             Severity::Error => "error",
             Severity::Warning => "warning",
         };
-        let subdir = if files.packs.iter().any(|p| p.name == finding.file) {
-            "packs/"
+        let place = if finding.file.is_empty() {
+            dir.display().to_string()
         } else {
-            ""
+            format!("{}/{}", dir.display(), finding.file)
         };
-        eprintln!(
-            "{label}: {}/{subdir}{}: {}",
-            dir.display(),
-            finding.file,
-            finding.message
-        );
+        eprintln!("{label}: {place}: {}", finding.message);
     }
     println!(
         "Checked {} entries and {} packs; errors: {}, warnings: {}.",
