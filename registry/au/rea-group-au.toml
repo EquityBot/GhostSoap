@@ -1,5 +1,5 @@
 id = "rea-group-au"
-name = "realestate.com.au (REA Group, PropTrack)"
+name = "realestate.com.au (REA Group)"
 legal_entity = "realestate.com.au Pty Limited"
 abn = "21 080 195 535"
 kinds = ["property-data"]

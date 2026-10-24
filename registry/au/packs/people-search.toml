@@ -2,7 +2,6 @@ id = "people-search"
 name = "People search and directories"
 description = "Directories and lookup services that link names to phone numbers and addresses."
 entries = [
-  "thryv-au",
   "acceleon-au",
   "id4me-au",
 ]
