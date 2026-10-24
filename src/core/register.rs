@@ -580,17 +580,20 @@ fn is_https(url: &str) -> bool {
     url.strip_prefix("https://").is_some_and(|rest| {
         let authority = rest.split(['/', '?', '#']).next().unwrap_or_default();
         let (host, port) = authority.split_once(':').unwrap_or((authority, "1"));
-        let port_ok = port.parse::<u16>().is_ok_and(|p| p > 0);
+        let port_ok =
+            port.bytes().all(|b| b.is_ascii_digit()) && port.parse::<u16>().is_ok_and(|p| p > 0);
         is_domain(host) && port_ok && !url.contains(char::is_whitespace)
     })
 }
 
-/// Two or more DNS labels of letters, digits and inner hyphens.
+/// Two or more DNS labels of 1 to 63 letters, digits and inner hyphens, at most 253
+/// bytes in all.
 fn is_domain(host: &str) -> bool {
     let labels: Vec<&str> = host.split('.').collect();
     labels.len() >= 2
+        && host.len() <= 253
         && labels.iter().all(|label| {
-            !label.is_empty()
+            (1..=63).contains(&label.len())
                 && !label.starts_with('-')
                 && !label.ends_with('-')
                 && label.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
@@ -599,7 +602,12 @@ fn is_domain(host: &str) -> bool {
 
 fn is_email(address: &str) -> bool {
     address.split_once('@').is_some_and(|(local, domain)| {
-        !local.is_empty() && is_domain(domain) && !address.contains(char::is_whitespace)
+        !local.is_empty()
+            && !local.starts_with('.')
+            && !local.ends_with('.')
+            && !local.contains("..")
+            && is_domain(domain)
+            && !address.contains(char::is_whitespace)
     })
 }
 
@@ -891,11 +899,18 @@ entries = ["example-au"]
             "https://example",
             "https://example.com:bad/path",
             "https://-bad.example/path",
+            "https://example.com:+443/path",
+            &format!("https://{}.com/", "a".repeat(64)),
         ] {
             let report = check_one(|t| t.replace("https://example.com.au/privacy", url));
             assert_error(&report, "is not an https URL");
         }
-        for email in ["privacy@example..au", "privacy@-bad.example"] {
+        for email in [
+            "privacy@example..au",
+            "privacy@-bad.example",
+            "privacy..team@example.com.au",
+            ".privacy@example.com.au",
+        ] {
             let report = check_one(|t| t.replace("privacy@example.com.au", email));
             assert_error(&report, "is not an email address");
         }
