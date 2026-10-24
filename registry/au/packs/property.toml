@@ -1,0 +1,11 @@
+id = "property"
+name = "Property data"
+description = "Firms that sell or publish property records, sales histories and owner details."
+entries = [
+  "cotality-au",
+  "rea-group-au",
+  "domain-au",
+  "landchecker-au",
+  "infotrack-au",
+  "globalx-au",
+]

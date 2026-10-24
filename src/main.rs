@@ -1,7 +1,8 @@
-use clap::{CommandFactory, Parser};
+use std::process::ExitCode;
+
+use clap::Parser;
 use ghostsoap::Cli;
 
-fn main() -> std::io::Result<()> {
-    Cli::parse();
-    Cli::command().print_help()
+fn main() -> ExitCode {
+    ghostsoap::cli::run(Cli::parse())
 }

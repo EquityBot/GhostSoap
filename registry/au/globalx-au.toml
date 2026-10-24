@@ -1,0 +1,41 @@
+id = "globalx-au"
+name = "GlobalX"
+legal_entity = "Dye & Durham Information Pty Ltd"
+abn = "99 073 436 414"
+kinds = ["property-data"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://globalx.com.au/privacy-policy/", "https://globalx.com.au/contact-us/"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "address", "email"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "DataProtection.AU@DyeDurham.com"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
+
+[[channels]]
+kind = "post"
+address = "The Data Protection Officer, Dye & Durham Australia Property Limited, 680 George Street, Sydney"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "phone"
+address = "+61 (02) 8206 6000"
+levers = []
+
+[[evidence]]
+url = "https://globalx.com.au/privacy-policy/"
+checked_at = 2026-10-24
+sha256 = "d92a2132ba46fb8f1c7f6d7401ae7c3f30f368afe1df952f6012328d1395ccb5"
+
+[[evidence]]
+url = "https://globalx.com.au/contact-us/"
+checked_at = 2026-10-24
+sha256 = "d720b6f85ca83cc86affafc7c4b3ec7863492a96c7dd55f2220d8b28044c4c79"

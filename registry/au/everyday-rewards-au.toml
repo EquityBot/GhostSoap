@@ -1,0 +1,46 @@
+id = "everyday-rewards-au"
+name = "Everyday Rewards (Woolworths)"
+legal_entity = "Woolworths Group Limited"
+abn = "88 000 014 675"
+kinds = ["loyalty"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://www.woolworthsgroup.com.au/au/en/privacy/privacy-policy.html", "https://www.woolworthsgroup.com.au/content/dam/wwg/privacy/2026/FINAL_Woolworths-Group-Privacy-Policy-August-2026.pdf", "https://www.woolworthsgroup.com.au/au/en/privacy.html"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@woolworths.com.au"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+preferred = true
+
+[[channels]]
+kind = "phone"
+address = "1300 908 631"
+levers = []
+
+[[channels]]
+kind = "post"
+address = "Privacy Office, Woolworths Group Limited, PO Box 8000, Baulkham Hills NSW 2153"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.woolworthsgroup.com.au/au/en/privacy/privacy-policy.html"
+checked_at = 2026-10-24
+sha256 = "3d937e82f1c70a519fdf63dcb421ea14eb0aef3ceba370f5b79695c90c99d99b"
+
+[[evidence]]
+url = "https://www.woolworthsgroup.com.au/content/dam/wwg/privacy/2026/FINAL_Woolworths-Group-Privacy-Policy-August-2026.pdf"
+checked_at = 2026-10-24
+sha256 = "70408cddb998cbffabe6b110d3deccf7cb7b84595f41f5f9e6e74dd2984f8e0b"
+
+[[evidence]]
+url = "https://www.woolworthsgroup.com.au/au/en/privacy.html"
+checked_at = 2026-10-24
+sha256 = "859fb2ef90dadea90d7f6d149580c5d53bd796c562528eea6d89ebcab7ac4a3a"
