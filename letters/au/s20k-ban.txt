@@ -1,7 +1,9 @@
 version 1
 {{title}} ({{provision}})
-I believe on reasonable grounds that I have been, or am likely to be, a victim of fraud, including identity fraud. I request that you do not use or disclose credit reporting information about me (section 20K(1)).
+I believe on reasonable grounds that I have been, or am likely to be, a victim of fraud, including identity fraud. My grounds:
 
 {{detail}}
 
-The ban period starts when this request is made and ends 21 days after it unless it is extended (section 20K(3)). {{charge}}
+I request that you do not use or disclose credit reporting information about me under Division 2 of Part IIIA (section 20K(1)). Section 20K(2) allows use or disclosure only if I expressly consent to it in writing, or if it is required by or under an Australian law or a court or tribunal order.
+
+The ban period starts when this request is made and ends 21 days after the day it is made, unless it is extended (section 20K(3)). {{charge}}

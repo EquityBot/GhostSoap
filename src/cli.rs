@@ -47,6 +47,10 @@ pub enum Command {
         /// Print each letter's To, Subject and body instead of writing files (for webmail).
         #[arg(long)]
         copy: bool,
+        /// Also print a mailto: link for each email letter short enough for one. The link
+        /// holds the whole letter, so it stays in your terminal's history.
+        #[arg(long, conflicts_with = "copy")]
+        mailto: bool,
         /// Read the passphrase from standard input instead of the terminal (for scripts).
         #[arg(long)]
         passphrase_stdin: bool,
@@ -123,8 +127,14 @@ pub fn run(cli: Cli) -> ExitCode {
             selection,
             out,
             copy,
+            mailto,
             passphrase_stdin,
-        }) => draft(&selection.selection(), out, copy, passphrase_stdin),
+        }) => draft(
+            &selection.selection(),
+            out,
+            Output { copy, mailto },
+            passphrase_stdin,
+        ),
         Some(Command::Clean { out }) => clean(out),
         Some(Command::Law) => {
             show_law();
@@ -204,10 +214,19 @@ fn show_plan(selection: &Selection) -> Result<(), String> {
     Ok(())
 }
 
+/// How `draft` hands over its letters.
+#[derive(Clone, Copy)]
+struct Output {
+    /// Print them instead of writing files.
+    copy: bool,
+    /// Also print mailto: links.
+    mailto: bool,
+}
+
 fn draft(
     selection: &Selection,
     out: Option<PathBuf>,
-    copy: bool,
+    output: Output,
     passphrase_stdin: bool,
 ) -> Result<(), String> {
     let register = built_in_register()?;
@@ -247,14 +266,14 @@ fn draft(
         };
         let letter = letters::compose(entry, profile, &request)?;
         print_missing_fields(entry, profile);
-        if copy {
+        if output.copy {
             print_copy(entry, &letter);
         } else {
-            write_draft(&dir, entry, &tag, &letter)?;
+            write_draft(&dir, entry, &tag, &letter, output.mailto)?;
         }
     }
     access_warning(selection);
-    if !tags.is_empty() && !copy {
+    if !tags.is_empty() && !output.copy {
         println!(
             "Drafts are plaintext. After sending them from your own mailbox, run `ghostsoap clean`."
         );
@@ -291,7 +310,13 @@ fn new_tag(used: &[String]) -> String {
     }
 }
 
-fn write_draft(dir: &Path, entry: &Entry, tag: &str, letter: &Letter) -> Result<(), String> {
+fn write_draft(
+    dir: &Path,
+    entry: &Entry,
+    tag: &str,
+    letter: &Letter,
+    mailto: bool,
+) -> Result<(), String> {
     let (extension, text) = match letter.kind {
         ChannelKind::Email => ("eml", letters::eml(letter)),
         _ => ("txt", format!("{}\n", letter.body)),
@@ -305,8 +330,11 @@ fn write_draft(dir: &Path, entry: &Entry, tag: &str, letter: &Letter) -> Result<
         ChannelKind::Phone => unreachable!("plans never send letters by phone"),
     };
     println!("draft   {}  {how}: {}", entry.id, path.display());
-    if let Some(link) = letters::mailto(letter).filter(|_| letter.kind == ChannelKind::Email) {
-        println!("        or open: {link}");
+    if mailto && letter.kind == ChannelKind::Email {
+        match letters::mailto(letter) {
+            Some(link) => println!("        or open: {link}"),
+            None => println!("        too long for a mailto: link; open the draft instead"),
+        }
     }
     Ok(())
 }
@@ -329,7 +357,8 @@ fn print_overseas(entry: &Entry) {
         .map(|c| c.address.as_str())
         .collect();
     println!(
-        "manual  {}: overseas site; no Australian law lever applies. Search for yourself at \
+        "manual  {}: overseas site; GhostSoap has not established that Australian privacy law \
+         reaches it, so it drafts no letter. Search for yourself at \
          {check}, then use its own opt-out form at {} (effort: {}).",
         entry.id,
         forms.join(" or "),
@@ -403,8 +432,9 @@ fn deadline_summary(deadline: Deadline) -> String {
 }
 
 fn clean(out: Option<PathBuf>) -> Result<(), String> {
+    let own_folder = out.is_none();
     let dir = drafts_dir(out)?;
-    let deleted = io::drafts::clean(&dir).map_err(|e| e.to_string())?;
+    let deleted = io::drafts::clean(&dir, own_folder).map_err(|e| e.to_string())?;
     println!("Deleted {deleted} drafts from {}.", dir.display());
     Ok(())
 }

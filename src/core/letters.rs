@@ -52,15 +52,10 @@ pub fn letter_version(lever: Lever) -> u32 {
     parts(template(lever)).0
 }
 
-/// Levers whose letter has a place for the user's own words.
+/// Levers whose letter needs the user's own words, such as what is wrong or the grounds
+/// for a ban.
 pub fn takes_detail(lever: Lever) -> bool {
     template(lever).contains("{{detail}}")
-}
-
-/// Levers whose letter needs the user's own words, such as what is wrong. A ban request
-/// may add them but does not need them.
-pub fn needs_detail(lever: Lever) -> bool {
-    takes_detail(lever) && lever != Lever::S20kBan
 }
 
 /// Fill `{{name}}` placeholders from `values`. A placeholder missing from `values` is an
@@ -189,32 +184,29 @@ fn identity_values(entry: &Entry, profile: &Profile) -> BTreeMap<&'static str, O
         .collect()
 }
 
-/// Where the user can complain: ACMA for spam, the entry's Privacy Act targets otherwise.
+/// Where the user can complain: the entry's Privacy Act targets about the Privacy Act
+/// requests and ACMA about an unsubscribe request, each named for its own matter.
 fn escalation(entry: &Entry, spam_only: bool, has_spam: bool) -> Option<String> {
-    let mut targets: Vec<Escalation> = entry
+    let name = |e: Escalation| match e {
+        Escalation::Oaic => "the Office of the Australian Information Commissioner (OAIC)",
+        Escalation::Afca => "the Australian Financial Complaints Authority (AFCA)",
+        Escalation::Acma => "the Australian Communications and Media Authority (ACMA)",
+    };
+    let privacy: Vec<&str> = entry
         .escalation
         .iter()
         .copied()
-        .filter(|&e| {
-            if e == Escalation::Acma {
-                has_spam
-            } else {
-                !spam_only
-            }
-        })
+        .filter(|&e| e != Escalation::Acma && !spam_only)
+        .map(name)
         .collect();
-    if has_spam && !targets.contains(&Escalation::Acma) {
-        targets.push(Escalation::Acma);
+    let privacy = (!privacy.is_empty()).then(|| privacy.join(" or "));
+    let spam = has_spam.then(|| name(Escalation::Acma));
+    match (privacy, spam) {
+        (Some(privacy), Some(spam)) => Some(format!(
+            "{privacy} about the Privacy Act requests, or {spam} about the unsubscribe request"
+        )),
+        (privacy, spam) => privacy.or(spam.map(str::to_owned)),
     }
-    let names: Vec<&str> = targets
-        .iter()
-        .map(|e| match e {
-            Escalation::Oaic => "the Office of the Australian Information Commissioner (OAIC)",
-            Escalation::Afca => "the Australian Financial Complaints Authority (AFCA)",
-            Escalation::Acma => "the Australian Communications and Media Authority (ACMA)",
-        })
-        .collect();
-    (!names.is_empty()).then(|| names.join(" or "))
 }
 
 /// Collapse runs of blank lines (left by dropped lines) and trim the ends.
@@ -327,8 +319,8 @@ mod tests {
         for lever in Lever::ALL {
             assert_eq!(letter_version(lever), 1, "{}", lever.name());
         }
-        assert!(needs_detail(Lever::App13) && !needs_detail(Lever::S20kBan));
-        assert!(takes_detail(Lever::S20kBan) && !takes_detail(Lever::App7Source));
+        assert!(takes_detail(Lever::App13) && takes_detail(Lever::S20kBan));
+        assert!(!takes_detail(Lever::App7Source));
     }
 
     #[test]

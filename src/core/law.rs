@@ -107,7 +107,7 @@ pub fn law(lever: Lever) -> Law {
             provision: "APP 13.2",
             deadline: Deadline::NotStated,
             deadline_text: "APP 13.2 sets no timeframe; it requires reasonable steps to give the notification unless it is impracticable or unlawful to do so",
-            charge: "APP 13.2 provides for no charge.",
+            charge: "APP 13.2 sets no charge rule of its own; APP 13.5(b) bars charging for a correction request or a statement request.",
         },
         Lever::App13Statement => Law {
             title: "Associate my statement with the information you refused to correct",
@@ -134,9 +134,9 @@ pub fn law(lever: Lever) -> Law {
         },
         Lever::S20kBan => Law {
             title: "Do not use or disclose my credit reporting information during a ban period",
-            provision: "Privacy Act s 20K(1), (3)",
+            provision: "Privacy Act s 20K(1)–(3)",
             deadline: Deadline::NotStated,
-            deadline_text: "the ban period starts when the request is made and ends 21 days after it unless extended (section 20K(3))",
+            deadline_text: "the ban period starts when the request is made and ends 21 days after the day it is made, unless extended (section 20K(3))",
             charge: "No charge may be made for the request or for giving effect to it (section 20K(6)).",
         },
         Lever::S21tAccess => Law {
@@ -157,7 +157,7 @@ pub fn law(lever: Lever) -> Law {
             title: "Stop sending me commercial electronic messages",
             provision: "Spam Act 2003 s 18; Sch 2 cl 6",
             deadline: Deadline::BusinessDays(5),
-            deadline_text: "at the end of the period of 5 business days beginning on the day this message is sent (Spam Act 2003, Schedule 2, clause 6)",
+            deadline_text: "at the end of the period of 5 business days beginning on the day this email is sent (Spam Act 2003, Schedule 2, clause 6(1)(e))",
             charge: "Using the unsubscribe address must not require a fee, an account or personal information other than the address itself (Spam Regulations 2021, section 7).",
         },
     }

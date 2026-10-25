@@ -464,7 +464,8 @@ fn check_levers(entry: &Entry, errors: &mut Vec<String>) {
     let no_levers = entry.levers.is_empty() && entry.opt_in_levers.is_empty();
     if entry.is_overseas() {
         if !no_levers {
-            errors.push("an overseas entry has no levers: no Australian law applies".to_owned());
+            errors
+                .push("an overseas entry has no levers: GhostSoap drafts it no letter".to_owned());
         }
         if entry.manual_check.is_none() {
             errors.push("an overseas entry needs a manual_check page".to_owned());
@@ -529,6 +530,15 @@ fn check_channel_levers(entry: &Entry, errors: &mut Vec<String>) {
                 "channel `{}` serves `{}`, which the entry does not list",
                 channel.address,
                 lever.name()
+            ));
+        }
+        // The letter states the Spam Act's 5-business-day period from the day an electronic
+        // message is sent; post and other methods start it on a different day (Schedule 2
+        // clause 6(1)).
+        if channel.kind != ChannelKind::Email && channel.levers.contains(&Lever::SpamUnsubscribe) {
+            errors.push(format!(
+                "channel `{}` serves `spam-unsubscribe`, which only an email channel may serve",
+                channel.address
             ));
         }
     }
@@ -1138,5 +1148,26 @@ url = "https://example.com/au"
     fn only_overseas_entries_may_omit_the_abn() {
         let report = check_one(|t| t.replace("abn = \"88 000 014 675\"\n", ""));
         assert_error(&report, "abn is missing");
+    }
+
+    #[test]
+    fn only_an_email_channel_may_serve_spam_unsubscribe() {
+        let with_spam = |kind: &str, address: &str| {
+            check_one(|t| {
+                t.replace(
+                    "levers = [\"app7-no-marketing\", \"app7-source\", \"app13\"]",
+                    "levers = [\"app7-no-marketing\", \"app7-source\", \"app13\", \"spam-unsubscribe\"]",
+                )
+                .replace(
+                    CHANNEL_LEVERS,
+                    "[\"app12\", \"app13\", \"app7-no-marketing\", \"app7-source\", \"spam-unsubscribe\"]",
+                )
+                .replace("kind = \"email\"", &format!("kind = \"{kind}\""))
+                .replace("privacy@example.com.au", address)
+            })
+        };
+        assert_eq!(with_spam("email", "privacy@example.com.au").findings, []);
+        let report = with_spam("post", "PO Box 1, Sydney NSW 2001");
+        assert_error(&report, "only an email channel may serve");
     }
 }

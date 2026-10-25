@@ -78,14 +78,7 @@ fn init_draft_and_clean() {
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
     let stdout = text(&out.stdout);
     assert!(stdout.contains("draft   cotality-au  email to AU-Privacy@Cotality.com"));
-    assert!(
-        !stdout.contains("mailto:"),
-        "a 3-request letter is too long for a link"
-    );
-    let files: Vec<_> = fs::read_dir(&drafts)
-        .unwrap()
-        .map(|f| f.unwrap().path())
-        .collect();
+    let files = emls(&drafts);
     assert_eq!(files.len(), 1);
     let eml = fs::read_to_string(&files[0]).unwrap();
     assert!(eml.starts_with("To: AU-Privacy@Cotality.com\r\nSubject: Privacy Act request [GS-"));
@@ -102,7 +95,17 @@ fn init_draft_and_clean() {
     let out = ghostsoap(&home, &["clean", "--out", drafts_arg], "");
     assert_eq!(out.status.code(), Some(0));
     assert!(text(&out.stdout).contains("Deleted 1 drafts"));
-    assert!(!drafts.exists());
+    assert!(drafts.exists(), "a folder named with --out stays");
+    assert_eq!(fs::read_dir(&drafts).unwrap().count(), 0);
+}
+
+/// The `.eml` drafts in `dir`.
+fn emls(dir: &Path) -> Vec<std::path::PathBuf> {
+    fs::read_dir(dir)
+        .unwrap()
+        .map(|f| f.unwrap().path())
+        .filter(|p| p.extension().is_some_and(|e| e == "eml"))
+        .collect()
 }
 
 #[test]
@@ -137,7 +140,14 @@ fn drafts_default_to_the_data_folder() {
     let args = ["draft", "--entry", "cotality-au", "--passphrase-stdin"];
     let out = ghostsoap(&home, &args, &format!("{PASSPHRASE}\n"));
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
-    assert_eq!(fs::read_dir(home.join("drafts")).unwrap().count(), 1);
+    assert!(!text(&out.stdout).contains("mailto:"), "links are opt-in");
+    let with_link = [&args[..], &["--mailto"]].concat();
+    let out = ghostsoap(&home, &with_link, &format!("{PASSPHRASE}\n"));
+    assert!(
+        text(&out.stdout).contains("too long for a mailto: link"),
+        "a 3-request letter is too long for a link"
+    );
+    assert_eq!(emls(&home.join("drafts")).len(), 2);
     let out = ghostsoap(&home, &["clean"], "");
     assert_eq!(out.status.code(), Some(0));
     assert!(!home.join("drafts").exists());
@@ -159,6 +169,10 @@ fn init_rejects_a_short_passphrase_and_bad_details() {
     let out = ghostsoap(&home, &["init", "--passphrase-stdin"], &answers);
     assert_eq!(out.status.code(), Some(1));
     assert!(text(&out.stderr).contains("is not a date"));
+    assert!(
+        !text(&out.stderr).contains("14/02/1968"),
+        "errors do not echo profile values"
+    );
     assert!(!home.join("state.age").exists());
 }
 
@@ -188,10 +202,10 @@ fn plan_needs_no_profile_and_shows_overseas_sites() {
     assert!(stdout.contains(
         "    app7-no-marketing (APP 7.6(c), 7.7(a); a reasonable period, OAIC guide 30 days)"
     ));
-    assert!(
-        stdout
-            .contains("manual  locate-family-au: overseas site; no Australian law lever applies.")
-    );
+    assert!(stdout.contains(
+        "manual  locate-family-au: overseas site; GhostSoap has not established that Australian \
+         privacy law reaches it, so it drafts no letter."
+    ));
     assert!(!tmp.path().join("state.age").exists());
 }
 

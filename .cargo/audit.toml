@@ -1,12 +1,15 @@
 # Advisories reviewed and accepted. Each comes through `age` 0.12.1, the latest release on
-# 25 October 2026; remove the ignore once `age` moves past it.
+# 25 October 2026, which has no feature that drops the dependency. Review on every `age`
+# upgrade, and remove the ignore once `cargo audit` passes without it.
 [advisories]
 ignore = [
-    # crypto-bigint 0.5.5 timing variability, via p256 in age's `tag` recipients
-    # (src/native/tag.rs). GhostSoap encrypts only to a passphrase (scrypt), which never
-    # reaches p256.
+    # crypto-bigint 0.5.5 timing variability. Path (cargo tree -i crypto-bigint):
+    # elliptic-curve 0.13.8 <- p256 0.13.2 <- age 0.12.1, and p256 <- hpke 0.12.0 <- age and
+    # age-core. p256 serves age's elliptic-curve recipients (src/native/tag.rs);
+    # GhostSoap encrypts and decrypts only with age::scrypt, which never calls it.
     "RUSTSEC-2026-0387",
-    # basic-toml is unmaintained; it parses i18n configuration inside age's build-time
-    # macros, never GhostSoap's files.
+    # basic-toml 0.1.10 is unmaintained. Path (cargo tree -i basic-toml): i18n-config 0.4.8 <-
+    # the i18n-embed-fl and i18n-embed-impl proc-macros <- age. It parses age's own i18n
+    # configuration at build time, never GhostSoap's files.
     "RUSTSEC-2026-0374",
 ]

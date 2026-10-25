@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::core::letters::{needs_detail, takes_detail};
+use crate::core::letters::takes_detail;
 use crate::core::register::{Channel, ChannelKind, Entry, Lever, Register};
 
 /// Levers sent when the user names none: they return no personal information and need
@@ -31,7 +31,8 @@ pub enum Step<'a> {
         channel: &'a Channel,
         levers: Vec<Lever>,
     },
-    /// An overseas site: no Australian law lever applies, so the user opts out by hand.
+    /// An overseas site: GhostSoap has not established that Australian law reaches it, so the
+    /// user opts out by hand.
     Overseas { entry: &'a Entry },
     /// Nothing to send, with the reason.
     Skip { entry: &'a Entry, reason: String },
@@ -53,14 +54,7 @@ pub fn plan<'a>(register: &'a Register, selection: &Selection) -> Result<Vec<Ste
             guarded.join(", ")
         ));
     }
-    let needs = selection.levers.iter().any(|&l| needs_detail(l));
-    let takes = selection.levers.iter().any(|&l| takes_detail(l));
-    if needs && selection.detail.is_none() {
-        return Err("the chosen lever needs --detail: say what the request is about".to_owned());
-    }
-    if selection.detail.is_some() && !takes {
-        return Err("--detail is used only with levers that take it, such as app13".to_owned());
-    }
+    check_detail(selection)?;
     Ok(entries
         .into_iter()
         .flat_map(|entry| steps(entry, selection))
@@ -71,11 +65,36 @@ pub fn plan<'a>(register: &'a Register, selection: &Selection) -> Result<Vec<Ste
 /// effects: chosen for one entity at a time, never through a pack (plan section 6a). Every
 /// `opt_in_levers` value in the register is one of these.
 fn is_guarded(lever: Lever) -> bool {
-    needs_detail(lever)
-        || matches!(
-            lever,
-            Lever::App12 | Lever::S20rAccess | Lever::S21tAccess | Lever::S20kBan
-        )
+    takes_detail(lever) || matches!(lever, Lever::App12 | Lever::S20rAccess | Lever::S21tAccess)
+}
+
+/// `--detail` goes with exactly one lever that takes it, so one request's words never land
+/// in another's letter, and it must say something.
+fn check_detail(selection: &Selection) -> Result<(), String> {
+    let detailed: Vec<&str> = selection
+        .levers
+        .iter()
+        .filter(|&&l| takes_detail(l))
+        .map(|l| l.name())
+        .collect();
+    if detailed.len() > 1 {
+        return Err(format!(
+            "{} each need their own --detail: choose one of them per run",
+            detailed.join(", ")
+        ));
+    }
+    match (selection.detail.as_deref(), detailed.is_empty()) {
+        (None, false) => {
+            Err("the chosen lever needs --detail: say what the request is about".to_owned())
+        }
+        (Some(_), true) => {
+            Err("--detail is used only with levers that take it, such as app13".to_owned())
+        }
+        (Some(detail), false) if detail.trim().is_empty() => {
+            Err("--detail must not be empty".to_owned())
+        }
+        _ => Ok(()),
+    }
 }
 
 fn resolve<'a>(register: &'a Register, selection: &Selection) -> Result<Vec<&'a Entry>, String> {
@@ -342,6 +361,24 @@ entries = ["pollos-au", "fsociety-au"]
         assert!(err.contains("needs --detail"), "{err}");
         let err = plan(&register, &select(&[], &["pollos-au"], &[], Some("x"))).unwrap_err();
         assert!(err.contains("--detail is used only"), "{err}");
+        let two = [Lever::App13, Lever::S20kBan];
+        let err = plan(&register, &select(&[], &["pollos-au"], &two, Some("x"))).unwrap_err();
+        assert!(err.contains("each need their own --detail"), "{err}");
+        let err = plan(
+            &register,
+            &select(&[], &["pollos-au"], &[Lever::App13], Some("  ")),
+        )
+        .unwrap_err();
+        assert_eq!(err, "--detail must not be empty");
+        let err = plan(
+            &register,
+            &select(&[], &["pollos-au"], &[Lever::S20kBan], None),
+        )
+        .unwrap_err();
+        assert!(
+            err.contains("needs --detail"),
+            "a ban states its grounds: {err}"
+        );
         let selection = select(&[], &["pollos-au"], &[Lever::App13], Some("x"));
         let steps = plan(&register, &selection).unwrap();
         assert_eq!(

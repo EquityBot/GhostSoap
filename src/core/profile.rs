@@ -48,19 +48,17 @@ impl Profile {
         if let Some(email) = &self.email
             && !is_email(email)
         {
-            problems.push(format!("`{email}` is not an email address"));
+            problems.push("email is not an email address".to_owned());
         }
         if let Some(date) = &self.date_of_birth
             && NaiveDate::parse_from_str(date, "%Y-%m-%d").is_err()
         {
-            problems.push(format!(
-                "date of birth `{date}` is not a date such as 1980-01-31"
-            ));
+            problems.push("date of birth is not a date such as 1980-01-31".to_owned());
         }
         if let Some(postcode) = &self.postcode
             && !(postcode.len() == 4 && postcode.bytes().all(|b| b.is_ascii_digit()))
         {
-            problems.push(format!("postcode `{postcode}` is not 4 digits"));
+            problems.push("postcode is not 4 digits".to_owned());
         }
         let all = [&self.full_name]
             .into_iter()

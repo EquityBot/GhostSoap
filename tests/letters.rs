@@ -117,6 +117,15 @@ fn combined_post_spam_and_small_business_letters_match_their_snapshots() {
         "post",
         &compose(&entry, &profile(), &[Lever::App7Source], 1),
     );
+    snapshot(
+        "mixed-privacy-spam",
+        &compose(
+            &entry,
+            &profile(),
+            &[Lever::App7NoMarketing, Lever::SpamUnsubscribe],
+            0,
+        ),
+    );
     let mut small = entry;
     small.exemption_risk = ghostsoap::core::register::ExemptionRisk::SmallBusinessPossible;
     snapshot(

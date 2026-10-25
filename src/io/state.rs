@@ -160,7 +160,9 @@ impl Drop for Lock {
 
 /// Write `bytes` to a temporary file beside `path`, flush it to disk and rename it over
 /// `path`. The caller holds the [`Lock`]. A rename that fails because antivirus or an indexer
-/// briefly holds the file is retried.
+/// briefly holds the file is retried. On Unix the folder is flushed too, so the rename itself
+/// survives a power cut. A temporary file left by an interrupted write is overwritten: it was
+/// never reported as saved, and `path` still holds the last complete state.
 fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let tmp = path.with_extension("age.tmp");
     let mut file = File::create(&tmp)?;
@@ -174,9 +176,14 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {
                 attempt += 1;
                 thread::sleep(Duration::from_millis(200));
             }
-            other => return other,
+            other => break other?,
         }
     }
+    #[cfg(unix)]
+    if let Some(dir) = path.parent() {
+        File::open(dir)?.sync_all()?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
