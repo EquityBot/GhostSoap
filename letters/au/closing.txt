@@ -1,0 +1,9 @@
+version 1
+Please reply in writing. If you refuse any of these requests, please tell me why and how I can complain about the refusal.
+
+If I am not satisfied with your response, I may complain to {{escalation}}.
+
+Yours faithfully
+{{full_name}}
+
+Reference: {{tag}}

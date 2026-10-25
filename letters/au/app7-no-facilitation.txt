@@ -1,0 +1,3 @@
+version 1
+{{title}} ({{provision}})
+Please stop using or disclosing my personal information for the purpose of facilitating direct marketing by other organisations. This includes selling or otherwise providing it to another organisation so that it can market its own products or services (OAIC APP guidelines, paragraph 7.43). Please give effect to this request {{deadline}}. {{charge}}

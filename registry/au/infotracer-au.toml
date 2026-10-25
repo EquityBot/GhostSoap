@@ -1,0 +1,40 @@
+id = "infotracer-au"
+name = "InfoTracer Australia"
+legal_entity = "InfoPay, Inc."
+kinds = ["people-search"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-25
+sources = ["https://infotracer.com/privacy/", "https://infotracer.com/terms/", "https://infotracer.com/optout/", "https://infotracer.com/do-not-sell-share-my-personal-information/", "https://au.infotracer.com/"]
+identity_fields = ["full_name"]
+exemption_risk = "overseas"
+escalation = []
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://infotracer.com/do-not-sell-share-my-personal-information/"
+levers = []
+
+[manual_check]
+url = "https://au.infotracer.com/"
+
+[[evidence]]
+url = "https://infotracer.com/privacy/"
+checked_at = 2026-10-25
+sha256 = "b3b2a5b5b2e4c3dc24f27339f6837bbf461bc730fa13a7bfdaf976f98e3f9f2a"
+
+[[evidence]]
+url = "https://infotracer.com/terms/"
+checked_at = 2026-10-25
+sha256 = "940504d909bab9aaf90157737f967ed4e4fe764798c4ede5c07032a7c1d72ff9"
+
+[[evidence]]
+url = "https://infotracer.com/do-not-sell-share-my-personal-information/"
+checked_at = 2026-10-25
+sha256 = "93ebf7d940d7f585e5a0fb91fd9087f4e3e0b80d73cb70b6d58afc3f07d98718"
+
+[[evidence]]
+url = "https://au.infotracer.com/"
+checked_at = 2026-10-25
+sha256 = "1c3dde7ca4166c60a980c54df80af47b1a32747740b538646b8ec7c5409cde3a"

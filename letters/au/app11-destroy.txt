@@ -1,0 +1,3 @@
+version 1
+{{title}} ({{provision}})
+Please consider whether you still need my personal information for any purpose for which you may use or disclose it under the Australian Privacy Principles. If you do not, APP 11.2 requires you to take reasonable steps to destroy it or to ensure that it is de-identified, unless it is contained in a Commonwealth record or an Australian law or a court or tribunal order requires you to keep it. Please tell me what you decide.
