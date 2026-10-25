@@ -1,12 +1,15 @@
 //! The drafts folder: plaintext letters waiting to be sent (plan section 5).
 //!
-//! Each folder has a manifest, `.ghostsoap-drafts`. Before a draft is written its name is
-//! recorded as `pending <name>`; once the draft is in place, `<sha256> <name>` commits it.
-//! `clean` deletes only committed drafts that still hold those bytes. A lock file serialises
-//! `write` and `clean` between GhostSoap processes; other programs changing the folder at the
-//! same moment are outside this guarantee.
+//! Each folder has a manifest, `.ghostsoap-drafts`, holding the latest record for each name.
+//! Before a draft is written its name is recorded as `pending <name>`; once the draft is in
+//! place, `<sha256> <name>` commits it. The manifest is only ever replaced whole, by renaming
+//! a complete new copy over it, so an interrupted update leaves the previous one and a link at
+//! its name is replaced rather than written through. `clean` deletes only committed drafts that
+//! still hold those bytes; a file put at a draft's name with exactly those bytes counts as that
+//! draft. A lock file serialises `write` and `clean` between GhostSoap processes; other
+//! programs changing the folder at the same moment are outside this guarantee.
 
-use std::fs::{self, File, OpenOptions};
+use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
@@ -48,9 +51,11 @@ pub fn write(dir: &Path, name: &str, text: &str) -> io::Result<PathBuf> {
             format!("`{name}` is not a draft name"),
         ));
     }
-    create_private_dir(dir)?;
-    check_private(dir)?;
-    let _lock = Lock::acquire(dir, LOCK)?;
+    let _lock = lock_new(dir).or_else(|e| match e.kind() {
+        // A `clean` removed the emptied folder between creating it and locking it.
+        io::ErrorKind::NotFound => lock_new(dir),
+        _ => Err(e),
+    })?;
     let path = dir.join(name);
     if fs::symlink_metadata(&path).is_ok() {
         return Err(io::Error::new(
@@ -58,8 +63,7 @@ pub fn write(dir: &Path, name: &str, text: &str) -> io::Result<PathBuf> {
             format!("{} already exists", path.display()),
         ));
     }
-    let mut manifest = open_manifest(dir)?;
-    record(&mut manifest, PENDING, name)?;
+    add_record(dir, PENDING, name)?;
     let tmp = dir.join(format!(".{name}.{}.tmp", std::process::id()));
     let mut file = private_file(OpenOptions::new().write(true).create_new(true)).open(&tmp)?;
     // From here the temporary file is this call's own, so it may remove it.
@@ -71,12 +75,34 @@ pub fn write(dir: &Path, name: &str, text: &str) -> io::Result<PathBuf> {
     let _ = fs::remove_file(&tmp);
     published?;
     sync_dir(dir)?;
-    record(&mut manifest, &sha256(text.as_bytes()), name)?;
+    add_record(dir, &sha256(text.as_bytes()), name)?;
     Ok(path)
 }
 
-/// Open the manifest for appending, refusing a link or anything but a plain file.
-fn open_manifest(dir: &Path) -> io::Result<File> {
+fn lock_new(dir: &Path) -> io::Result<Lock> {
+    create_private_dir(dir)?;
+    check_private(dir)?;
+    Lock::acquire(dir, LOCK)
+}
+
+/// One manifest line: `pending` or a SHA-256, then a draft name.
+type Record = (String, String);
+
+/// Set `name`'s record, replacing any earlier one, so each name has only its latest.
+fn set_record(records: &mut Vec<Record>, first: &str, name: &str) {
+    records.retain(|(_, n)| n != name);
+    records.push((first.to_owned(), name.to_owned()));
+}
+
+fn add_record(dir: &Path, first: &str, name: &str) -> io::Result<()> {
+    let mut records = read_manifest(dir)?;
+    set_record(&mut records, first, name);
+    save_manifest(dir, &records)
+}
+
+/// The manifest's records, the last for each name winning; none if it is missing. Refuses a
+/// symbolic link or anything but a plain file at its name.
+fn read_manifest(dir: &Path) -> io::Result<Vec<Record>> {
     let path = dir.join(MANIFEST);
     match fs::symlink_metadata(&path) {
         Ok(meta) if !meta.is_file() => {
@@ -85,21 +111,53 @@ fn open_manifest(dir: &Path) -> io::Result<File> {
                 format!("{} is not a plain file", path.display()),
             ));
         }
-        Err(e) if e.kind() != io::ErrorKind::NotFound => return Err(e),
-        _ => {}
+        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(e) => return Err(e),
+        Ok(_) => {}
     }
-    private_file(OpenOptions::new().append(true).create(true)).open(path)
+    let mut records = Vec::new();
+    for (first, name) in fs::read_to_string(&path)?
+        .lines()
+        .filter_map(|l| l.split_once(' '))
+        .filter(|&(_, name)| is_draft(name))
+    {
+        set_record(&mut records, first, name);
+    }
+    Ok(records)
 }
 
-fn record(manifest: &mut File, first: &str, name: &str) -> io::Result<()> {
-    writeln!(manifest, "{first} {name}")?;
-    manifest.sync_all()
+/// Replace the manifest with `records`, or remove it when none remain. The new copy is
+/// written and synced under another name, then renamed over the old one.
+fn save_manifest(dir: &Path, records: &[Record]) -> io::Result<()> {
+    let path = dir.join(MANIFEST);
+    let tmp = dir.join(format!("{MANIFEST}.tmp"));
+    // Under the lock, a file here is left by an interrupted update; never write through it.
+    remove_if_present(&tmp)?;
+    if records.is_empty() {
+        remove_if_present(&path)?;
+        return sync_dir(dir);
+    }
+    let mut file = private_file(OpenOptions::new().write(true).create_new(true)).open(&tmp)?;
+    for (first, name) in records {
+        writeln!(file, "{first} {name}")?;
+    }
+    file.sync_all()?;
+    drop(file);
+    fs::rename(&tmp, &path)?;
+    sync_dir(dir)
+}
+
+fn remove_if_present(path: &Path) -> io::Result<()> {
+    match fs::remove_file(path) {
+        Err(e) if e.kind() != io::ErrorKind::NotFound => Err(e),
+        _ => Ok(()),
+    }
 }
 
 /// On Unix, flush the folder so a new name survives a power cut.
 fn sync_dir(dir: &Path) -> io::Result<()> {
     #[cfg(unix)]
-    File::open(dir)?.sync_all()?;
+    fs::File::open(dir)?.sync_all()?;
     #[cfg(not(unix))]
     let _ = dir;
     Ok(())
@@ -177,42 +235,31 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
     check_private(dir)?;
     let lock = Lock::acquire(dir, LOCK)?;
     let mut cleaned = Cleaned::default();
-    let manifest = dir.join(MANIFEST);
-    if fs::symlink_metadata(&manifest).is_ok() {
-        drop(open_manifest(dir)?); // refuses a link or a folder
-        let lines = fs::read_to_string(&manifest)?;
-        let records: Vec<(&str, &str)> = lines
-            .lines()
-            .filter_map(|l| l.split_once(' '))
-            .filter(|&(_, name)| is_draft(name))
-            .collect();
-        // Records for files left in place stay in the manifest, so the next clean reports them.
-        let mut remaining = Vec::new();
-        for &(hash, name) in records.iter().filter(|&&(first, _)| first != PENDING) {
-            let path = dir.join(name);
-            match fs::read(&path) {
-                Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-                Err(e) => return Err(e),
-                Ok(bytes) if sha256(&bytes) == hash => {
-                    fs::remove_file(&path)?;
-                    cleaned.deleted += 1;
-                }
-                Ok(_) => remaining.push((hash, name)),
+    // Records for files left in place stay in the manifest, so the next clean reports them.
+    let mut remaining = Vec::new();
+    for (first, name) in read_manifest(dir)? {
+        let path = dir.join(&name);
+        if first == PENDING {
+            if path.exists() {
+                cleaned.unconfirmed.push(name.clone());
+                remaining.push((first, name));
+            }
+            continue;
+        }
+        match fs::read(&path) {
+            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+            Err(e) => return Err(e),
+            Ok(bytes) if sha256(&bytes) == first => {
+                fs::remove_file(&path)?;
+                cleaned.deleted += 1;
+            }
+            Ok(_) => {
+                cleaned.kept.push(name.clone());
+                remaining.push((first, name));
             }
         }
-        // A name written again after its first draft went holds a later record; once that
-        // draft is deleted, the earlier record no longer describes a file.
-        remaining.retain(|&(_, name)| dir.join(name).exists());
-        cleaned.kept = remaining.iter().map(|&(_, n)| n.to_owned()).collect();
-        for &(_, name) in records.iter().filter(|&&(first, _)| first == PENDING) {
-            let committed = records.iter().any(|&(f, n)| n == name && f != PENDING);
-            if !committed && dir.join(name).exists() {
-                cleaned.unconfirmed.push(name.to_owned());
-                remaining.push((PENDING, name));
-            }
-        }
-        rewrite_manifest(&manifest, &remaining)?;
     }
+    save_manifest(dir, &remaining)?;
     for item in fs::read_dir(dir)? {
         let name = item?.file_name().to_string_lossy().into_owned();
         if name.starts_with('.') && name.ends_with(".tmp") && name.contains("-GS-") {
@@ -220,23 +267,28 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
         }
     }
     drop(lock);
-    if remove_dir && fs::read_dir(dir)?.next().is_none() {
-        fs::remove_dir(dir)?;
+    if remove_dir {
+        remove_if_empty(dir)?;
     }
     Ok(cleaned)
 }
 
-/// Replace the manifest with `records`, or remove it when none remain. An interrupted rewrite
-/// can lose these records, so the next clean stops reporting them, but adds none.
-fn rewrite_manifest(path: &Path, records: &[(&str, &str)]) -> io::Result<()> {
-    if records.is_empty() {
-        return fs::remove_file(path);
+fn remove_if_empty(dir: &Path) -> io::Result<()> {
+    if fs::read_dir(dir)?.next().is_some() {
+        return Ok(());
     }
-    let mut file = private_file(OpenOptions::new().write(true).truncate(true)).open(path)?;
-    for (first, name) in records {
-        writeln!(file, "{first} {name}")?;
+    match fs::remove_dir(dir) {
+        // A `write` started in the folder after the lock was released; it stays.
+        Err(e)
+            if !matches!(
+                e.kind(),
+                io::ErrorKind::DirectoryNotEmpty | io::ErrorKind::NotFound
+            ) =>
+        {
+            Err(e)
+        }
+        _ => Ok(()),
     }
-    file.sync_all()
 }
 
 #[cfg(test)]
@@ -286,8 +338,7 @@ mod tests {
         let err = write(&drafts, "a-GS-22222.eml", "letter").unwrap_err();
         assert_eq!(err.kind(), io::ErrorKind::AlreadyExists);
         // A write that published but stopped before committing leaves a pending name only.
-        let mut manifest = open_manifest(&drafts).unwrap();
-        record(&mut manifest, PENDING, "b-GS-33333.eml").unwrap();
+        add_record(&drafts, PENDING, "b-GS-33333.eml").unwrap();
         fs::write(drafts.join("b-GS-33333.eml"), "unconfirmed").unwrap();
         let cleaned = clean(&drafts, false).unwrap();
         assert_eq!(cleaned.deleted, 1, "only the seed draft");
@@ -310,8 +361,7 @@ mod tests {
         let path = write(&drafts, "a-GS-11111.eml", "letter").unwrap();
         fs::rename(&path, dir.path().join("moved.eml")).unwrap();
         fs::write(&path, "the user's own file").unwrap();
-        let mut manifest = open_manifest(&drafts).unwrap();
-        record(&mut manifest, &"0".repeat(64), "b-GS-22222.eml").unwrap();
+        add_record(&drafts, &"0".repeat(64), "b-GS-22222.eml").unwrap();
         fs::write(drafts.join("b-GS-22222.eml"), "also the user's").unwrap();
         let cleaned = clean(&drafts, true).unwrap();
         assert_eq!(cleaned.deleted, 0);
@@ -335,6 +385,53 @@ mod tests {
         let cleaned = clean(&drafts, true).unwrap();
         assert_eq!((cleaned.deleted, cleaned.kept.len()), (1, 0));
         assert!(!drafts.exists());
+        // A second write of a name that stops after publishing, with the same or other bytes,
+        // leaves its draft unconfirmed: the earlier commit no longer authorises deleting it.
+        for second in ["letter", "changed"] {
+            let path = write(&drafts, "b-GS-22222.eml", "letter").unwrap();
+            fs::remove_file(&path).unwrap();
+            add_record(&drafts, PENDING, "b-GS-22222.eml").unwrap();
+            fs::write(&path, second).unwrap();
+            let cleaned = clean(&drafts, false).unwrap();
+            assert_eq!(cleaned.deleted, 0, "{second}");
+            assert_eq!(cleaned.unconfirmed, ["b-GS-22222.eml"], "{second}");
+            assert!(cleaned.kept.is_empty(), "{second}");
+            assert_eq!(fs::read_to_string(&path).unwrap(), second);
+            fs::remove_file(&path).unwrap();
+        }
+    }
+
+    #[test]
+    fn a_hard_linked_manifest_is_replaced_not_written_through() {
+        let dir = tempfile::tempdir().unwrap();
+        let drafts = dir.path().join("drafts");
+        write(&drafts, "a-GS-11111.eml", "x").unwrap();
+        fs::remove_file(drafts.join(MANIFEST)).unwrap();
+        let canary = dir.path().join("canary.txt");
+        fs::write(&canary, "unchanged").unwrap();
+        fs::hard_link(&canary, drafts.join(MANIFEST)).unwrap();
+        write(&drafts, "b-GS-22222.eml", "y").unwrap();
+        assert_eq!(fs::read_to_string(&canary).unwrap(), "unchanged");
+        assert_eq!(clean(&drafts, false).unwrap().deleted, 1);
+        assert_eq!(fs::read_to_string(&canary).unwrap(), "unchanged");
+    }
+
+    #[test]
+    fn an_interrupted_manifest_update_keeps_the_previous_manifest() {
+        let dir = tempfile::tempdir().unwrap();
+        let drafts = dir.path().join("drafts");
+        write(&drafts, "a-GS-11111.eml", "x").unwrap();
+        // A copy left half-written by an update that stopped before its rename.
+        let tmp = drafts.join(format!("{MANIFEST}.tmp"));
+        fs::write(&tmp, "pending").unwrap();
+        write(&drafts, "b-GS-22222.eml", "y").unwrap();
+        assert!(!tmp.exists());
+        fs::write(&tmp, "pending").unwrap();
+        assert_eq!(clean(&drafts, true).unwrap().deleted, 2);
+        assert!(
+            !drafts.exists(),
+            "the stale copy is removed with the manifest"
+        );
     }
 
     #[test]
