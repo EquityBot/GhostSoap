@@ -186,6 +186,8 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
             .filter_map(|l| l.split_once(' '))
             .filter(|&(_, name)| is_draft(name))
             .collect();
+        // Records for files left in place stay in the manifest, so the next clean reports them.
+        let mut remaining = Vec::new();
         for &(hash, name) in records.iter().filter(|&&(first, _)| first != PENDING) {
             let path = dir.join(name);
             match fs::read(&path) {
@@ -195,16 +197,21 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
                     fs::remove_file(&path)?;
                     cleaned.deleted += 1;
                 }
-                Ok(_) => cleaned.kept.push(name.to_owned()),
+                Ok(_) => remaining.push((hash, name)),
             }
         }
+        // A name written again after its first draft went holds a later record; once that
+        // draft is deleted, the earlier record no longer describes a file.
+        remaining.retain(|&(_, name)| dir.join(name).exists());
+        cleaned.kept = remaining.iter().map(|&(_, n)| n.to_owned()).collect();
         for &(_, name) in records.iter().filter(|&&(first, _)| first == PENDING) {
             let committed = records.iter().any(|&(f, n)| n == name && f != PENDING);
             if !committed && dir.join(name).exists() {
                 cleaned.unconfirmed.push(name.to_owned());
+                remaining.push((PENDING, name));
             }
         }
-        fs::remove_file(&manifest)?;
+        rewrite_manifest(&manifest, &remaining)?;
     }
     for item in fs::read_dir(dir)? {
         let name = item?.file_name().to_string_lossy().into_owned();
@@ -217,6 +224,19 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
         fs::remove_dir(dir)?;
     }
     Ok(cleaned)
+}
+
+/// Replace the manifest with `records`, or remove it when none remain. An interrupted rewrite
+/// can lose these records, so the next clean stops reporting them, but adds none.
+fn rewrite_manifest(path: &Path, records: &[(&str, &str)]) -> io::Result<()> {
+    if records.is_empty() {
+        return fs::remove_file(path);
+    }
+    let mut file = private_file(OpenOptions::new().write(true).truncate(true)).open(path)?;
+    for (first, name) in records {
+        writeln!(file, "{first} {name}")?;
+    }
+    file.sync_all()
 }
 
 #[cfg(test)]
@@ -274,6 +294,13 @@ mod tests {
         assert_eq!(fs::read_to_string(&path).unwrap(), "letter");
         assert_eq!(cleaned.unconfirmed, ["b-GS-33333.eml"]);
         assert!(drafts.join("b-GS-33333.eml").exists());
+        let again = clean(&drafts, false).unwrap();
+        assert_eq!(
+            again.unconfirmed,
+            ["b-GS-33333.eml"],
+            "reported until dealt with"
+        );
+        assert_eq!(again.deleted, 0);
     }
 
     #[test]
@@ -291,6 +318,23 @@ mod tests {
         assert_eq!(cleaned.kept, ["a-GS-11111.eml", "b-GS-22222.eml"]);
         assert_eq!(fs::read_to_string(&path).unwrap(), "the user's own file");
         assert!(drafts.exists());
+        assert_eq!(
+            clean(&drafts, true).unwrap().kept,
+            cleaned.kept,
+            "still reported by the next clean"
+        );
+    }
+
+    #[test]
+    fn a_name_written_again_reports_only_its_latest_draft() {
+        let dir = tempfile::tempdir().unwrap();
+        let drafts = dir.path().join("drafts");
+        let path = write(&drafts, "a-GS-11111.eml", "first").unwrap();
+        fs::remove_file(&path).unwrap();
+        write(&drafts, "a-GS-11111.eml", "second").unwrap();
+        let cleaned = clean(&drafts, true).unwrap();
+        assert_eq!((cleaned.deleted, cleaned.kept.len()), (1, 0));
+        assert!(!drafts.exists());
     }
 
     #[test]
