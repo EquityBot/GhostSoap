@@ -1,0 +1,7 @@
+version 1
+{{title}} ({{provision}})
+If you refuse, or have refused, to correct personal information about me as I requested, I ask you to associate the following statement with that information, in a way that will make the statement apparent to users of the information (APP 13.4):
+
+{{detail}}
+
+Please respond {{deadline}}. {{charge}}

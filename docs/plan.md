@@ -32,32 +32,34 @@ GhostSoap's edge is to be honest about Australian law, use the levers that law a
 
 Australia has no general right to erasure today. The tranche 2 Privacy Act reform is an exposure draft (submissions closed 18 September 2026); commentary says its erasure right is limited to large digital platforms. GhostSoap therefore uses these levers, each stored in a law table with its source and deadline:
 
-'Verified' below means read in the section's text on AustLII, or in the OAIC APP text and guidelines (paragraph numbers given), on 24 October 2026; the rest must be checked against the Federal Register of Legislation before M2 ships.
+Every row below was read in the primary text on 25 October 2026: the Privacy Act 1988 compilation C2026C00227 (in force from 4 June 2026; the next compilation starts 10 December 2026), the Spam Act 2003 compilation C2016C00614, the Spam Regulations 2021 (F2021L00285), the Criminal Code compilation C2026C00243 and the OAIC's APP guidelines (paragraph numbers given). The law table in `src/core/law.rs` holds the same values with their citations, and `ghostsoap law` prints it.
 
 | Lever | Request | Deadline basis |
 |---|---|---|
-| APP 7.6(c), 7.7(a) | Stop sending me direct marketing; free | Reasonable period, OAIC: generally no more than 30 days (para 7.37, verified) |
-| APP 7.6(d), 7.7(a) | Stop using or disclosing my information to facilitate others' direct marketing, including by sale; free | As above (para 7.41, verified). Selling data to another organisation is the OAIC's own example of facilitating (paras 7.40, 7.43), so APP 7 reaches brokers that only sell |
-| APP 7.6(e), 7.7(b) | Tell me the source of my information; free | Generally 30 days (para 7.47), unless impracticable or unreasonable; inconvenience or cost alone is not enough (para 7.46) (verified); source tracing finds the next broker upstream |
-| APP 12 | Give me access to the information you hold | Organisations: reasonable period (generally 30 days, to check); agencies: 30 days. No charge for the request; a non-excessive charge for giving access is allowed (APP 12.8, paras 12.77–12.81), so the letter asks for any charge to be stated first. 10 refusal grounds (APP 12.3); a refusal needs written reasons and complaint options (APP 12.9) (verified) |
-| APP 13 | Correct information that is inaccurate, out of date, incomplete, irrelevant or misleading; free (APP 13.5(b)) | Reasonable period, generally 30 days (para 13.63, verified) |
-| APP 13.2 | Tell the entities you disclosed my information to about the correction | As APP 13 (verified) |
-| APP 13.4 | Attach my statement where you refuse to correct | As APP 13 (verified) |
+| APP 7.6(c), 7.7(a) | Stop sending me direct marketing; free | Reasonable period, OAIC: generally no more than 30 days (para 7.37) |
+| APP 7.6(d), 7.7(a) | Stop using or disclosing my information to facilitate others' direct marketing, including by sale; free | Reasonable period, OAIC: no more than 30 days (para 7.41, without 'generally'). Selling data to another organisation is the OAIC's own example of facilitating (paras 7.40, 7.43), so APP 7 reaches brokers that only sell |
+| APP 7.6(e), 7.7(b) | Tell me the source of my information; free | Generally 30 days (para 7.47), unless impracticable or unreasonable; the organisation must justify that (para 7.46); source tracing finds the next broker upstream |
+| APP 12 | Give me access to the information you hold | Organisations: reasonable period (APP 12.4(a)(ii)), OAIC: should not exceed 30 calendar days (para 12.67); agencies: 30 days. No charge for the request; a non-excessive charge for giving access is allowed (APP 12.8, paras 12.77–12.81), so the letter asks for any charge to be stated first. 10 refusal grounds (APP 12.3); a refusal needs written reasons and complaint options (APP 12.9) |
+| APP 13 | Correct information that is inaccurate, out of date, incomplete, irrelevant or misleading; free (APP 13.5(b)) | Reasonable period, OAIC: should not exceed 30 calendar days (para 13.63) |
+| APP 13.2 | Tell the entities you disclosed my information to about the correction | No time set: reasonable steps unless impracticable or unlawful |
+| APP 13.4 | Attach my statement where you refuse to correct | As APP 13 (APP 13.5 covers it; para 13.63) |
 | APP 11.2 | Destroy or de-identify information you no longer need | An entity obligation, not an individual right; asked for, never demanded |
-| s 20R | Credit reporting body access | Within a reasonable period, not longer than 10 days; free if no request in the previous 3 months (verified) |
-| s 20T | Credit reporting body correction | Within 30 days or a longer period the individual agrees to in writing; free (verified) |
-| s 21T, s 21V | Credit provider access; credit provider correction | Access: reasonable period; correction: 30 days (verified) |
-| s 20K | Ban period after suspected fraud | 21 days, extendable on request (verified) |
-| Spam Act 2003 | Unsubscribe | Schedule 2 withdrawal of consent; 5 business days (to check; not in s 16) |
-| s 40(1A)–(1B) | Escalation | Complain to the entity first; the Act sets no waiting period, and OAIC guidance allows about 30 days (para 12.87). Then the entity's external dispute resolution scheme if it has one (for example AFCA for credit entities), then the OAIC. The complain-first precondition does not apply to complaints about ss 20R, 20T, 21T or 21V (verified). Spam Act and Do Not Call complaints go to ACMA, not the OAIC (to check). Each register entry lists its escalation targets |
+| s 20R | Credit reporting body access | Within a reasonable period, not longer than 10 days (s 20R(3)); free if no request in the previous 3 months (s 20R(5)) |
+| s 20T | Credit reporting body correction | Within 30 days or a longer period the individual agrees to in writing (s 20T(2)); free (s 20T(5)) |
+| s 21T, s 21V | Credit provider access; credit provider correction | Access: reasonable period (s 21T(3)); correction: 30 days (s 21V(2)) |
+| s 20K | Ban period after suspected fraud | Starts on the request and ends 21 days later, extendable on request, more than once (s 20K(3)–(5)); free (s 20K(6)) |
+| Spam Act 2003 | Unsubscribe | Withdrawal of consent takes effect at the end of 5 business days from the day an electronic unsubscribe message is sent (from service for post, from delivery otherwise), with public holidays where the message was sent to (Sch 2 cl 6); only email channels may serve this lever, so letters state the sending rule. The unsubscribe address must be reasonably likely to receive unsubscribe messages for at least 30 days after the message is sent (s 18(1)(e)) and must not need a fee, an account or personal information beyond the address (Spam Regulations 2021 s 7) |
+| s 40(1A)–(1B), s 41 | Escalation | Complain to the entity first; the Act sets no waiting period, and OAIC guidance allows about 30 days (para 12.87). Then the entity's external dispute resolution scheme if it has one (for example AFCA for credit entities), then the OAIC, within 12 months of becoming aware (the OAIC may decline later complaints, s 41(1)(c)). The complain-first precondition does not apply to complaints about ss 20R, 20T, 21T or 21V. Spam complaints go to ACMA through its spam complaint form with a copy of the message; telemarketing complaints go to donotcall.gov.au. Each register entry lists its escalation targets |
 
-APP 7 applies only where the entity uses or discloses information for direct marketing, and is displaced to the extent the Spam Act or the Do Not Call Register Act applies (APP 7.8, verified). A broker that does neither gets APP 12 and 13 letters, not APP 7, and a reply to that effect is recorded as `not-direct-marketing`.
+APP 12 and 13 set no form for a request: an entity may publish a preferred procedure but 'cannot require an individual to follow a particular procedure, use a designated form or explain the reason for making the request' (paras 12.18, 12.21, 13.20, 13.22). A letter to any published privacy address is therefore a valid request.
 
-The Privacy and Other Legislation Amendment Act 2024 added a statutory tort for serious invasions of privacy (Privacy Act Schedule 2, in the current compilation) and doxxing offences (in effect from 11 December 2024, secondary source; Criminal Code sections to check). GhostSoap prepares neither claims nor reports; the honesty panel and checklist point to a community legal centre, police and eSafety.
+APP 7 applies only where the entity uses or discloses information for direct marketing, and is displaced to the extent the Interactive Gambling Act 2001 (Pt 7B Div 5), the Do Not Call Register Act 2006 or the Spam Act applies (APP 7.8). A broker that does neither gets APP 12 and 13 letters, not APP 7, and a reply to that effect is recorded as `not-direct-marketing`.
 
-Each register entry records an **exemption risk**: `none`, `small-business-possible` (turnover under A$3 million, unless it discloses personal information for a benefit, service or advantage, or pays to collect it, under s 6D(4)(c)–(d), verified; s 6D(7)–(8) narrow both carve-outs), or `overseas` (Australian link doubtful). The letter text and the honesty panel change with it.
+The Privacy and Other Legislation Amendment Act 2024 added a statutory tort for serious invasions of privacy (Privacy Act Schedule 2, s 94A; commenced 10 June 2025) and doxxing offences (Criminal Code ss 474.17C and 474.17D; commenced 11 December 2024). GhostSoap prepares neither claims nor reports; the honesty panel and checklist point to a community legal centre, police and eSafety.
 
-A future `au-erasure` letter waits for passed legislation; the law table design accepts it without code changes.
+Each register entry records an **exemption risk**: `none`, `small-business-possible` (turnover under A$3 million, unless it discloses personal information for a benefit, service or advantage, or pays to collect it, under s 6D(4)(c)–(d); s 6D(7)–(8) narrow both carve-outs), or `overseas` (no Australian presence found: no ABN, no levers, a manual check only; the Act can still reach an overseas organisation that carries on business in Australia (s 5B(1A), (3)), so GhostSoap says it has not established a legal basis rather than that none exists). The letter text and the honesty panel change with it.
+
+A future `au-erasure` letter waits for passed legislation. Adding it needs a `Lever` variant, a law table row and a letter template; the compiler rejects a lever missing either.
 
 ## 4. Scope
 
@@ -109,9 +111,11 @@ url = "https://example.com.au/search"   # the broker's own page; GhostSoap only 
 
 Quality grades follow datenanfragen: `tested` means a GhostSoap request got a reply; `verified` means the contact was checked against the entity's own privacy policy or contact pages, by a person or an AI agent, with the evidence recorded in `docs/provenance.md`; `imported` means taken from a licence-compatible dataset; `lead` means named in a non-reusable source and not yet checked. Only `tested` and `verified` entries enter packs by default.
 
+Planned register fields (M3, not yet in the schema), after datenanfragen's `needs-id-document` and the Big Ass Data Broker Opt-Out List's flags: `last_tested` (the date of the latest `tested` reply, beside `verified_at`), `needs_id_document`, `needs_phone` and `paid_removal`. `plan` and `draft` warn before a letter goes to an entry carrying one of these flags.
+
 **Packs** (`registry/au/packs/*.toml`) group entries: `credit` (Equifax, Experian, which now includes illion, and any other credit reporting body), `property`, `marketing`, `people-search`, `loyalty`, plus `start-here` for users with little time.
 
-**Request**, held in the tracker: id, entity id, lever, letter version, channel, timestamps, status, reason and an append-only event list. Statuses: `drafted`, `sent`, `acknowledged`, `charge-quoted`, `fulfilled`, `refused-with-reasons`, `refused`, `no-record`, `id-requested`, `exempt-claimed`, `overdue`, `escalated`, `closed`. Reasons include `not-direct-marketing` and otherwise borrow the Data Rights Protocol vocabulary where it fits.
+**Request**, held in the tracker: id, entity id, lever, letter version, channel, timestamps, status, reason and an append-only event list. Statuses: `drafted`, `sent`, `acknowledged`, `charge-quoted`, `fulfilled`, `refused-with-reasons`, `refused`, `no-record`, `id-requested`, `exempt-claimed`, `overdue`, `escalated`, `closed`. Reasons include `not-direct-marketing` and otherwise borrow the Data Rights Protocol vocabulary where it fits. `ghostsoap status` groups the statuses into 5 action states, after datenanfragen's proceedings: overdue (`overdue`), action needed (`charge-quoted`, `id-requested`, `exempt-claimed`, `refused`), waiting (`drafted`, `sent`, `acknowledged`, `escalated`), done (`fulfilled`, `refused-with-reasons`, `no-record`, `closed` after a result) and abandoned (`closed` without one). Overdue items are listed first.
 
 **Profile**: the user's identity fields, previous addresses and alias names; never document numbers.
 
@@ -119,30 +123,36 @@ Quality grades follow datenanfragen: `tested` means a GhostSoap request got a re
 
 - One state file (profile, requests, events) encrypted with the `age` crate under a passphrase (scrypt), entered through a hidden prompt (`rpassword`).
 - State lives in the platform data directory (`%LOCALAPPDATA%\GhostSoap` on Windows, the XDG data directory on Linux), never under `Documents` or another folder OneDrive or a similar service may sync.
-- Writes go to a temporary file in the same directory, `sync_all`, then rename, retrying a rename that fails because antivirus or an indexer holds the file. A lock file stops 2 processes overwriting each other.
+- Writes go to a temporary file in the same directory, `sync_all`, then rename, retrying a rename that fails because antivirus or an indexer holds the file. A lock file stops 2 processes overwriting each other. GhostSoap keeps only what it reported as saved: after an interrupted update the state file still holds the last complete state, and after an interrupted `init` the user runs it again.
 - The OS keyring cache for the key is optional and off by default: it trades the passphrase for OS-login protection, since any process running as the user can read it. SMTP credentials (M5) live only in the keyring.
-- Plaintext outside the state file is the weakest point: drafts, exports, the escalation pack and the mailbox's Sent folder. Drafts go to a temporary folder and `ghostsoap draft --clean` removes them; export and escalation warn where they write; the README says plainly that the Sent folder holds copies.
+- Plaintext outside the state file is the weakest point: drafts, exports, the escalation pack and the mailbox's Sent folder. Drafts go to a `drafts` folder in the data directory (private to the user, unlike a shared temporary folder such as Linux's `/tmp`; on Unix the folder is mode 700 and each draft 600) and `ghostsoap clean` removes them. Each draft is recorded as pending in a `.ghostsoap-drafts` manifest in its folder, written to a temporary file of its own, hard-linked into place once complete (so it never replaces an existing file) and then committed with the SHA-256 of its content; the manifest keeps only each name's latest record and is replaced whole by renaming a complete copy over it, never edited in place; a lock file serialises `write` and `clean` between GhostSoap processes. `clean` deletes a committed draft only while it still holds those bytes (a file put at that name with exactly those bytes counts as the draft), and reports, without deleting, a listed file that changed, a pending name whose write never committed and temporary files left by an interrupted write or manifest update, on every run until they are dealt with; it refuses a manifest that is a link, keeps a `--out` folder's other files and removes only GhostSoap's own emptied folder, never one named with `--out`. On Unix a drafts folder others can open, or a link, is refused; export and escalation warn where they write; the README says plainly that the Sent folder holds copies.
 - `ghostsoap export` writes a readable archive; `ghostsoap forget` deletes the state file, drafts and keyring entries after confirmation. Docs say 'deletes', not 'erases', because an SSD cannot promise erasure.
-- Leak tests check the state file, drafts folder after `--clean`, temporary files and logs for the profile's plaintext values.
+- Leak tests check the state file, drafts folder after `clean`, temporary files and logs for the profile's plaintext values.
 - A 'What leaves your machine' page in the README lists every outbound path.
 
 ### Letters
 
-Plain text templates in `letters/au/<lever>.txt` with `{{field}}` placeholders, rendered by a small strict renderer: an unknown placeholder is an error, and a line whose optional field is empty is dropped. Letters are written fresh from the Privacy Act, the APP guidelines and Part IIIA; none is adapted from another project's text. Each letter carries a version so a request records exactly what was sent. Subject lines carry a tag such as `[GS-7K3QX]` to match replies.
+Plain text templates in `letters/au/<lever>.txt` with `{{field}}` placeholders, rendered by a small strict renderer: an unknown placeholder is an error, and a line whose optional field is empty is dropped. Letters are written fresh from the Privacy Act, the APP guidelines and Part IIIA; none is adapted from another project's text. Each letter carries a version so a request records exactly what was sent. Subject lines carry a tag such as `[GS-7K3QX]` to match replies. From M3, a new tag is checked against the request store, since 5 Crockford base32 characters give only 33,554,432 values.
+
+Since M2, a draft is one message per entry and channel: an opening (date, addressee, the entry's identity fields only, a request not to use them for anything else), one paragraph per lever with its deadline and charge rule from the law table, and a closing (written reasons for a refusal, the escalation targets, the tag). Without `--lever`, a round asks for the 3 APP 7 requests, which return no personal information and need nothing from the user; any other lever is named with `--lever`. Access, correction, notification, statement, ban and unsubscribe levers need a single `--entry` and no `--pack`, and those needing the user's own words take `--detail`.
 
 ### Sending and replies
 
-- **v0.1:** `ghostsoap draft` writes `.eml` files with `X-Unsent: 1` (so Outlook opens them as drafts) and prints `mailto:` links for short letters; `ghostsoap draft --copy <id>` prints the To, Subject and Body for webmail, which cannot open `.eml` files and truncates long links. The user sends from their own client, then runs `ghostsoap sent <id>` (or marks a batch). No credentials are stored, and the user's Sent folder doubles as evidence for an escalation.
+- **v0.1:** `ghostsoap draft` writes `.eml` files with `X-Unsent: 1` (so Outlook opens them as drafts) and, with `--mailto`, prints `mailto:` links for letters short enough (2,000 characters; a 3-request APP 7 letter is longer); links are opt-in because each holds the whole letter and stays in the terminal's history; `ghostsoap draft --copy` prints the To, Subject and Body for webmail, which cannot open `.eml` files and truncates long links. The user sends from their own client, then runs `ghostsoap sent <id>` (or marks a batch). No credentials are stored, and the user's Sent folder doubles as evidence for an escalation.
+- **M3, replies to pushback:** `ghostsoap reply <id> <status>` offers a ready follow-up letter for the common answers, as datenanfragen's Reactor does: a demand for an identity document or more identity than needed (APP 12 identity checks; OAIC paragraph to check), the wrong channel or a required form (OAIC 12.21 and 13.22), a charge for making the request or an excessive charge (APP 12.8), or any charge where the law table records that none may be made, a claim that the use is not direct marketing or that the small business exemption applies, and silence. Each follow-up carries the original tag, date and letter version, and its ground is cited from the law table.
+- **M3, reminders that escalate:** after Your Digital Rights' reminder (ideas only; GPL-3.0), a reminder's wording follows the status: before the deadline it asks for a reply; after it, it states the days elapsed against the law table's period for that lever, says the period has passed and names the escalation target. It quotes the original letter's date and tag.
 - **M5:** SMTP through `lettre` with rustls, a review step before each batch, and a conservative rate limit.
 - **M6:** read-only IMAP that matches tags and suggests a status in a review queue. It never sends, replies, deletes or follows links on its own; a confirmation link is offered only when it stays on the entity's own registered domain.
 
 ### CLI (clap 4, derive)
 
 ```text
-ghostsoap init                       create the encrypted profile
+ghostsoap init                       create the encrypted profile (M2)
 ghostsoap packs | brokers [--pack]   browse the register
-ghostsoap plan --pack start-here     choose entities and levers; dry run by default
-ghostsoap draft [--all-planned]      write .eml files and mailto links
+ghostsoap plan --pack start-here     choose entities and levers; dry run by default (M2)
+ghostsoap draft [--all-planned]      write .eml files, mailto links with --mailto (M2, without --all-planned)
+ghostsoap clean                      delete drafts (M2)
+ghostsoap law                        print the law table (M2)
 ghostsoap sent <id>...               record what was sent
 ghostsoap reply <id> <status> [--note]
 ghostsoap status [--due]             deadlines, overdue items, next actions
@@ -152,7 +162,7 @@ ghostsoap registry check             validate the register (also run in CI)
 ghostsoap export | forget
 ```
 
-Every command supports `--json`; output honours `NO_COLOR`, and no status is shown by colour alone.
+Every command supports `--json`; output honours `NO_COLOR`, and no status is shown by colour alone. (`--json` is not yet built; M2 output has no colour.)
 
 ### Dependencies (initial)
 
@@ -163,9 +173,10 @@ Every command supports `--json`; output honours `NO_COLOR`, and no status is sho
 - **Seed:** the 3 credit reporting bodies; the firms in the ACCC's 2024 data broker report (CoreLogic, PropTrack, Quantium, LiveRamp, Nielsen, Oracle and others named there); Australian people-search sites (leads from the Optery list such as Reverse Australia, verified independently); marketing-list firms; directories; the large loyalty programmes as APP 7 targets. Target for v0.1: 25 to 40 entries at `verified` or better. Small and correct beats large and stale.
 - **Data licence:** CC0-1.0 for `registry/` and `checklist/`, so other projects (datenanfragen, eraseme) can reuse it; code under Apache-2.0.
 - **Freshness:** CI fails an entry with no source, an unknown lever or a malformed ABN, and warns when `verified_at` is older than 12 months. A scheduled workflow opens one issue a quarter listing stale entries. Since M1, entries carry `[[evidence]]` hashes of their source pages, and a monthly workflow opens or updates one issue listing pages that changed or could not be read, and closes it when every page matches again (normalisation in `registry/README.md`).
+- **Backlog (M3):** unvetted leads go in `registry/au/backlog.toml` (name, lead source, date found, reason not yet an entry), as markramm/data-broker-registry keeps `backlog.json`, so a lead is neither guessed at nor silently dropped. `registry check` prints coverage counts: entries by quality grade, kind and pack, and backlog size.
 - **Contribution:** an issue form and a pull request template asking for the source URL and the date checked. Replies from `tested` requests (with personal details removed) can raise an entry's grade.
 - **Feedback loop:** APP 7.6(e) replies name upstream sources; `ghostsoap reply --source "<name>"` records them, and the README invites users to report new brokers this way.
-- **Overseas people-search sites (M2):** a site that lists Australians but has no Australian presence gets an entry with `exemption_risk = "overseas"` and no ABN. It carries only a `manual_check` page, the site's own web-form opt-out and an effort marker, and no levers or letters; the honesty panel says no Australian law lever applies. The validator accepts a missing ABN only on such entries. Leads may come from Optery's Australian list (names only, as section 9 requires); the priority tiers of the Big Ass Data Broker Opt-Out List and JustDeleteMe's difficulty ratings are the pattern for the effort marker, with no data copied.
+- **Overseas people-search sites (M2):** a site that lists Australians but has no Australian presence gets an entry with `exemption_risk = "overseas"` and no ABN. It carries only a `manual_check` page, the site's own web-form opt-out and an effort marker, and no levers or letters; the honesty panel says GhostSoap has not established that Australian privacy law reaches the site. The validator accepts a missing ABN only on such entries. Leads may come from Optery's Australian list (names only, as section 9 requires); the priority tiers of the Big Ass Data Broker Opt-Out List and JustDeleteMe's difficulty ratings are the pattern for the effort marker, with no data copied.
 - **Outcome reporting (M3, opt-in):** `ghostsoap report-outcome <id>` writes a summary with personal details removed (entry id, lever, status, days to reply) for the user to review and paste into an issue form; nothing is sent automatically. Reports raise entries to `tested` (as datenanfragen does) and feed a public table of how each entity responded; Consumer Reports measured removal rates once, and no paid service publishes this.
 - **Sharing with datenanfragen (after M1):** offer the Australian entries to datenanfragen (CC0 both ways), mapped to its schema. This is a pull request to another project and needs Ryan's authorisation first.
 
@@ -204,7 +215,7 @@ The checklist is guidance: it links to the official page and records progress; i
 | M0 Scaffold | Repository, licences, README with tagline, CI | CI matrix (`ubuntu-latest`, `windows-latest`) runs `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked`, `cargo build --locked --release` green; `cargo audit` and Dependabot enabled |
 | M1 Register | Schema, validator, 25 to 40 entries, packs | `ghostsoap registry check` passes; CI rejects a fixture entry with no source; every entry has an ABN Lookup check recorded |
 | M2 Letters and drafts | Profile, plan, draft, law table; overseas people-search entries (section 6) | Snapshot tests for every lever letter; tests show a letter contains only the entry's identity fields; deadline values verified against primary sources and cited in the law table |
-| M3 Tracker | Encrypted state, statuses, deadlines, reminders, OAIC pack; re-check reminders by kind (defaults of 60 days for people-search and 90 days for other kinds, after Scrubbr) to catch re-listing; opt-in `report-outcome` | Unit tests for every status transition and deadline; plaintext-leak test on the state file; export and forget round-trip test |
+| M3 Tracker | Encrypted state, statuses, deadlines, reminders, OAIC pack; re-check reminders by kind (defaults of 60 days for people-search and 90 days for other kinds, after Scrubbr) to catch re-listing; opt-in `report-outcome`; replies to pushback, reminders that escalate and 5 action states (section 5); planned register fields and backlog (sections 5 and 6) | Unit tests for every status transition and deadline; snapshot tests for every reply and reminder letter, with each ground cited from a primary source; plaintext-leak test on the state file; export and forget round-trip test |
 | M4 Checklist | Checklist data and command | Each item links to an official page checked within the release month |
 | v0.1 | First release candidate | Security audit skill run, Calvino final review, letters reviewed against the statute; release gates per the house binary-release decision when Ryan authorises a release |
 | M5 SMTP | Optional sending | Review step, rate limit and keyring-only credentials, with tests against a local SMTP test server |
@@ -216,6 +227,7 @@ The checklist is guidance: it links to the official page and records progress; i
 - No code, letter text or data from digisamroc/eraser (no licence) or its forks. Its README and public behaviour informed the design only.
 - CC BY-NC-SA sources (Big Ass Data Broker Opt-Out List, Optery directory) are leads: an entry may name a broker found there only after independent verification from the broker's own pages, and copies no text.
 - MIT or Apache-2.0 sources may be reused with their notices; each reuse is listed in `NOTICE` and `docs/provenance.md`.
+- GPL-3.0 and AGPL-3.0 projects (Your Digital Rights, OpenOptOut) and CC BY-NC-SA data (markramm/data-broker-registry) informed the design only; no code, text or data is copied. The M3 additions in sections 5 and 6 (25 October 2026) came from reading datenanfragen (code MIT, data CC0-1.0), Your Digital Rights, markramm/data-broker-registry and the Big Ass Data Broker Opt-Out List, on that date.
 - `docs/provenance.md` records, per register entry, where the lead came from and what verified it.
 
 ## 10. Repository layout
@@ -252,6 +264,7 @@ Ryan approved draft 2 on 24 October 2026 and decided:
 4. **Branding:** the name and tagline only; no Call of Duty art, logos or fonts; the README disclaims any affiliation.
 5. **Register quality (24 October 2026, at M1):** `verified` covers a check against the entity's own pages with recorded evidence, made by a person or an AI agent; provenance says which.
 6. **Evidence coverage (24 October 2026, at M1):** an entry records `[[evidence]]` for each source page that gives the same hash on 2 fetches and a hash no other source shares. Pages that return bot checks, errors or browser-only content stay untracked, and provenance lists them; at M1, 22 of 29 entries carry evidence and 7 have none.
+7. **Letters and drafts (25 October 2026, at M2, agent's choices within the approved plan):** the law table is Rust code with one match arm per lever, so a missing row or letter fails to compile; a message bundles an entry's levers per channel rather than one message per lever; the default round is the 3 APP 7 levers; drafts are cleaned by a `clean` command; the encrypted profile arrives in M2 (`init`), with requests and events added in M3. Ryan kept Locate Family as an overseas entry although its operator is not named.
 
 ## 13. Risks
 

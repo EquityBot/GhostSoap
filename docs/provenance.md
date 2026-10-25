@@ -14,7 +14,7 @@ Every entry was checked on 24 October 2026 by AI research agents working for the
 
 - **Contact:** each channel was taken from the entity's own privacy policy, credit reporting policy or contact page, listed in the entry's `sources`. Every channel (email, post, phone, web form and manual-check page) was then matched against the saved text of those pages or, for links, a query of the page's links.
 - **ABN:** each ABN was read from the entity's own pages or found on ABN Lookup by name, then re-checked on ABN Lookup; all 29 were active.
-- **Leads:** no shipped entry came from the Optery directory or the Big Ass Data Broker Opt-Out List. Those lists were used only to learn the names of people-search sites, all of which were rejected below. No text, URL or description was copied from any lead source.
+- **Leads:** no M1 entry came from the Optery directory or the Big Ass Data Broker Opt-Out List. Those lists were used only to learn the names of people-search sites, all of which were rejected below; 2 of them returned at M2 as overseas entries. No text, URL or description was copied from any lead source.
 
 'M1 seed list' means the firm was named in the milestone's research brief: the ACCC report firms, the credit reporting bodies and well-known Australian property, directory and loyalty businesses.
 
@@ -52,7 +52,7 @@ Every entry was checked on 24 October 2026 by AI research agents working for the
 
 ### Evidence hashes
 
-42 of the 71 source pages have an `[[evidence]]` hash, taken on 24 October 2026 with `cargo run -p xtask -- evidence-hash` and confirmed by a second fetch. Five hashes were recomputed the same day after normaliser fixes: 2 Australia Post pages and 2 Woolworths Group privacy pages, where markup inside quoted attribute values had leaked into the text, and Equifax's credit and identity products page, whose nested `<main>` had been cut short. On the same fetched pages the earlier normaliser reproduced each original hash, so the pages themselves had not changed. The other pages are not tracked by the monthly drift check, because a plain HTTP fetch gets an error, a bot check or a page that needs a browser:
+At M1, 42 of the 71 source pages had an `[[evidence]]` hash; the 3 overseas entries added at M2 bring 15 more (57 across 25 entries). The M1 hashes were taken on 24 October 2026 with `cargo run -p xtask -- evidence-hash` and confirmed by a second fetch. Five hashes were recomputed the same day after normaliser fixes: 2 Australia Post pages and 2 Woolworths Group privacy pages, where markup inside quoted attribute values had leaked into the text, and Equifax's credit and identity products page, whose nested `<main>` had been cut short. On the same fetched pages the earlier normaliser reproduced each original hash, so the pages themselves had not changed. The other pages are not tracked by the monthly drift check, because a plain HTTP fetch gets an error, a bot check or a page that needs a browser:
 
 - whole entries: `domain-au` (CoStar returns 403), `experian-au` and `experian-marketing-au` (every page returns the same bot-check page), `flybuys-au` (script-only page and a malformed response), `liveramp-au` (its domains did not resolve from the checking machine; the TrustArc form needs a browser), `priceline-pulse-rewards-au` (script-only pages) and `rea-group-au` (429 and 403);
 - single pages: the Equifax complaints form, the Lead Lists and List Factory contact forms, the TaleFin portal, InfoTrack's policy URL that redirects to the tracked PDF, Thryv's privacy policy and White Pages (403), and the WINR request form.
@@ -70,7 +70,23 @@ Every entry was checked on 24 October 2026 by AI research agents working for the
 - `landchecker-au`: the privacy contact is its support inbox; small business exemption possible.
 - `globalx-au`: the policy is dated 1 July 2021 and is issued by Dye & Durham Australia Pty Ltd for its affiliates; its postal contact is the Data Protection Officer at Dye & Durham Australia Property Limited.
 
-### Rejected candidates
+### Overseas people-search entries (M2)
+
+Checked on 25 October 2026 by an AI research agent working for the maintainer, from public pages only: no name was searched, no form submitted, no CAPTCHA solved and no account created. Form fields were read from each page without typing. No person has re-checked them. These entries have `exemption_risk = "overseas"`, no ABN and no levers (plan section 6): GhostSoap shows the site's own search page and opt-out form and sends no letter.
+
+| Entry | Lead | Verified from | Australian presence check (ABN Lookup, 25 October 2026) |
+|---|---|---|---|
+| `infotracer-au` | Optery Australian list (name only) | Privacy policy, terms, opt-out page and removal form on infotracer.com; Australian search page au.infotracer.com | No entity: 'InfoPay' and 'InfoTracer' return only near-spellings and unrelated firms. Operator InfoPay, Inc., Boston, Massachusetts |
+| `records-finder-au` | Optery Australian list (name only) | Privacy policy, terms, privacy-choices page and removal form on recordsfinder.com; Australian search page recordsfinder.com/australia/ | No entity: 'InfoPay', 'Records Finder', 'RecordsFinder' and 'Globicom' return no match for the operator. Operator InfoPay, Inc., Boston, Massachusetts |
+| `locate-family-au` | A home page fetched during GhostSoap's own research; not on the Optery list | Removal, privacy, legal and FAQ pages and the street-list index on www.locatefamily.com; its Australian street list | No entity: 'LocateFamily' finds no names; 'Locate Family' returns only near-spellings. The FAQ says the site and its parent company are outside the EU; no page names the company or its country |
+
+Untracked pages: `https://infotracer.com/optout/` (88 characters of main text without a browser) and `https://www.locatefamily.com/Street-Lists/Australia/index.html` (stable, but its listings change with the site's data and it holds personal listings).
+
+- `infotracer-au`, `records-finder-au`: both InfoPay sites share one removal form (first name, last name, a US-state list with 'All States', optional city) that removes the records the user selects, one at a time. The rights their policies describe are US state rights; they promise nothing to Australians. Records Finder's privacy policy names 'InfoPay, Inc. and Globicom'; its terms and footer name InfoPay, Inc. alone, which the entry uses. Priority `standard`: the Australian pages claim national coverage, but no listing was opened to confirm it.
+- `locate-family-au`: no page names the operator, so `legal_entity` says so. The maintainer decided on 25 October 2026 to keep it, because an overseas entry sends no letter and its Australian street list says it lists 636,359 people in Australia (hence `high` priority). Its form needs the listing page's URL and entry numbers, an email address and a reCAPTCHA, one submission per page.
+- Rejected at M2: NumLookup (no Australian search page), Radaris (domain transferred by court order), Locate-Friend (refuses connections), Pipl (business data, no public search or Australian coverage page), Social Catfish (Australian page returns 404; US-state opt-outs), Truecaller (caller-ID app; search needs sign-in), Infobel (Australian listings are businesses only).
+
+### Rejected candidates (M1)
 
 | Candidate | Reason |
 |---|---|
@@ -83,7 +99,7 @@ Every entry was checked on 24 October 2026 by AI research agents working for the
 | Reverse Australia | Privacy page returns a server error; no legal entity or ABN found |
 | personlookup.com.au, PeopleSearch.com.au | No named entity or Australian privacy contact |
 | NumberCheck, PhoneLookup | Community phone-number report sites, not people search |
-| InfoTracer Australia, Records Finder Australia | Run by a US company under US law |
+| InfoTracer Australia, Records Finder Australia | Run by a US company under US law; added at M2 as overseas entries (above) |
 | Valocity | No sign it sells records linked to owners; postal privacy contact only |
 | Impact Lists | Privacy policy served over http only; entity and business name held by different parties |
 | Australian Marketing Lists | Business contacts only; sole trader |

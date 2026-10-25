@@ -1,0 +1,44 @@
+To: privacy@example.com.au
+Subject: Privacy Act request [GS-TEST1]
+
+25 October 2026
+
+The Privacy Officer
+Wexler McGill Pty Ltd
+
+I am writing about personal information that Wexler McGill Pty Ltd may hold
+about me. I make the requests below under the Privacy Act 1988 (Cth).
+
+To help you find your records about me:
+Name: James McGill
+Email: jimmy@example.com
+
+Please use these details only to identify me and to deal with these
+requests, and not for any other purpose.
+
+Associate my statement with the information if you refuse to correct it (APP
+13.4, 13.5(a)(ii))
+If you refuse, or have refused, to correct personal information about me as
+I requested, I ask you to associate the following statement with that
+information, in a way that will make the statement apparent to users of the
+information (APP 13.4):
+
+These are my own words about this request.
+
+Please respond within a reasonable period after the request is made (APP
+13.5(a)(ii)), which the OAIC's APP guidelines say should not exceed 30
+calendar days (paragraph 13.63). No charge may be made for the request, the
+correction or associating a statement (APP 13.5(b)).
+
+Please reply in writing. If you refuse any of these requests, please tell me
+why and how I can complain about the refusal.
+
+If I am not satisfied with your response, I may complain to the Australian
+Financial Complaints Authority (AFCA, if my complaint is within its
+jurisdiction) or the Office of the Australian Information Commissioner
+(OAIC).
+
+Yours faithfully
+James McGill
+
+Reference: [GS-TEST1]

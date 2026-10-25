@@ -1,7 +1,10 @@
 id = "people-search"
 name = "People search and directories"
-description = "Directories and lookup services that link names to phone numbers and addresses."
+description = "Directories and lookup services that link names to phone numbers and addresses, including overseas sites that list Australians."
 entries = [
   "acceleon-au",
   "id4me-au",
+  "infotracer-au",
+  "locate-family-au",
+  "records-finder-au",
 ]

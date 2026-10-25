@@ -1,0 +1,22 @@
+version 1
+{{date}}
+
+The Privacy Officer
+{{legal_entity}}
+{{postal_address}}
+
+I am writing about personal information that {{legal_entity}} may hold about me. I make the requests below under {{laws}}.
+
+To help you find your records about me:
+Name: {{full_name}}
+Other names I have used: {{alias_names}}
+Email: {{email}}
+Phone: {{phone}}
+Date of birth: {{date_of_birth}}
+Address: {{address}}
+Previous addresses: {{previous_addresses}}
+Postcode: {{postcode}}
+
+Please use these details only to identify me and to deal with these requests, and not for any other purpose.
+
+{{exemption_note}}

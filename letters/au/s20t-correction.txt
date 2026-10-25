@@ -1,0 +1,7 @@
+version 1
+{{title}} ({{provision}})
+I believe the following personal information you hold about me is inaccurate, out of date, incomplete, irrelevant or misleading, and I ask you to correct it (section 20T(1)):
+
+{{detail}}
+
+If you are satisfied that it needs correcting, section 20T(2) requires you to take reasonable steps to correct it {{deadline}}. {{charge}}

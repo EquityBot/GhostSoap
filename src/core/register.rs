@@ -71,6 +71,28 @@ pub enum Lever {
 }
 
 impl Lever {
+    pub const ALL: [Lever; 14] = [
+        Self::App7NoMarketing,
+        Self::App7NoFacilitation,
+        Self::App7Source,
+        Self::App11Destroy,
+        Self::App12,
+        Self::App13,
+        Self::App13NotifyRecipients,
+        Self::App13Statement,
+        Self::S20rAccess,
+        Self::S20tCorrection,
+        Self::S20kBan,
+        Self::S21tAccess,
+        Self::S21vCorrection,
+        Self::SpamUnsubscribe,
+    ];
+
+    /// The lever named `name` in register files.
+    pub fn from_name(name: &str) -> Option<Lever> {
+        Self::ALL.into_iter().find(|l| l.name() == name)
+    }
+
     /// The name used in register files.
     pub fn name(self) -> &'static str {
         match self {
@@ -175,7 +197,8 @@ pub struct Entry {
     pub id: String,
     pub name: String,
     pub legal_entity: String,
-    pub abn: String,
+    /// Required, except on an overseas entry, which has none (plan section 6).
+    pub abn: Option<String>,
     pub kinds: Vec<Kind>,
     pub priority: Priority,
     pub quality: Quality,
@@ -199,6 +222,14 @@ pub struct Entry {
     /// Hashes of source pages at verification, for the monthly drift check.
     #[serde(default)]
     pub evidence: Vec<Evidence>,
+}
+
+impl Entry {
+    /// A site that lists Australians but has no Australian presence: it gets a manual check
+    /// and its own opt-out form, never a letter.
+    pub fn is_overseas(&self) -> bool {
+        self.exemption_risk == ExemptionRisk::Overseas
+    }
 }
 
 /// A source page's state when the entry was verified (normalisation in `registry/README.md`).
@@ -283,6 +314,32 @@ impl Report {
     }
 }
 
+/// Parsed entries and packs, keyed by id.
+#[derive(Debug)]
+pub struct Register {
+    pub entries: BTreeMap<String, Entry>,
+    pub packs: BTreeMap<String, Pack>,
+}
+
+/// Parse register files without validating them (`check` does that, and CI runs it on the
+/// built-in register). Fails on the first file that does not parse.
+pub fn parse_register(files: &RegisterFiles) -> Result<Register, String> {
+    let mut register = Register {
+        entries: BTreeMap::new(),
+        packs: BTreeMap::new(),
+    };
+    for file in &files.entries {
+        let entry: Entry = toml::from_str(&file.text).map_err(|e| format!("{}: {e}", file.name))?;
+        register.entries.insert(entry.id.clone(), entry);
+    }
+    for file in &files.packs {
+        let pack: Pack =
+            toml::from_str(&file.text).map_err(|e| format!("packs/{}: {e}", file.name))?;
+        register.packs.insert(pack.id.clone(), pack);
+    }
+    Ok(register)
+}
+
 /// What later checks need to know about an entry already seen.
 struct Known<'a> {
     file: &'a str,
@@ -352,11 +409,15 @@ fn check_entry(entry: &Entry, file: &str, today: NaiveDate, report: &mut Report)
     if entry.name.trim().is_empty() || entry.legal_entity.trim().is_empty() {
         errors.push("name and legal_entity must not be empty".to_owned());
     }
-    if !abn_is_valid(&entry.abn) {
-        errors.push(format!(
-            "ABN `{}` is malformed: use 11 digits as `NN NNN NNN NNN` with a valid check digit",
-            entry.abn
-        ));
+    match (&entry.abn, entry.is_overseas()) {
+        (None, false) => errors.push("abn is missing".to_owned()),
+        (Some(_), true) => errors.push(
+            "an overseas entry has no Australian presence, so it must not have an abn".to_owned(),
+        ),
+        (Some(abn), false) if !abn_is_valid(abn) => errors.push(format!(
+            "ABN `{abn}` is malformed: use 11 digits as `NN NNN NNN NNN` with a valid check digit"
+        )),
+        _ => {}
     }
     if entry.kinds.is_empty() {
         errors.push("kinds must not be empty".to_owned());
@@ -400,7 +461,23 @@ fn check_id(id: &str, file: &str, errors: &mut Vec<String>) {
 }
 
 fn check_levers(entry: &Entry, errors: &mut Vec<String>) {
-    if entry.obsolete.is_none() && entry.levers.is_empty() && entry.opt_in_levers.is_empty() {
+    let no_levers = entry.levers.is_empty() && entry.opt_in_levers.is_empty();
+    if entry.is_overseas() {
+        if !no_levers {
+            errors
+                .push("an overseas entry has no levers: GhostSoap drafts it no letter".to_owned());
+        }
+        if entry.manual_check.is_none() {
+            errors.push("an overseas entry needs a manual_check page".to_owned());
+        }
+        if !entry
+            .channels
+            .iter()
+            .any(|c| c.kind == ChannelKind::WebForm)
+        {
+            errors.push("an overseas entry needs its own web-form opt-out channel".to_owned());
+        }
+    } else if entry.obsolete.is_none() && no_levers {
         errors.push("an entry must list at least one lever".to_owned());
     }
     if entry.levers.iter().any(|l| ACCESS_LEVERS.contains(l)) {
@@ -453,6 +530,15 @@ fn check_channel_levers(entry: &Entry, errors: &mut Vec<String>) {
                 "channel `{}` serves `{}`, which the entry does not list",
                 channel.address,
                 lever.name()
+            ));
+        }
+        // The letter states the Spam Act's 5-business-day period from the day an electronic
+        // message is sent; post and other methods start it on a different day (Schedule 2
+        // clause 6(1)).
+        if channel.kind != ChannelKind::Email && channel.levers.contains(&Lever::SpamUnsubscribe) {
+            errors.push(format!(
+                "channel `{}` serves `spam-unsubscribe`, which only an email channel may serve",
+                channel.address
             ));
         }
     }
@@ -600,7 +686,7 @@ fn is_domain(host: &str) -> bool {
         })
 }
 
-fn is_email(address: &str) -> bool {
+pub(crate) fn is_email(address: &str) -> bool {
     address.split_once('@').is_some_and(|(local, domain)| {
         !local.is_empty()
             && local
@@ -1012,5 +1098,76 @@ replaced_by = \"example-au\"
             format!("{t}\n[obsolete]\nreason = \"merged\"\nreplaced_by = \"gone-au\"\n")
         });
         assert_error(&report, "unknown entry `gone-au`");
+    }
+
+    const OVERSEAS: &str = r#"
+id = "example-au"
+name = "Example People"
+legal_entity = "Example People LLC"
+kinds = ["people-search"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-24
+sources = ["https://example.com/privacy"]
+identity_fields = ["full_name"]
+exemption_risk = "overseas"
+escalation = []
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://example.com/opt-out"
+levers = []
+
+[manual_check]
+url = "https://example.com/au"
+"#;
+
+    #[test]
+    fn overseas_entries_have_no_abn_or_levers_and_need_a_form_and_manual_check() {
+        let check_overseas = |text: &str| check(&[file("example-au.toml", text)], &[], today());
+        assert_eq!(check_overseas(OVERSEAS).findings, []);
+        let report = check_overseas(&format!("abn = \"88 000 014 675\"\n{OVERSEAS}"));
+        assert_error(&report, "must not have an abn");
+        let report = check_overseas(&OVERSEAS.replace("levers = []", "levers = [\"app7-source\"]"));
+        assert_error(
+            &report,
+            "serves `app7-source`, which the entry does not list",
+        );
+        let report = check_overseas(&format!("levers = [\"app7-source\"]\n{OVERSEAS}"));
+        assert_error(&report, "an overseas entry has no levers");
+        let report = check_overseas(
+            &OVERSEAS.replace("[manual_check]\nurl = \"https://example.com/au\"\n", ""),
+        );
+        assert_error(&report, "needs a manual_check page");
+        let report = check_overseas(&OVERSEAS.replace("kind = \"web-form\"", "kind = \"post\""));
+        assert_error(&report, "needs its own web-form opt-out channel");
+    }
+
+    #[test]
+    fn only_overseas_entries_may_omit_the_abn() {
+        let report = check_one(|t| t.replace("abn = \"88 000 014 675\"\n", ""));
+        assert_error(&report, "abn is missing");
+    }
+
+    #[test]
+    fn only_an_email_channel_may_serve_spam_unsubscribe() {
+        let with_spam = |kind: &str, address: &str| {
+            check_one(|t| {
+                t.replace(
+                    "levers = [\"app7-no-marketing\", \"app7-source\", \"app13\"]",
+                    "levers = [\"app7-no-marketing\", \"app7-source\", \"app13\", \"spam-unsubscribe\"]",
+                )
+                .replace(
+                    CHANNEL_LEVERS,
+                    "[\"app12\", \"app13\", \"app7-no-marketing\", \"app7-source\", \"spam-unsubscribe\"]",
+                )
+                .replace("kind = \"email\"", &format!("kind = \"{kind}\""))
+                .replace("privacy@example.com.au", address)
+            })
+        };
+        assert_eq!(with_spam("email", "privacy@example.com.au").findings, []);
+        let report = with_spam("post", "PO Box 1, Sydney NSW 2001");
+        assert_error(&report, "only an email channel may serve");
     }
 }

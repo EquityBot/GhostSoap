@@ -1,0 +1,45 @@
+id = "records-finder-au"
+name = "Records Finder Australia"
+legal_entity = "InfoPay, Inc."
+kinds = ["people-search"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-25
+sources = ["https://recordsfinder.com/privacy/", "https://recordsfinder.com/terms/", "https://recordsfinder.com/optout/", "https://recordsfinder.com/do-not-sell-share-my-personal-information/", "https://recordsfinder.com/australia/"]
+identity_fields = ["full_name"]
+exemption_risk = "overseas"
+escalation = []
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://recordsfinder.com/do-not-sell-share-my-personal-information/"
+levers = []
+
+[manual_check]
+url = "https://recordsfinder.com/australia/"
+
+[[evidence]]
+url = "https://recordsfinder.com/privacy/"
+checked_at = 2026-10-25
+sha256 = "572946dbdda3efecf0b16fc347081530267df9d33c5d22deac923ab300abca87"
+
+[[evidence]]
+url = "https://recordsfinder.com/terms/"
+checked_at = 2026-10-25
+sha256 = "ec8f39257958f057bc7f9124a08c155f12c93bde766913e56a8b3b765883a4f8"
+
+[[evidence]]
+url = "https://recordsfinder.com/optout/"
+checked_at = 2026-10-25
+sha256 = "c88024ac830586c5ac152a30327dd01f977fc282ea75ff5de621232082d3dd78"
+
+[[evidence]]
+url = "https://recordsfinder.com/do-not-sell-share-my-personal-information/"
+checked_at = 2026-10-25
+sha256 = "ae99872996c5d8e13dec966599146e3a4c4fdf0b8c3a907e40390a9291abba7f"
+
+[[evidence]]
+url = "https://recordsfinder.com/australia/"
+checked_at = 2026-10-25
+sha256 = "1864c827332dd7c8bc46ab22526f532ca858c0f6022b7ab5a209440ff1626a89"

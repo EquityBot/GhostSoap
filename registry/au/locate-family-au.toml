@@ -1,0 +1,50 @@
+id = "locate-family-au"
+name = "Locate Family"
+legal_entity = "LocateFamily.com (operating company not named on its pages)"
+kinds = ["people-search"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-25
+sources = ["https://www.locatefamily.com/removal.html", "https://www.locatefamily.com/removal2.html", "https://www.locatefamily.com/legal.html", "https://www.locatefamily.com/faq.html", "https://www.locatefamily.com/privacy_policy.html", "https://www.locatefamily.com/Street-Lists/index.html", "https://www.locatefamily.com/Street-Lists/Australia/index.html"]
+identity_fields = ["full_name", "email"]
+exemption_risk = "overseas"
+escalation = []
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.locatefamily.com/removal2.html"
+levers = []
+
+[manual_check]
+url = "https://www.locatefamily.com/"
+
+[[evidence]]
+url = "https://www.locatefamily.com/removal.html"
+checked_at = 2026-10-25
+sha256 = "5ff095557b4e068066010b5f263c5935358ce5299964e1751bf87e5f5cf95bb6"
+
+[[evidence]]
+url = "https://www.locatefamily.com/removal2.html"
+checked_at = 2026-10-25
+sha256 = "eaea891f495190cdf30769642aacb3c850c5da6fdaf0177dd5a4a18d0feca8f2"
+
+[[evidence]]
+url = "https://www.locatefamily.com/legal.html"
+checked_at = 2026-10-25
+sha256 = "fe89c88781a7d97e2d860d73f0d02a8e478fbdd44d86f32b9cffc85b8e5c8940"
+
+[[evidence]]
+url = "https://www.locatefamily.com/faq.html"
+checked_at = 2026-10-25
+sha256 = "f39c385a3b403c3e48c558ede32788c5465b8678e8cc8d0c5b98e46297c4f20a"
+
+[[evidence]]
+url = "https://www.locatefamily.com/privacy_policy.html"
+checked_at = 2026-10-25
+sha256 = "f30da6807d992ba5e6f1281ffa174f4e6b19d35822363991e7cb84b411052296"
+
+[[evidence]]
+url = "https://www.locatefamily.com/Street-Lists/index.html"
+checked_at = 2026-10-25
+sha256 = "bb917ed8354979896dc86ce14c4e127c8ded7c904079aaeadf2722e73611774f"
