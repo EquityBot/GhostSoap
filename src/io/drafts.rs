@@ -253,7 +253,9 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
     }
     let lock = match check_private(dir).and_then(|()| Lock::acquire(dir, LOCK)) {
         // Another clean removed the folder since the check above.
-        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(Cleaned::default()),
+        Err(e) if e.kind() == io::ErrorKind::NotFound && !dir.exists() => {
+            return Ok(Cleaned::default());
+        }
         lock => lock?,
     };
     let mut cleaned = Cleaned::default();
@@ -483,6 +485,15 @@ mod tests {
             "not GhostSoap's, so not reported"
         );
         assert_eq!(fs::read_to_string(&other).unwrap(), "keep this");
+    }
+
+    #[test]
+    fn clean_refuses_a_path_that_is_a_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("not-a-folder");
+        fs::write(&file, "x").unwrap();
+        assert!(clean(&file, true).is_err());
+        assert!(file.exists());
     }
 
     #[test]
