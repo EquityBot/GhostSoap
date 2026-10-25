@@ -1,22 +1,27 @@
 //! The drafts folder: plaintext letters waiting to be sent (plan section 5).
 
-use std::env;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// The default drafts folder, in the system temporary directory.
-pub fn default_dir() -> PathBuf {
-    env::temp_dir().join("ghostsoap-drafts")
+use crate::io::state::create_private_dir;
+
+/// The default drafts folder: `drafts` in the data directory, which is private to the user on
+/// every platform, unlike a shared temporary folder such as Linux's `/tmp`.
+pub fn default_dir(data_dir: &Path) -> PathBuf {
+    data_dir.join("drafts")
 }
 
-/// Write `text` to `<dir>/<name>`, creating `dir`. Fails rather than overwrite a file.
+/// Write `text` to `<dir>/<name>`, creating `dir`. Fails rather than overwrite a file. On Unix,
+/// folders it creates and the file are readable by the user alone.
 pub fn write(dir: &Path, name: &str, text: &str) -> io::Result<PathBuf> {
-    fs::create_dir_all(dir)?;
+    create_private_dir(dir)?;
     let path = dir.join(name);
-    fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+    options
         .open(&path)
         .and_then(|mut f| io::Write::write_all(&mut f, text.as_bytes()))?;
     Ok(path)
@@ -83,5 +88,17 @@ mod tests {
         assert_eq!(clean(&drafts).unwrap(), 1);
         assert!(!drafts.exists(), "an emptied folder is removed");
         assert_eq!(clean(&drafts).unwrap(), 0);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn drafts_are_private_on_unix() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().unwrap();
+        let drafts = dir.path().join("drafts");
+        let path = write(&drafts, "a-GS-11111.eml", "x").unwrap();
+        let mode = |p: &Path| fs::metadata(p).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode(&drafts), 0o700);
+        assert_eq!(mode(&path), 0o600);
     }
 }

@@ -130,6 +130,21 @@ fn copy_prints_instead_of_writing() {
 }
 
 #[test]
+fn drafts_default_to_the_data_folder() {
+    let tmp = tempfile::tempdir().unwrap();
+    let home = tmp.path().join("home");
+    init(&home);
+    let args = ["draft", "--entry", "cotality-au", "--passphrase-stdin"];
+    let out = ghostsoap(&home, &args, &format!("{PASSPHRASE}\n"));
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    assert_eq!(fs::read_dir(home.join("drafts")).unwrap().count(), 1);
+    let out = ghostsoap(&home, &["clean"], "");
+    assert_eq!(out.status.code(), Some(0));
+    assert!(!home.join("drafts").exists());
+    assert!(home.join("state.age").exists(), "clean keeps the profile");
+}
+
+#[test]
 fn init_rejects_a_short_passphrase_and_bad_details() {
     let tmp = tempfile::tempdir().unwrap();
     let home = tmp.path().join("home");

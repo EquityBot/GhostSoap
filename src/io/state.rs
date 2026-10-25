@@ -63,17 +63,20 @@ pub fn state_path(dir: &Path) -> PathBuf {
 /// Encrypt and write a new state file. Refuses to replace an existing one.
 pub fn create(dir: &Path, state: &State, passphrase: SecretString) -> io::Result<()> {
     let path = state_path(dir);
+    let text = toml::to_string(state).map_err(io::Error::other)?;
+    let recipient = age::scrypt::Recipient::new(passphrase);
+    let bytes = age::encrypt(&recipient, text.as_bytes()).map_err(io::Error::other)?;
+    create_private_dir(dir)?;
+    // Checked under the lock, so 2 `init` runs cannot both see no file and the second replace
+    // the first.
+    let _lock = Lock::acquire(dir)?;
     if path.exists() {
         return Err(io::Error::new(
             io::ErrorKind::AlreadyExists,
             format!("{} already exists", path.display()),
         ));
     }
-    let text = toml::to_string(state).map_err(io::Error::other)?;
-    let recipient = age::scrypt::Recipient::new(passphrase);
-    let bytes = age::encrypt(&recipient, text.as_bytes()).map_err(io::Error::other)?;
-    create_private_dir(dir)?;
-    write_atomic(dir, &path, &bytes)
+    write_atomic(&path, &bytes)
 }
 
 /// Read and decrypt the state file.
@@ -107,8 +110,9 @@ pub fn load(dir: &Path, passphrase: SecretString) -> io::Result<State> {
     Ok(state)
 }
 
+/// Create `dir` and its parents; on Unix, the folders created are private to the user.
 #[cfg(unix)]
-fn create_private_dir(dir: &Path) -> io::Result<()> {
+pub(crate) fn create_private_dir(dir: &Path) -> io::Result<()> {
     use std::os::unix::fs::DirBuilderExt;
     fs::DirBuilder::new()
         .recursive(true)
@@ -117,50 +121,62 @@ fn create_private_dir(dir: &Path) -> io::Result<()> {
 }
 
 #[cfg(not(unix))]
-fn create_private_dir(dir: &Path) -> io::Result<()> {
+pub(crate) fn create_private_dir(dir: &Path) -> io::Result<()> {
     fs::create_dir_all(dir)
 }
 
-/// Write `bytes` to a temporary file beside `path`, flush it to disk and rename it over
-/// `path`, holding a lock file so 2 processes cannot interleave. A rename that fails because
-/// antivirus or an indexer briefly holds the file is retried.
-fn write_atomic(dir: &Path, path: &Path, bytes: &[u8]) -> io::Result<()> {
-    let lock_path = dir.join(LOCK_FILE);
-    let lock = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&lock_path)
-        .map_err(|e| match e.kind() {
-            io::ErrorKind::AlreadyExists => io::Error::new(
-                e.kind(),
-                format!(
-                    "{} exists: another GhostSoap is writing, or one stopped mid-write; \
-                     delete it if no GhostSoap is running",
-                    lock_path.display()
+/// The state lock: a file created exclusively, so 2 processes cannot interleave writes, and
+/// removed when dropped.
+struct Lock(PathBuf);
+
+impl Lock {
+    fn acquire(dir: &Path) -> io::Result<Self> {
+        let path = dir.join(LOCK_FILE);
+        OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .map_err(|e| match e.kind() {
+                io::ErrorKind::AlreadyExists => io::Error::new(
+                    e.kind(),
+                    format!(
+                        "{} exists: another GhostSoap is writing, or one stopped mid-write; \
+                         delete it if no GhostSoap is running",
+                        path.display()
+                    ),
                 ),
-            ),
-            _ => e,
-        })?;
-    let result = (|| {
-        let tmp = path.with_extension("age.tmp");
-        let mut file = File::create(&tmp)?;
-        file.write_all(bytes)?;
-        file.sync_all()?;
-        drop(file);
-        let mut attempt = 0;
-        loop {
-            match fs::rename(&tmp, path) {
-                Err(e) if e.kind() == io::ErrorKind::PermissionDenied && attempt < 10 => {
-                    attempt += 1;
-                    thread::sleep(Duration::from_millis(200));
-                }
-                other => return other,
+                _ => e,
+            })?;
+        Ok(Self(path))
+    }
+}
+
+impl Drop for Lock {
+    fn drop(&mut self) {
+        // A lock left behind stops the next write with a message saying how to clear it.
+        let _ = fs::remove_file(&self.0);
+    }
+}
+
+/// Write `bytes` to a temporary file beside `path`, flush it to disk and rename it over
+/// `path`. The caller holds the [`Lock`]. A rename that fails because antivirus or an indexer
+/// briefly holds the file is retried.
+fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    let tmp = path.with_extension("age.tmp");
+    let mut file = File::create(&tmp)?;
+    file.write_all(bytes)?;
+    file.sync_all()?;
+    drop(file);
+    let mut attempt = 0;
+    loop {
+        match fs::rename(&tmp, path) {
+            Err(e) if e.kind() == io::ErrorKind::PermissionDenied && attempt < 10 => {
+                attempt += 1;
+                thread::sleep(Duration::from_millis(200));
             }
+            other => return other,
         }
-    })();
-    drop(lock);
-    fs::remove_file(&lock_path)?;
-    result
+    }
 }
 
 #[cfg(test)]

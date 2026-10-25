@@ -41,7 +41,7 @@ pub enum Command {
     Draft {
         #[command(flatten)]
         selection: SelectionArgs,
-        /// Drafts folder; defaults to `ghostsoap-drafts` in the system temporary folder.
+        /// Drafts folder; defaults to `drafts` in GhostSoap's data folder.
         #[arg(long)]
         out: Option<PathBuf>,
         /// Print each letter's To, Subject and body instead of writing files (for webmail).
@@ -53,7 +53,7 @@ pub enum Command {
     },
     /// Delete the drafts GhostSoap wrote; other files in the folder are left alone.
     Clean {
-        /// Drafts folder; defaults to `ghostsoap-drafts` in the system temporary folder.
+        /// Drafts folder; defaults to `drafts` in GhostSoap's data folder.
         #[arg(long)]
         out: Option<PathBuf>,
     },
@@ -213,7 +213,7 @@ fn draft(
     let register = built_in_register()?;
     let steps = plan::plan(&register, selection)?;
     let mut profile = None;
-    let dir = out.unwrap_or_else(io::drafts::default_dir);
+    let dir = drafts_dir(out)?;
     let today = chrono::Local::now().date_naive();
     let mut tags = Vec::new();
     for step in &steps {
@@ -403,10 +403,20 @@ fn deadline_summary(deadline: Deadline) -> String {
 }
 
 fn clean(out: Option<PathBuf>) -> Result<(), String> {
-    let dir = out.unwrap_or_else(io::drafts::default_dir);
+    let dir = drafts_dir(out)?;
     let deleted = io::drafts::clean(&dir).map_err(|e| e.to_string())?;
     println!("Deleted {deleted} drafts from {}.", dir.display());
     Ok(())
+}
+
+/// The folder `--out` names, else the default drafts folder in the data directory.
+fn drafts_dir(out: Option<PathBuf>) -> Result<PathBuf, String> {
+    match out {
+        Some(dir) => Ok(dir),
+        None => state::data_dir()
+            .map(|d| io::drafts::default_dir(&d))
+            .map_err(|e| e.to_string()),
+    }
 }
 
 fn show_law() {
