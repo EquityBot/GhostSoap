@@ -103,14 +103,14 @@ pub fn law(lever: Lever) -> Law {
             charge: APP13_FREE,
         },
         Lever::App13NotifyRecipients => Law {
-            title: "Tell the entities you disclosed my information to about the correction",
+            title: "Notify the entities you disclosed my information to if you correct it",
             provision: "APP 13.2",
             deadline: Deadline::NotStated,
             deadline_text: "APP 13.2 sets no timeframe; it requires reasonable steps to give the notification unless it is impracticable or unlawful to do so",
             charge: "APP 13.2 sets no charge rule of its own; APP 13.5(b) bars charging for a correction request or a statement request.",
         },
         Lever::App13Statement => Law {
-            title: "Associate my statement with the information you refused to correct",
+            title: "Associate my statement with the information if you refuse to correct it",
             provision: "APP 13.4, 13.5(a)(ii)",
             deadline: Deadline::Reasonable {
                 guide_days: Some(30),

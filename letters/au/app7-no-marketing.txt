@@ -1,3 +1,3 @@
 version 1
 {{title}} ({{provision}})
-Please stop sending me direct marketing communications, by any channel. Please give effect to this request {{deadline}}. {{charge}} APP 7 does not apply to the extent that the Spam Act 2003, the Do Not Call Register Act 2006 or another Act listed in APP 7.8 applies; for marketing those Acts cover, please treat this letter as withdrawing any consent I have given to receive it.
+Please stop sending me direct marketing communications, by any channel. To the extent that APP 7 applies, please give effect to this request {{deadline}}. {{charge}} APP 7 does not apply to the extent that the Spam Act 2003, the Do Not Call Register Act 2006 or another Act listed in APP 7.8 applies; for marketing one of those Acts governs instead, please treat this letter as withdrawing any consent I have given to receive it, as that Act provides.

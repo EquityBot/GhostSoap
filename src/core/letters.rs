@@ -189,7 +189,9 @@ fn identity_values(entry: &Entry, profile: &Profile) -> BTreeMap<&'static str, O
 fn escalation(entry: &Entry, spam_only: bool, has_spam: bool) -> Option<String> {
     let name = |e: Escalation| match e {
         Escalation::Oaic => "the Office of the Australian Information Commissioner (OAIC)",
-        Escalation::Afca => "the Australian Financial Complaints Authority (AFCA)",
+        Escalation::Afca => {
+            "the Australian Financial Complaints Authority (AFCA, if my complaint is within its jurisdiction)"
+        }
         Escalation::Acma => "the Australian Communications and Media Authority (ACMA)",
     };
     let privacy: Vec<&str> = entry

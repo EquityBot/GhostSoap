@@ -71,12 +71,12 @@ fn is_guarded(lever: Lever) -> bool {
 /// `--detail` goes with exactly one lever that takes it, so one request's words never land
 /// in another's letter, and it must say something.
 fn check_detail(selection: &Selection) -> Result<(), String> {
-    let detailed: Vec<&str> = selection
-        .levers
-        .iter()
-        .filter(|&&l| takes_detail(l))
-        .map(|l| l.name())
-        .collect();
+    let mut detailed: Vec<&str> = Vec::new();
+    for lever in selection.levers.iter().filter(|&&l| takes_detail(l)) {
+        if !detailed.contains(&lever.name()) {
+            detailed.push(lever.name());
+        }
+    }
     if detailed.len() > 1 {
         return Err(format!(
             "{} each need their own --detail: choose one of them per run",
@@ -364,6 +364,8 @@ entries = ["pollos-au", "fsociety-au"]
         let two = [Lever::App13, Lever::S20kBan];
         let err = plan(&register, &select(&[], &["pollos-au"], &two, Some("x"))).unwrap_err();
         assert!(err.contains("each need their own --detail"), "{err}");
+        let twice = [Lever::App13, Lever::App13];
+        assert!(plan(&register, &select(&[], &["pollos-au"], &twice, Some("x"))).is_ok());
         let err = plan(
             &register,
             &select(&[], &["pollos-au"], &[Lever::App13], Some("  ")),

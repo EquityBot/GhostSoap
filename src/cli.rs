@@ -232,6 +232,7 @@ fn draft(
     let register = built_in_register()?;
     let steps = plan::plan(&register, selection)?;
     let mut profile = None;
+    warn_unchecked_out(out.is_some() && !output.copy);
     let dir = drafts_dir(out)?;
     let today = chrono::Local::now().date_naive();
     let mut tags = Vec::new();
@@ -274,11 +275,26 @@ fn draft(
     }
     access_warning(selection);
     if !tags.is_empty() && !output.copy {
-        println!(
-            "Drafts are plaintext. After sending them from your own mailbox, run `ghostsoap clean`."
-        );
+        print_clean_reminder();
     }
     Ok(())
+}
+
+fn print_clean_reminder() {
+    println!(
+        "Drafts are plaintext. After sending them from your own mailbox, run `ghostsoap clean`."
+    );
+}
+
+/// On Windows the drafts folder keeps the access list it inherits, which GhostSoap does not
+/// check; say so when the user names the folder (`named`).
+fn warn_unchecked_out(named: bool) {
+    if cfg!(windows) && named {
+        eprintln!(
+            "note: on Windows GhostSoap does not check who else can open the --out folder; \
+             choose one only you can open"
+        );
+    }
 }
 
 fn load_profile(passphrase_stdin: bool) -> Result<Profile, String> {
@@ -434,8 +450,14 @@ fn deadline_summary(deadline: Deadline) -> String {
 fn clean(out: Option<PathBuf>) -> Result<(), String> {
     let own_folder = out.is_none();
     let dir = drafts_dir(out)?;
-    let deleted = io::drafts::clean(&dir, own_folder).map_err(|e| e.to_string())?;
-    println!("Deleted {deleted} drafts from {}.", dir.display());
+    let cleaned = io::drafts::clean(&dir, own_folder).map_err(|e| e.to_string())?;
+    println!("Deleted {} drafts from {}.", cleaned.deleted, dir.display());
+    for name in &cleaned.kept {
+        println!("kept    {name}: it no longer holds the letter GhostSoap wrote");
+    }
+    for name in &cleaned.leftovers {
+        println!("check   {name}: left by a write that stopped part-way; delete it if unwanted");
+    }
     Ok(())
 }
 

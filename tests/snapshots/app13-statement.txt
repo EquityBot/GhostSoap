@@ -16,7 +16,7 @@ Email: jimmy@example.com
 Please use these details only to identify me and to deal with these
 requests, and not for any other purpose.
 
-Associate my statement with the information you refused to correct (APP
+Associate my statement with the information if you refuse to correct it (APP
 13.4, 13.5(a)(ii))
 If you refuse, or have refused, to correct personal information about me as
 I requested, I ask you to associate the following statement with that
@@ -34,8 +34,9 @@ Please reply in writing. If you refuse any of these requests, please tell me
 why and how I can complain about the refusal.
 
 If I am not satisfied with your response, I may complain to the Australian
-Financial Complaints Authority (AFCA) or the Office of the Australian
-Information Commissioner (OAIC).
+Financial Complaints Authority (AFCA, if my complaint is within its
+jurisdiction) or the Office of the Australian Information Commissioner
+(OAIC).
 
 Yours faithfully
 James McGill

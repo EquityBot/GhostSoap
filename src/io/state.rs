@@ -161,8 +161,9 @@ impl Drop for Lock {
 /// Write `bytes` to a temporary file beside `path`, flush it to disk and rename it over
 /// `path`. The caller holds the [`Lock`]. A rename that fails because antivirus or an indexer
 /// briefly holds the file is retried. On Unix the folder is flushed too, so the rename itself
-/// survives a power cut. A temporary file left by an interrupted write is overwritten: it was
-/// never reported as saved, and `path` still holds the last complete state.
+/// survives a power cut. A temporary file left by an interrupted write is overwritten, so
+/// GhostSoap keeps only what it reported as saved: after an interrupted update `path` still
+/// holds the last complete state, and after an interrupted `init` the user runs it again.
 fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let tmp = path.with_extension("age.tmp");
     let mut file = File::create(&tmp)?;
