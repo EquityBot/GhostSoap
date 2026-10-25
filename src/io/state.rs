@@ -69,7 +69,7 @@ pub fn create(dir: &Path, state: &State, passphrase: SecretString) -> io::Result
     create_private_dir(dir)?;
     // Checked under the lock, so 2 `init` runs cannot both see no file and the second replace
     // the first.
-    let _lock = Lock::acquire(dir)?;
+    let _lock = Lock::acquire(dir, LOCK_FILE)?;
     if path.exists() {
         return Err(io::Error::new(
             io::ErrorKind::AlreadyExists,
@@ -125,13 +125,13 @@ pub(crate) fn create_private_dir(dir: &Path) -> io::Result<()> {
     fs::create_dir_all(dir)
 }
 
-/// The state lock: a file created exclusively, so 2 processes cannot interleave writes, and
-/// removed when dropped.
-struct Lock(PathBuf);
+/// A lock file created exclusively, so 2 GhostSoap processes cannot interleave changes to
+/// the same files, and removed when dropped. Used for the state and for each drafts folder.
+pub(crate) struct Lock(PathBuf);
 
 impl Lock {
-    fn acquire(dir: &Path) -> io::Result<Self> {
-        let path = dir.join(LOCK_FILE);
+    pub(crate) fn acquire(dir: &Path, name: &str) -> io::Result<Self> {
+        let path = dir.join(name);
         OpenOptions::new()
             .write(true)
             .create_new(true)

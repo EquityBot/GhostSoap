@@ -455,6 +455,9 @@ fn clean(out: Option<PathBuf>) -> Result<(), String> {
     for name in &cleaned.kept {
         println!("kept    {name}: it no longer holds the letter GhostSoap wrote");
     }
+    for name in &cleaned.unconfirmed {
+        println!("check   {name}: its write never finished recording; delete it if unwanted");
+    }
     for name in &cleaned.leftovers {
         println!("check   {name}: left by a write that stopped part-way; delete it if unwanted");
     }

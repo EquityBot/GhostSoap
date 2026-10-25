@@ -1,24 +1,32 @@
 //! The drafts folder: plaintext letters waiting to be sent (plan section 5).
+//!
+//! Each folder has a manifest, `.ghostsoap-drafts`. Before a draft is written its name is
+//! recorded as `pending <name>`; once the draft is in place, `<sha256> <name>` commits it.
+//! `clean` deletes only committed drafts that still hold those bytes. A lock file serialises
+//! `write` and `clean` between GhostSoap processes; other programs changing the folder at the
+//! same moment are outside this guarantee.
 
-use std::fs::{self, OpenOptions};
+use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use sha2::{Digest, Sha256};
 
-use crate::io::state::create_private_dir;
+use crate::io::state::{Lock, create_private_dir};
 
-/// Lists the drafts GhostSoap wrote in a folder, one `<sha256> <name>` line each, so `clean`
-/// deletes a listed file only while it still holds the bytes GhostSoap wrote.
 const MANIFEST: &str = ".ghostsoap-drafts";
+const LOCK: &str = ".ghostsoap-drafts.lock";
+const PENDING: &str = "pending";
 
 /// What `clean` did.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Cleaned {
     /// Drafts deleted.
     pub deleted: usize,
-    /// Listed names whose file no longer holds what GhostSoap wrote, left alone.
+    /// Committed names whose file no longer holds what GhostSoap wrote, left alone.
     pub kept: Vec<String>,
+    /// Names whose write never committed but whose file exists, left alone.
+    pub unconfirmed: Vec<String>,
     /// Temporary files from a write that stopped part-way, left for the user to check.
     pub leftovers: Vec<String>,
 }
@@ -42,13 +50,16 @@ pub fn write(dir: &Path, name: &str, text: &str) -> io::Result<PathBuf> {
     }
     create_private_dir(dir)?;
     check_private(dir)?;
+    let _lock = Lock::acquire(dir, LOCK)?;
     let path = dir.join(name);
-    // Recorded first, with the content's hash, so `clean` finds a draft even if a crash
-    // follows its publication, and never deletes a file holding other bytes.
-    let mut manifest =
-        private_file(OpenOptions::new().append(true).create(true)).open(dir.join(MANIFEST))?;
-    writeln!(manifest, "{} {name}", sha256(text.as_bytes()))?;
-    manifest.sync_all()?;
+    if fs::symlink_metadata(&path).is_ok() {
+        return Err(io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            format!("{} already exists", path.display()),
+        ));
+    }
+    let mut manifest = open_manifest(dir)?;
+    record(&mut manifest, PENDING, name)?;
     let tmp = dir.join(format!(".{name}.{}.tmp", std::process::id()));
     let mut file = private_file(OpenOptions::new().write(true).create_new(true)).open(&tmp)?;
     // From here the temporary file is this call's own, so it may remove it.
@@ -58,13 +69,40 @@ pub fn write(dir: &Path, name: &str, text: &str) -> io::Result<PathBuf> {
         .and_then(|()| fs::hard_link(&tmp, &path));
     drop(file);
     let _ = fs::remove_file(&tmp);
-    match published {
-        Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Err(io::Error::new(
-            e.kind(),
-            format!("{} already exists", path.display()),
-        )),
-        other => other.map(|()| path),
+    published?;
+    sync_dir(dir)?;
+    record(&mut manifest, &sha256(text.as_bytes()), name)?;
+    Ok(path)
+}
+
+/// Open the manifest for appending, refusing a link or anything but a plain file.
+fn open_manifest(dir: &Path) -> io::Result<File> {
+    let path = dir.join(MANIFEST);
+    match fs::symlink_metadata(&path) {
+        Ok(meta) if !meta.is_file() => {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("{} is not a plain file", path.display()),
+            ));
+        }
+        Err(e) if e.kind() != io::ErrorKind::NotFound => return Err(e),
+        _ => {}
     }
+    private_file(OpenOptions::new().append(true).create(true)).open(path)
+}
+
+fn record(manifest: &mut File, first: &str, name: &str) -> io::Result<()> {
+    writeln!(manifest, "{first} {name}")?;
+    manifest.sync_all()
+}
+
+/// On Unix, flush the folder so a new name survives a power cut.
+fn sync_dir(dir: &Path) -> io::Result<()> {
+    #[cfg(unix)]
+    File::open(dir)?.sync_all()?;
+    #[cfg(not(unix))]
+    let _ = dir;
+    Ok(())
 }
 
 fn sha256(bytes: &[u8]) -> String {
@@ -127,41 +165,54 @@ fn is_draft(name: &str) -> bool {
             .all(|b| b.is_ascii_digit() || b.is_ascii_uppercase())
 }
 
-/// Delete the drafts GhostSoap wrote in `dir`: each file the manifest lists that still holds
-/// the bytes GhostSoap wrote. Other files, including a listed name now holding something
-/// else, are left alone, as are temporary files from an interrupted write (reported, not
-/// deleted). With `remove_dir`, `dir` is also removed once empty; pass it only for
-/// GhostSoap's own drafts folder.
+/// Delete the drafts GhostSoap wrote in `dir`: each committed draft that still holds the
+/// bytes GhostSoap wrote. Other files, including a listed name now holding something else
+/// and a name whose write never committed, are left alone and reported, as are temporary
+/// files from an interrupted write. With `remove_dir`, `dir` is also removed once empty;
+/// pass it only for GhostSoap's own drafts folder.
 pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
-    let manifest = dir.join(MANIFEST);
-    let lines = match fs::read_to_string(&manifest) {
-        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(Cleaned::default()),
-        other => other?,
-    };
-    check_private(dir)?;
-    let mut cleaned = Cleaned::default();
-    for (hash, name) in lines.lines().filter_map(|l| l.split_once(' ')) {
-        if !is_draft(name) {
-            continue;
-        }
-        let path = dir.join(name);
-        match fs::read(&path) {
-            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-            Err(e) => return Err(e),
-            Ok(bytes) if sha256(&bytes) == hash => {
-                fs::remove_file(&path)?;
-                cleaned.deleted += 1;
-            }
-            Ok(_) => cleaned.kept.push(name.to_owned()),
-        }
+    if !dir.exists() {
+        return Ok(Cleaned::default());
     }
-    fs::remove_file(&manifest)?;
+    check_private(dir)?;
+    let lock = Lock::acquire(dir, LOCK)?;
+    let mut cleaned = Cleaned::default();
+    let manifest = dir.join(MANIFEST);
+    if fs::symlink_metadata(&manifest).is_ok() {
+        drop(open_manifest(dir)?); // refuses a link or a folder
+        let lines = fs::read_to_string(&manifest)?;
+        let records: Vec<(&str, &str)> = lines
+            .lines()
+            .filter_map(|l| l.split_once(' '))
+            .filter(|&(_, name)| is_draft(name))
+            .collect();
+        for &(hash, name) in records.iter().filter(|&&(first, _)| first != PENDING) {
+            let path = dir.join(name);
+            match fs::read(&path) {
+                Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+                Err(e) => return Err(e),
+                Ok(bytes) if sha256(&bytes) == hash => {
+                    fs::remove_file(&path)?;
+                    cleaned.deleted += 1;
+                }
+                Ok(_) => cleaned.kept.push(name.to_owned()),
+            }
+        }
+        for &(_, name) in records.iter().filter(|&&(first, _)| first == PENDING) {
+            let committed = records.iter().any(|&(f, n)| n == name && f != PENDING);
+            if !committed && dir.join(name).exists() {
+                cleaned.unconfirmed.push(name.to_owned());
+            }
+        }
+        fs::remove_file(&manifest)?;
+    }
     for item in fs::read_dir(dir)? {
         let name = item?.file_name().to_string_lossy().into_owned();
         if name.starts_with('.') && name.ends_with(".tmp") && name.contains("-GS-") {
             cleaned.leftovers.push(name);
         }
     }
+    drop(lock);
     if remove_dir && fs::read_dir(dir)?.next().is_none() {
         fs::remove_dir(dir)?;
     }
@@ -201,22 +252,39 @@ mod tests {
         assert!(drafts.join("notes.txt").exists());
         assert!(drafts.join("notes-GS-ABCDE.txt").exists());
         assert!(!drafts.join(MANIFEST).exists());
+        assert!(!drafts.join(LOCK).exists());
         assert_eq!(clean(&drafts, true).unwrap(), Cleaned::default());
     }
 
     #[test]
-    fn clean_keeps_a_listed_file_that_now_holds_other_bytes() {
+    fn a_failed_write_cannot_authorise_deleting_an_existing_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let drafts = dir.path().join("drafts");
+        write(&drafts, "seed-GS-11111.eml", "seed").unwrap();
+        let path = drafts.join("a-GS-22222.eml");
+        fs::write(&path, "letter").unwrap();
+        let err = write(&drafts, "a-GS-22222.eml", "letter").unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::AlreadyExists);
+        // A write that published but stopped before committing leaves a pending name only.
+        let mut manifest = open_manifest(&drafts).unwrap();
+        record(&mut manifest, PENDING, "b-GS-33333.eml").unwrap();
+        fs::write(drafts.join("b-GS-33333.eml"), "unconfirmed").unwrap();
+        let cleaned = clean(&drafts, false).unwrap();
+        assert_eq!(cleaned.deleted, 1, "only the seed draft");
+        assert_eq!(fs::read_to_string(&path).unwrap(), "letter");
+        assert_eq!(cleaned.unconfirmed, ["b-GS-33333.eml"]);
+        assert!(drafts.join("b-GS-33333.eml").exists());
+    }
+
+    #[test]
+    fn clean_keeps_a_committed_file_that_now_holds_other_bytes() {
         let dir = tempfile::tempdir().unwrap();
         let drafts = dir.path().join("drafts");
         let path = write(&drafts, "a-GS-11111.eml", "letter").unwrap();
         fs::rename(&path, dir.path().join("moved.eml")).unwrap();
         fs::write(&path, "the user's own file").unwrap();
-        // A listing GhostSoap never wrote cannot authorise a deletion either.
-        let mut manifest = OpenOptions::new()
-            .append(true)
-            .open(drafts.join(MANIFEST))
-            .unwrap();
-        writeln!(manifest, "{} b-GS-22222.eml", "0".repeat(64)).unwrap();
+        let mut manifest = open_manifest(&drafts).unwrap();
+        record(&mut manifest, &"0".repeat(64), "b-GS-22222.eml").unwrap();
         fs::write(drafts.join("b-GS-22222.eml"), "also the user's").unwrap();
         let cleaned = clean(&drafts, true).unwrap();
         assert_eq!(cleaned.deleted, 0);
@@ -238,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn a_draft_never_replaces_a_file_and_a_failed_write_leaves_others_alone() {
+    fn a_draft_never_replaces_a_file_and_leftovers_stay_reported() {
         let dir = tempfile::tempdir().unwrap();
         let drafts = dir.path().join("drafts");
         let path = write(&drafts, "a-GS-11111.eml", "first").unwrap();
@@ -247,18 +315,37 @@ mod tests {
         assert_eq!(fs::read_to_string(&path).unwrap(), "first");
         // Another writer's temporary file with this process's name is neither used nor
         // removed.
-        let tmp = drafts.join(format!(".b-GS-22222.eml.{}.tmp", std::process::id()));
+        let tmp_name = format!(".b-GS-22222.eml.{}.tmp", std::process::id());
+        let tmp = drafts.join(&tmp_name);
         fs::write(&tmp, "canary").unwrap();
         assert!(write(&drafts, "b-GS-22222.eml", "x").is_err());
         assert_eq!(fs::read_to_string(&tmp).unwrap(), "canary");
         assert!(!drafts.join("b-GS-22222.eml").exists());
         let cleaned = clean(&drafts, true).unwrap();
         assert_eq!(cleaned.deleted, 1);
+        assert_eq!(cleaned.leftovers, std::slice::from_ref(&tmp_name));
         assert_eq!(
-            cleaned.leftovers,
-            [format!(".b-GS-22222.eml.{}.tmp", std::process::id())]
+            clean(&drafts, true).unwrap().leftovers,
+            [tmp_name],
+            "still reported without a manifest"
         );
         assert!(tmp.exists(), "leftovers are reported, not deleted");
+    }
+
+    #[test]
+    fn a_held_lock_stops_write_and_clean() {
+        let dir = tempfile::tempdir().unwrap();
+        let drafts = dir.path().join("drafts");
+        write(&drafts, "a-GS-11111.eml", "x").unwrap();
+        fs::write(drafts.join(LOCK), "").unwrap();
+        let err = write(&drafts, "b-GS-22222.eml", "y").unwrap_err();
+        assert!(err.to_string().contains("another GhostSoap"), "{err}");
+        assert!(clean(&drafts, true).is_err());
+        assert!(drafts.join("a-GS-11111.eml").exists());
+        assert!(
+            drafts.join(LOCK).exists(),
+            "someone else's lock is left alone"
+        );
     }
 
     #[cfg(unix)]
@@ -284,5 +371,20 @@ mod tests {
             "a link is refused"
         );
         assert!(clean(&link, true).is_err(), "clean refuses a link too");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_linked_manifest_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let drafts = dir.path().join("drafts");
+        write(&drafts, "a-GS-11111.eml", "x").unwrap();
+        fs::remove_file(drafts.join(MANIFEST)).unwrap();
+        let canary = dir.path().join("canary.txt");
+        fs::write(&canary, "unchanged").unwrap();
+        std::os::unix::fs::symlink(&canary, drafts.join(MANIFEST)).unwrap();
+        assert!(write(&drafts, "b-GS-22222.eml", "y").is_err());
+        assert!(clean(&drafts, true).is_err());
+        assert_eq!(fs::read_to_string(&canary).unwrap(), "unchanged");
     }
 }
