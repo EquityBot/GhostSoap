@@ -12,6 +12,7 @@
 use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use sha2::{Digest, Sha256};
 
@@ -127,24 +128,38 @@ fn read_manifest(dir: &Path) -> io::Result<Vec<Record>> {
 }
 
 /// Replace the manifest with `records`, or remove it when none remain. The new copy is
-/// written and synced under another name, then renamed over the old one.
+/// written and synced under a new name of this update's own, then renamed over the old one;
+/// a copy left by an update that stopped part-way stays and `clean` reports it.
 fn save_manifest(dir: &Path, records: &[Record]) -> io::Result<()> {
     let path = dir.join(MANIFEST);
-    let tmp = dir.join(format!("{MANIFEST}.tmp"));
-    // Under the lock, a file here is left by an interrupted update; never write through it.
-    remove_if_present(&tmp)?;
     if records.is_empty() {
         remove_if_present(&path)?;
         return sync_dir(dir);
     }
+    // A name of this update's own: a file already at it, whoever left it, is never touched.
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    let tmp = dir.join(format!("{MANIFEST}.{}-{nanos}.tmp", std::process::id()));
     let mut file = private_file(OpenOptions::new().write(true).create_new(true)).open(&tmp)?;
-    for (first, name) in records {
-        writeln!(file, "{first} {name}")?;
-    }
-    file.sync_all()?;
+    let written = records
+        .iter()
+        .try_for_each(|(first, name)| writeln!(file, "{first} {name}"))
+        .and_then(|()| file.sync_all());
     drop(file);
-    fs::rename(&tmp, &path)?;
+    let replaced = written.and_then(|()| fs::rename(&tmp, &path));
+    if replaced.is_err() {
+        let _ = fs::remove_file(&tmp);
+    }
+    replaced?;
     sync_dir(dir)
+}
+
+/// A temporary file GhostSoap leaves only if it stops part-way: a draft's or the manifest's.
+fn is_leftover(name: &str) -> bool {
+    name.starts_with('.')
+        && name.ends_with(".tmp")
+        && (name.contains("-GS-") || name.starts_with(&format!("{MANIFEST}.")))
 }
 
 fn remove_if_present(path: &Path) -> io::Result<()> {
@@ -262,7 +277,7 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
     save_manifest(dir, &remaining)?;
     for item in fs::read_dir(dir)? {
         let name = item?.file_name().to_string_lossy().into_owned();
-        if name.starts_with('.') && name.ends_with(".tmp") && name.contains("-GS-") {
+        if is_leftover(&name) {
             cleaned.leftovers.push(name);
         }
     }
@@ -274,7 +289,13 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
 }
 
 fn remove_if_empty(dir: &Path) -> io::Result<()> {
-    if fs::read_dir(dir)?.next().is_some() {
+    let empty = match fs::read_dir(dir) {
+        Ok(mut items) => items.next().is_none(),
+        // Another clean removed it after this one released the lock.
+        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(e) => return Err(e),
+    };
+    if !empty {
         return Ok(());
     }
     match fs::remove_dir(dir) {
@@ -422,16 +443,34 @@ mod tests {
         let drafts = dir.path().join("drafts");
         write(&drafts, "a-GS-11111.eml", "x").unwrap();
         // A copy left half-written by an update that stopped before its rename.
-        let tmp = drafts.join(format!("{MANIFEST}.tmp"));
-        fs::write(&tmp, "pending").unwrap();
+        let stale = format!("{MANIFEST}.1-1.tmp");
+        fs::write(drafts.join(&stale), "pending").unwrap();
         write(&drafts, "b-GS-22222.eml", "y").unwrap();
-        assert!(!tmp.exists());
-        fs::write(&tmp, "pending").unwrap();
-        assert_eq!(clean(&drafts, true).unwrap().deleted, 2);
-        assert!(
-            !drafts.exists(),
-            "the stale copy is removed with the manifest"
+        let cleaned = clean(&drafts, true).unwrap();
+        assert_eq!(cleaned.deleted, 2);
+        assert_eq!(
+            cleaned.leftovers,
+            std::slice::from_ref(&stale),
+            "reported, not deleted"
         );
+        assert_eq!(fs::read_to_string(drafts.join(&stale)).unwrap(), "pending");
+    }
+
+    #[test]
+    fn a_file_at_an_old_manifest_temp_name_is_left_alone() {
+        let dir = tempfile::tempdir().unwrap();
+        let out = dir.path().join("mine");
+        fs::create_dir(&out).unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&out, fs::Permissions::from_mode(0o700)).unwrap();
+        }
+        let other = out.join(format!("{MANIFEST}.tmp"));
+        fs::write(&other, "keep this").unwrap();
+        write(&out, "a-GS-11111.eml", "x").unwrap();
+        assert_eq!(clean(&out, false).unwrap().deleted, 1);
+        assert_eq!(fs::read_to_string(&other).unwrap(), "keep this");
     }
 
     #[test]
