@@ -157,9 +157,13 @@ fn save_manifest(dir: &Path, records: &[Record]) -> io::Result<()> {
 
 /// A temporary file GhostSoap leaves only if it stops part-way: a draft's or the manifest's.
 fn is_leftover(name: &str) -> bool {
-    name.starts_with('.')
-        && name.ends_with(".tmp")
-        && (name.contains("-GS-") || name.starts_with(&format!("{MANIFEST}.")))
+    let digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    let manifest_copy = name
+        .strip_prefix(&format!("{MANIFEST}."))
+        .and_then(|rest| rest.strip_suffix(".tmp"))
+        .and_then(|stamp| stamp.split_once('-'))
+        .is_some_and(|(pid, nanos)| digits(pid) && digits(nanos));
+    manifest_copy || (name.starts_with('.') && name.ends_with(".tmp") && name.contains("-GS-"))
 }
 
 fn remove_if_present(path: &Path) -> io::Result<()> {
@@ -247,8 +251,11 @@ pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
     if !dir.exists() {
         return Ok(Cleaned::default());
     }
-    check_private(dir)?;
-    let lock = Lock::acquire(dir, LOCK)?;
+    let lock = match check_private(dir).and_then(|()| Lock::acquire(dir, LOCK)) {
+        // Another clean removed the folder since the check above.
+        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(Cleaned::default()),
+        lock => lock?,
+    };
     let mut cleaned = Cleaned::default();
     // Records for files left in place stay in the manifest, so the next clean reports them.
     let mut remaining = Vec::new();
@@ -469,7 +476,12 @@ mod tests {
         let other = out.join(format!("{MANIFEST}.tmp"));
         fs::write(&other, "keep this").unwrap();
         write(&out, "a-GS-11111.eml", "x").unwrap();
-        assert_eq!(clean(&out, false).unwrap().deleted, 1);
+        let cleaned = clean(&out, false).unwrap();
+        assert_eq!(cleaned.deleted, 1);
+        assert!(
+            cleaned.leftovers.is_empty(),
+            "not GhostSoap's, so not reported"
+        );
         assert_eq!(fs::read_to_string(&other).unwrap(), "keep this");
     }
 
