@@ -1,4 +1,11 @@
-# GhostSoap
+<p align="center">
+  <picture>
+    <source media="(max-width: 600px) and (prefers-color-scheme: light)" srcset=".github/assets/banner-phone-light.svg">
+    <source media="(max-width: 600px)" srcset=".github/assets/banner-phone.svg">
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/banner-light.svg">
+    <img src=".github/assets/banner.svg" width="100%" alt="GhostSoap. Privacy Act requests to data brokers, sent by you. Pixel art of a startled ghost with soap bubbles beside the GhostSoap wordmark in slab-serif block letters.">
+  </picture>
+</p>
 
 _GhostSoap at no Price._
 
