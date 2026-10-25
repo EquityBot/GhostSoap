@@ -1,0 +1,7 @@
+version 1
+{{title}} ({{provision}})
+You have corrected personal information about me that you had previously disclosed to other entities bound by the Australian Privacy Principles. I ask you to notify each of them of the correction:
+
+{{detail}}
+
+APP 13.2 requires you to take reasonable steps to give this notification unless it is impracticable or unlawful to do so.

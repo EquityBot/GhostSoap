@@ -1,0 +1,7 @@
+version 1
+{{title}} ({{provision}})
+I do not want to receive any further commercial electronic messages from you, or authorised by you, at these addresses:
+
+{{detail}}
+
+My consent to receiving them is withdrawn {{deadline}}.

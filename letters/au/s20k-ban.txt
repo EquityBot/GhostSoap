@@ -1,0 +1,7 @@
+version 1
+{{title}} ({{provision}})
+I believe on reasonable grounds that I have been, or am likely to be, a victim of fraud, including identity fraud. I request that you do not use or disclose credit reporting information about me (section 20K(1)).
+
+{{detail}}
+
+The ban period starts when this request is made and ends 21 days after it unless it is extended (section 20K(3)). {{charge}}

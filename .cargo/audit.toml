@@ -1,0 +1,12 @@
+# Advisories reviewed and accepted. Each comes through `age` 0.12.1, the latest release on
+# 25 October 2026; remove the ignore once `age` moves past it.
+[advisories]
+ignore = [
+    # crypto-bigint 0.5.5 timing variability, via p256 in age's `tag` recipients
+    # (src/native/tag.rs). GhostSoap encrypts only to a passphrase (scrypt), which never
+    # reaches p256.
+    "RUSTSEC-2026-0387",
+    # basic-toml is unmaintained; it parses i18n configuration inside age's build-time
+    # macros, never GhostSoap's files.
+    "RUSTSEC-2026-0374",
+]

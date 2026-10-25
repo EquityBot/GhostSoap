@@ -1,0 +1,3 @@
+version 1
+{{title}} ({{provision}})
+Please stop sending me direct marketing communications, by any channel. Please give effect to this request {{deadline}}. {{charge}}

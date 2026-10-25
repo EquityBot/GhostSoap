@@ -1,0 +1,223 @@
+//! The M2 commands end to end: init, plan, draft, clean and law.
+
+use std::fs;
+use std::io::Write;
+use std::path::Path;
+use std::process::{Command, Output, Stdio};
+
+const PASSPHRASE: &str = "present day, present time";
+
+/// Run ghostsoap with `GHOSTSOAP_HOME` set to `home` and `input` on standard input.
+fn ghostsoap(home: &Path, args: &[&str], input: &str) -> Output {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_ghostsoap"))
+        .args(args)
+        .env("GHOSTSOAP_HOME", home)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("run ghostsoap");
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(input.as_bytes())
+        .unwrap();
+    child.wait_with_output().unwrap()
+}
+
+fn text(bytes: &[u8]) -> String {
+    String::from_utf8_lossy(bytes).into_owned()
+}
+
+/// Answers to `init`: name, other names, email, phone, date of birth, address, previous
+/// addresses, postcode, then the passphrase twice.
+fn init_answers(passphrase: &str) -> String {
+    format!(
+        "Lara Croft\n\nlara@croft-manor.example\n0400 000 001\n1968-02-14\n\
+         1 Croft Manor Lane, Surrey Hills VIC 3127\n\n3127\n{passphrase}\n{passphrase}\n"
+    )
+}
+
+fn init(home: &Path) {
+    let out = ghostsoap(
+        home,
+        &["init", "--passphrase-stdin"],
+        &init_answers(PASSPHRASE),
+    );
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+}
+
+#[test]
+fn init_draft_and_clean() {
+    let tmp = tempfile::tempdir().unwrap();
+    let home = tmp.path().join("home");
+    let drafts = tmp.path().join("drafts");
+    let drafts_arg = drafts.to_str().unwrap();
+    init(&home);
+    let state = fs::read(home.join("state.age")).unwrap();
+    assert!(!text(&state).contains("Croft"), "the profile is encrypted");
+
+    let again = ghostsoap(
+        &home,
+        &["init", "--passphrase-stdin"],
+        &init_answers(PASSPHRASE),
+    );
+    assert_eq!(again.status.code(), Some(1));
+    assert!(text(&again.stderr).contains("a profile already exists"));
+
+    let args = [
+        "draft",
+        "--entry",
+        "cotality-au",
+        "--out",
+        drafts_arg,
+        "--passphrase-stdin",
+    ];
+    let out = ghostsoap(&home, &args, &format!("{PASSPHRASE}\n"));
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    let stdout = text(&out.stdout);
+    assert!(stdout.contains("draft   cotality-au  email to AU-Privacy@Cotality.com"));
+    assert!(
+        !stdout.contains("mailto:"),
+        "a 3-request letter is too long for a link"
+    );
+    let files: Vec<_> = fs::read_dir(&drafts)
+        .unwrap()
+        .map(|f| f.unwrap().path())
+        .collect();
+    assert_eq!(files.len(), 1);
+    let eml = fs::read_to_string(&files[0]).unwrap();
+    assert!(eml.starts_with("To: AU-Privacy@Cotality.com\r\nSubject: Privacy Act request [GS-"));
+    assert!(eml.contains("Name: Lara Croft"));
+    assert!(
+        !eml.contains("1968-02-14"),
+        "Cotality does not get the date of birth"
+    );
+
+    let wrong = ghostsoap(&home, &args, "not the passphrase\n");
+    assert_eq!(wrong.status.code(), Some(1));
+    assert!(text(&wrong.stderr).contains("error: wrong passphrase"));
+
+    let out = ghostsoap(&home, &["clean", "--out", drafts_arg], "");
+    assert_eq!(out.status.code(), Some(0));
+    assert!(text(&out.stdout).contains("Deleted 1 drafts"));
+    assert!(!drafts.exists());
+}
+
+#[test]
+fn copy_prints_instead_of_writing() {
+    let tmp = tempfile::tempdir().unwrap();
+    let home = tmp.path().join("home");
+    let drafts = tmp.path().join("drafts");
+    init(&home);
+    let args = [
+        "draft",
+        "--entry",
+        "experian-marketing-au",
+        "--copy",
+        "--out",
+        drafts.to_str().unwrap(),
+        "--passphrase-stdin",
+    ];
+    let out = ghostsoap(&home, &args, &format!("{PASSPHRASE}\n"));
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    let stdout = text(&out.stdout);
+    assert!(stdout.contains("==== experian-marketing-au (web form)"));
+    assert!(stdout.contains("==== experian-marketing-au (post)"));
+    assert!(stdout.contains("PO Box 7405, St Kilda Road VIC 3004"));
+    assert!(!drafts.exists());
+}
+
+#[test]
+fn init_rejects_a_short_passphrase_and_bad_details() {
+    let tmp = tempfile::tempdir().unwrap();
+    let home = tmp.path().join("home");
+    let out = ghostsoap(
+        &home,
+        &["init", "--passphrase-stdin"],
+        &init_answers("short"),
+    );
+    assert_eq!(out.status.code(), Some(1));
+    assert!(text(&out.stderr).contains("at least 12 characters"));
+    let answers = init_answers(PASSPHRASE).replace("1968-02-14", "14/02/1968");
+    let out = ghostsoap(&home, &["init", "--passphrase-stdin"], &answers);
+    assert_eq!(out.status.code(), Some(1));
+    assert!(text(&out.stderr).contains("is not a date"));
+    assert!(!home.join("state.age").exists());
+}
+
+#[test]
+fn draft_without_a_profile_says_to_run_init() {
+    let tmp = tempfile::tempdir().unwrap();
+    let args = [
+        "draft",
+        "--entry",
+        "cotality-au",
+        "--out",
+        tmp.path().to_str().unwrap(),
+        "--passphrase-stdin",
+    ];
+    let out = ghostsoap(&tmp.path().join("home"), &args, &format!("{PASSPHRASE}\n"));
+    assert_eq!(out.status.code(), Some(1));
+    assert!(text(&out.stderr).contains("run `ghostsoap init` first"));
+}
+
+#[test]
+fn plan_needs_no_profile_and_shows_overseas_sites() {
+    let tmp = tempfile::tempdir().unwrap();
+    let out = ghostsoap(tmp.path(), &["plan", "--pack", "people-search"], "");
+    assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
+    let stdout = text(&out.stdout);
+    assert!(stdout.contains("letter  acceleon-au  by email to privacy@acceleon.com.au"));
+    assert!(stdout.contains(
+        "    app7-no-marketing (APP 7.6(c), 7.7(a); a reasonable period, OAIC guide 30 days)"
+    ));
+    assert!(
+        stdout
+            .contains("manual  locate-family-au: overseas site; no Australian law lever applies.")
+    );
+    assert!(!tmp.path().join("state.age").exists());
+}
+
+#[test]
+fn plan_refuses_access_levers_in_bulk() {
+    let tmp = tempfile::tempdir().unwrap();
+    let out = ghostsoap(
+        tmp.path(),
+        &["plan", "--pack", "credit", "--lever", "s20r-access"],
+        "",
+    );
+    assert_eq!(out.status.code(), Some(1));
+    assert!(text(&out.stderr).contains("must be chosen for one entity at a time"));
+    let out = ghostsoap(
+        tmp.path(),
+        &["plan", "--entry", "talefin-au", "--lever", "s20r-access"],
+        "",
+    );
+    assert_eq!(out.status.code(), Some(0));
+    assert!(text(&out.stdout).contains("warning: access requests return personal information"));
+    let out = ghostsoap(
+        tmp.path(),
+        &["plan", "--entry", "talefin-au", "--lever", "app99"],
+        "",
+    );
+    assert_eq!(out.status.code(), Some(2));
+    assert!(text(&out.stderr).contains("unknown lever"));
+}
+
+#[test]
+fn law_lists_every_lever_with_its_sources() {
+    let tmp = tempfile::tempdir().unwrap();
+    let out = ghostsoap(tmp.path(), &["law"], "");
+    assert_eq!(out.status.code(), Some(0));
+    let stdout = text(&out.stdout);
+    for line in [
+        "s20r-access: Give me access to my credit reporting information",
+        "    deadline: within a reasonable period, but not longer than 10 days, after the request is made (section 20R(3))",
+        "spam-unsubscribe: Stop sending me commercial electronic messages",
+        "    Privacy Act 1988 (Cth), compilation C2026C00227, in force from 4 June 2026",
+    ] {
+        assert!(stdout.contains(line), "missing {line:?}");
+    }
+}
