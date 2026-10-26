@@ -1,0 +1,25 @@
+id = "jb-hi-fi-au"
+name = "JB Hi-Fi"
+legal_entity = "JB Hi-Fi Group Pty Ltd"
+abn = "37 093 114 286"
+kinds = ["retail", "loyalty"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.jbhifi.com.au/pages/privacy-policy"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.jbhifi.com.au/pages/privacy-policy"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "post"
+address = "The Privacy Officer, JB Hi-Fi Group Pty Ltd, pre-paid post PO BOX 5190 South Melbourne VIC 3205"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]

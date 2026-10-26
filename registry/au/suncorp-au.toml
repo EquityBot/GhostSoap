@@ -1,0 +1,60 @@
+id = "suncorp-au"
+name = "Suncorp Insurance (AAMI, GIO, Apia)"
+legal_entity = "AAI Limited"
+abn = "48 005 297 807"
+kinds = ["insurance"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.suncorpgroup.com.au/assets/documents/suncorpgroup/suncorp-group-privacy-policy.pdf", "https://www.aami.com.au/privacy.html", "https://www.suncorp.com.au/privacy.html", "https://www.gio.com.au/privacy.html", "https://www.apia.com.au/privacy.html"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["afca", "oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacyaccessrequests@aami.com.au"
+levers = ["app12"]
+
+[[channels]]
+kind = "email"
+address = "InsuranceServices@suncorp.com.au"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+
+[[channels]]
+kind = "phone"
+address = "13 22 44"
+levers = []
+
+[[channels]]
+kind = "phone"
+address = "13 11 55"
+levers = []
+
+[[evidence]]
+url = "https://www.suncorpgroup.com.au/assets/documents/suncorpgroup/suncorp-group-privacy-policy.pdf"
+checked_at = 2026-10-26
+sha256 = "397f8a3e3ec2ac614e55422a3d8457a33df52545fcc8e57afa7595373c6f5873"
+
+[[evidence]]
+url = "https://www.aami.com.au/privacy.html"
+checked_at = 2026-10-26
+sha256 = "47b67badc707d3f2e700dac7845e2ed0c76c40583ec05d0f115144faa366c5e7"
+
+[[evidence]]
+url = "https://www.suncorp.com.au/privacy.html"
+checked_at = 2026-10-26
+sha256 = "a60381efa3d564283bd5e80bde60940b59a8b64964e000f3ec8eb3c9b5fdf1d0"
+
+[[evidence]]
+url = "https://www.gio.com.au/privacy.html"
+checked_at = 2026-10-26
+sha256 = "0e6c3ac597e29f02d77e53bc1fb813c0e6c4347633814acd4a332c53993c4291"
+
+[[evidence]]
+url = "https://www.apia.com.au/privacy.html"
+checked_at = 2026-10-26
+sha256 = "38708c702ba95e27d898408765564a7fca75583d542ae079a431632eef74590a"

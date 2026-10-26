@@ -13,7 +13,7 @@ use crate::core::letters::{self, Letter, Request};
 use crate::core::plan::{self, Selection, Step};
 use crate::core::profile::Profile;
 use crate::core::register::{
-    self, ChannelKind, Entry, IdentityField, Lever, Register, RegisterFiles, Severity,
+    self, ChannelKind, Entry, IdentityField, Kind, Lever, Register, RegisterFiles, Severity,
 };
 use crate::io;
 use crate::io::prompt::Input;
@@ -400,6 +400,11 @@ fn print_copy(entry: &Entry, letter: &Letter) {
 
 fn print_overseas(entry: &Entry) {
     let check = entry.manual_check.as_ref().map_or("", |m| m.url.as_str());
+    let look = if entry.kinds.contains(&Kind::PeopleSearch) {
+        "Search for yourself at"
+    } else {
+        "See"
+    };
     let forms: Vec<&str> = entry
         .channels
         .iter()
@@ -407,9 +412,9 @@ fn print_overseas(entry: &Entry) {
         .map(|c| c.address.as_str())
         .collect();
     println!(
-        "manual  {}: overseas site; GhostSoap has not established that Australian privacy law \
-         reaches it, so it drafts no letter. Search for yourself at \
-         {check}, then use its own opt-out form at {} (effort: {}).",
+        "manual  {}: run from overseas; GhostSoap has not established that Australian privacy \
+         law reaches it, so it drafts no letter. {look} {check}, then use its own opt-out or \
+         privacy request form at {} (effort: {}).",
         entry.id,
         forms.join(" or "),
         format!("{:?}", entry.effort).to_lowercase()

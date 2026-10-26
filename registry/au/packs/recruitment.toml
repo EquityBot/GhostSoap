@@ -1,0 +1,21 @@
+id = "recruitment"
+name = "Recruitment agencies and job boards"
+description = "Recruiters and job boards that keep CVs and candidate records. SEEK is not included: add it with --entry seek-au if you no longer want your SEEK profile. Add --lever app11-destroy to ask them to destroy your candidate records."
+entries = [
+  "hays-au",
+  "randstad-au",
+  "charterhouse-au",
+  "chandler-macleod-au",
+  "peoplebank-au",
+  "robert-half-au",
+  "michael-page-au",
+  "adecco-au",
+  "hudson-au",
+  "robert-walters-au",
+  "programmed-au",
+  "manpowergroup-au",
+  "talent-international-au",
+  "careerone-au",
+  "indeed-au",
+  "linkedin-au",
+]

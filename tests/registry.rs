@@ -31,7 +31,7 @@ fn built_in_register_passes() {
         .output()
         .expect("run ghostsoap");
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
-    assert!(text(&out.stdout).contains("Checked 32 entries and 6 packs; errors: 0,"));
+    assert!(text(&out.stdout).contains("Checked 80 entries and 12 packs; errors: 0,"));
 }
 
 #[test]
@@ -47,30 +47,41 @@ fn built_in_register_matches_the_files() {
 }
 
 #[test]
-fn shipped_register_meets_the_m1_targets() {
+fn shipped_register_meets_its_targets() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("registry/au");
     let files = io::register::load(&dir).expect("read register");
     let today = chrono::Local::now().date_naive();
     let report = register::check(&files.entries, &files.packs, today);
     assert_eq!(report.errors(), 0, "{:?}", report.findings);
-    assert!(
-        (25..=40).contains(&report.entries),
-        "{} entries",
-        report.entries
-    );
+    assert!(report.entries >= 25, "{} entries", report.entries);
     let mut packs: Vec<_> = files.packs.iter().map(|p| p.name.as_str()).collect();
     packs.sort_unstable();
     assert_eq!(
         packs,
         [
+            "banks-and-lenders.toml",
             "credit.toml",
+            "data-breaches.toml",
+            "insurers.toml",
             "loyalty.toml",
             "marketing.toml",
             "people-search.toml",
             "property.toml",
-            "start-here.toml"
+            "recruitment.toml",
+            "retail.toml",
+            "start-here.toml",
+            "telecommunications.toml"
         ]
     );
+    // Ryan's decision (plan decision 8): SEEK is sent only when named with --entry.
+    for pack in &files.packs {
+        let pack: register::Pack = toml::from_str(&pack.text).expect("parse pack");
+        assert!(
+            !pack.entries.iter().any(|e| e == "seek-au"),
+            "seek-au is in pack {}",
+            pack.id
+        );
+    }
     for file in &files.entries {
         let entry: register::Entry = toml::from_str(&file.text).expect("parse entry");
         assert!(

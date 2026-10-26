@@ -1,0 +1,50 @@
+id = "randstad-au"
+name = "Randstad"
+legal_entity = "Randstad Pty Limited"
+abn = "28 080 275 378"
+kinds = ["recruitment"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.randstad.com.au/your-privacy-explained/", "https://www.randstad.com.au/your-privacy-a-candidate/", "https://www.randstad.com.au/data-protection-notice/", "https://www.randstad.com.au/privacy-policy/"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@randstad.com.au"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "phone"
+address = "1800 661 026"
+levers = []
+
+[[channels]]
+kind = "post"
+address = "Randstad Pty Limited, Level 9, 83 Clarence St, Sydney, NSW. 2000"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.randstad.com.au/your-privacy-explained/"
+checked_at = 2026-10-26
+sha256 = "4b0ecdcfd887d0d88d0ce82e041066d8b6dc96f8f17bb32cd45812257e5f4752"
+
+[[evidence]]
+url = "https://www.randstad.com.au/your-privacy-a-candidate/"
+checked_at = 2026-10-26
+sha256 = "d17ab358d1a335ae1fa5dcfea366a5dc590aff71d45f68d022c83da6c0b20b94"
+
+[[evidence]]
+url = "https://www.randstad.com.au/data-protection-notice/"
+checked_at = 2026-10-26
+sha256 = "160b290d39f10eff4417531abdaa1a22232cb87559273c359058e959444bc02a"
+
+[[evidence]]
+url = "https://www.randstad.com.au/privacy-policy/"
+checked_at = 2026-10-26
+sha256 = "90e045552e03f398267d770963f21a156025a90feb7be560718d68232536498b"

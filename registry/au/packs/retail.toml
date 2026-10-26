@@ -1,0 +1,16 @@
+id = "retail"
+name = "Retailers and online services"
+description = "Large retailers, marketplaces and online services. To ask firms you have stopped dealing with to destroy your details, choose them with --entry and add --lever app11-destroy."
+entries = [
+  "coles-au",
+  "kmart-au",
+  "bunnings-au",
+  "jb-hi-fi-au",
+  "harvey-norman-au",
+  "amazon-au",
+  "ebay-au",
+  "the-iconic-au",
+  "dymocks-au",
+  "ticketek-au",
+  "canva-au",
+]

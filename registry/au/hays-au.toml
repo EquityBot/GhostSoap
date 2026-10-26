@@ -1,0 +1,40 @@
+id = "hays-au"
+name = "Hays"
+legal_entity = "Hays Specialist Recruitment (Australia) Pty Limited"
+abn = "47 001 407 281"
+kinds = ["recruitment"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.hays.com.au/privacy-policy", "https://www.hays.com.au/au-privacy-policy"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@hays.com.au"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "post"
+address = "The Privacy Officer, Hays Specialist Recruitment, Reply Paid 2135, Brisbane QLD 4001"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "phone"
+address = "1800 805 051"
+levers = []
+
+[[evidence]]
+url = "https://www.hays.com.au/privacy-policy"
+checked_at = 2026-10-26
+sha256 = "f5f1b97b66a1dca0123533f5840f73eddc52671636312600ce826c22f82d1666"
+
+[[evidence]]
+url = "https://www.hays.com.au/au-privacy-policy"
+checked_at = 2026-10-26
+sha256 = "d940b8c3d1201d4260a900c5ad007dd729c069668d34495da67021b174243acf"

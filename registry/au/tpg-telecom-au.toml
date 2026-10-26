@@ -1,0 +1,45 @@
+id = "tpg-telecom-au"
+name = "TPG Telecom"
+legal_entity = "TPG Telecom Limited"
+abn = "76 096 304 620"
+kinds = ["telecommunications"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.tpgtelecom.com.au/privacy", "https://www.tpgtelecom.com.au/sites/default/files/2023-03/PrivacyComplaint-Form.pdf"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@tpgtelecom.com.au"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "post"
+address = "TPG Telecom Customer Care, GPO Box 406, Sydney NSW 2001"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "email"
+address = "nomarketing@tpg.com.au"
+levers = ["app7-no-marketing"]
+
+[[channels]]
+kind = "web-form"
+address = "https://marketing.vodafone.com.au/unsubscribe-here"
+levers = ["app7-no-marketing"]
+
+[[evidence]]
+url = "https://www.tpgtelecom.com.au/privacy"
+checked_at = 2026-10-26
+sha256 = "415a967a36e20d51200e1bbeb52f9569b6ac0145a614334d2be0fe7c2e3007b8"
+
+[[evidence]]
+url = "https://www.tpgtelecom.com.au/sites/default/files/2023-03/PrivacyComplaint-Form.pdf"
+checked_at = 2026-10-26
+sha256 = "0aea43758e2287b5dee62b9dbc8e6e7b904d6b1d5650fd7a23fbcae91b162caa"

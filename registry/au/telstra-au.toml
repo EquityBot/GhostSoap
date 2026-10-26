@@ -1,0 +1,40 @@
+id = "telstra-au"
+name = "Telstra"
+legal_entity = "Telstra Group Limited"
+abn = "56 650 620 303"
+kinds = ["telecommunications"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.telstra.com.au/privacy/privacy-statement", "https://www.telstra.com.au/privacy/customer-access", "https://www.belong.com.au/go/privacy-and-terms/privacy"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@online.telstra.com.au"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+
+[[channels]]
+kind = "phone"
+address = "1800 039 059"
+levers = []
+
+[[channels]]
+kind = "web-form"
+address = "https://www.telstra.com.au/forms/request-customer-account-information"
+levers = ["app12"]
+
+[[evidence]]
+url = "https://www.telstra.com.au/privacy/privacy-statement"
+checked_at = 2026-10-26
+sha256 = "a1ccd5a31828ee0eb05251c6420649453bceb9ec468a12df1eb7dadefc6119a8"
+
+[[evidence]]
+url = "https://www.telstra.com.au/privacy/customer-access"
+checked_at = 2026-10-26
+sha256 = "f8748786a499dfc237c081a008deb29c3acc7769cc6a1f686141c3593a60bb48"

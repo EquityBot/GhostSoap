@@ -1,0 +1,35 @@
+id = "programmed-au"
+name = "Programmed"
+legal_entity = "Programmed Maintenance Services Limited"
+abn = "61 054 742 264"
+kinds = ["recruitment"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://programmed.com.au/wp-content/uploads/2026/07/Privacy-Policy.pdf", "https://programmed.com.au/policies/"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@programmed.com.au"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "post"
+address = "Privacy Officer, Programmed Maintenance Services Ltd, 47 Burswood Road, Burswood WA 6100"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://programmed.com.au/wp-content/uploads/2026/07/Privacy-Policy.pdf"
+checked_at = 2026-10-26
+sha256 = "2867e18657d1979a6ee061398900514d430e2b8ac4f2d12ac54f18a7861fd043"
+
+[[evidence]]
+url = "https://programmed.com.au/policies/"
+checked_at = 2026-10-26
+sha256 = "ff504323e1e63a733b9c033e1594960415cbdc572bb6eed017af4632c49339fe"
