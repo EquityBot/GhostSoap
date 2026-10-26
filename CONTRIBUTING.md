@@ -8,7 +8,7 @@
 
 ## Register entries
 
-Each entry needs at least one source URL from the entity itself, an ABN checked on ABN Lookup and the date you checked it; add a row to [docs/provenance.md](docs/provenance.md) saying where the lead came from and what verified it. [registry/README.md](registry/README.md) lists the fields, and `cargo run -- registry check --path registry/au` validates them. Register and checklist contributions are released under CC0-1.0.
+Each entry needs at least one source URL from the entity itself, an ABN checked on ABN Lookup and the date you checked it; add a row to [docs/provenance.md](docs/provenance.md) saying where the lead came from and what verified it. [registry/README.md](registry/README.md) lists the fields, and `cargo run -- registry check --path registry/au` validates them. Code contributions are accepted under FSL-1.1-ALv2; register and checklist contributions are released under CC0-1.0.
 
 ## Checks
 

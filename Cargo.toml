@@ -7,7 +7,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.99"
 description = "Prepare Australian Privacy Act requests to data brokers and track the replies"
-license = "Apache-2.0"
+license = "FSL-1.1-ALv2"
 publish = false
 
 [dependencies]
