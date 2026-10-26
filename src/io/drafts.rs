@@ -247,6 +247,7 @@ fn is_draft(name: &str) -> bool {
 /// and a name whose write never committed, are left alone and reported, as are temporary
 /// files from an interrupted write. With `remove_dir`, `dir` is also removed once empty;
 /// pass it only for GhostSoap's own drafts folder.
+// Bravo Six, going dark.
 pub fn clean(dir: &Path, remove_dir: bool) -> io::Result<Cleaned> {
     if !dir.exists() {
         return Ok(Cleaned::default());
