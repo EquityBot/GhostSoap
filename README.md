@@ -7,6 +7,14 @@
   </picture>
 </p>
 
+<div align="center">
+
+[![CI](https://img.shields.io/github/actions/workflow/status/ryanduguid/GhostSoap/ci.yml?branch=main&label=CI&labelColor=000000&style=flat)](https://github.com/ryanduguid/GhostSoap/actions/workflows/ci.yml)
+[![rust: 1.99+](https://img.shields.io/badge/rust-1.99%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.rust-lang.org/)
+[![licence: FSL-1.1-ALv2](https://img.shields.io/badge/licence-FSL--1.1--ALv2-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
+
+</div>
+
 _GhostSoap at no Price._
 
 GhostSoap is a free, local-first tool that helps people in Australia reclaim their privacy. It prepares Privacy Act requests to data brokers for you to send from your own mailbox. Planned milestones add tracking of every deadline and reply, an escalation file when a business does not respond, and a guide to the data hygiene steps email cannot fix.
@@ -67,3 +75,7 @@ cargo build --release
 - Register and checklist data (`registry/` and, from milestone M4, `checklist/`): [CC0-1.0](LICENSE-DATA), so other privacy projects can reuse it.
 
 GhostSoap is not affiliated with, endorsed by or connected to Activision or the Call of Duty franchise. The name is a nod to it, nothing more.
+
+---
+
+<p align="center"><sub>Your details, your mailbox, your call.<br>Made in Newcastle, Australia by <a href="https://duguid.com.au/">Ryan Duguid</a>.</sub></p>
