@@ -41,7 +41,10 @@ pub enum Command {
     Draft {
         #[command(flatten)]
         selection: SelectionArgs,
-        /// Drafts folder; defaults to `drafts` in GhostSoap's data folder.
+        /// Drafts folder; defaults to `drafts` in GhostSoap's data folder. GhostSoap warns
+        /// if it finds the folder inside a Git working tree or a OneDrive, Dropbox or iCloud
+        /// Drive folder, but it cannot find every such place, so no warning does not mean
+        /// the folder is private.
         #[arg(long)]
         out: Option<PathBuf>,
         /// Print each letter's To, Subject and body instead of writing files (for webmail).
@@ -232,8 +235,8 @@ fn draft(
     let register = built_in_register()?;
     let steps = plan::plan(&register, selection)?;
     let mut profile = None;
-    warn_unchecked_out(out.is_some() && !output.copy);
-    let dir = drafts_dir(out)?;
+    let dir = drafts_dir(out.as_deref())?;
+    warn_about_out(&dir, out.is_some(), output);
     let today = chrono::Local::now().date_naive();
     let mut tags = Vec::new();
     for step in &steps {
@@ -286,6 +289,15 @@ fn print_clean_reminder() {
     );
 }
 
+/// Warnings about the folder drafts go to, `named` with `--out`; none with `--copy`, which
+/// writes nothing.
+fn warn_about_out(dir: &Path, named: bool, output: Output) {
+    if !output.copy {
+        warn_unchecked_out(named);
+        warn_exposed(dir);
+    }
+}
+
 /// On Windows the drafts folder keeps the access list it inherits, which GhostSoap does not
 /// check; say so when the user names the folder (`named`).
 fn warn_unchecked_out(named: bool) {
@@ -293,6 +305,28 @@ fn warn_unchecked_out(named: bool) {
         eprintln!(
             "note: on Windows GhostSoap does not check who else can open the --out folder; \
              choose one only you can open"
+        );
+    }
+}
+
+/// Warn when the drafts folder is inside a Git working tree or a known sync folder. The
+/// checks are incomplete (see `io::exposure`), so no warning says nothing about safety.
+fn warn_exposed(dir: &Path) {
+    let roots = io::exposure::sync_roots(|name| std::env::var_os(name));
+    for exposure in io::exposure::exposures(dir, &roots) {
+        let (place, consequence) = match exposure {
+            io::exposure::Exposure::Git { root } => (
+                format!("the Git working tree at {}", io::exposure::display(&root)),
+                "committed",
+            ),
+            io::exposure::Exposure::Sync { service, root } => (
+                format!("the {service} folder at {}", io::exposure::display(&root)),
+                "uploaded",
+            ),
+        };
+        eprintln!(
+            "warning: the drafts folder is inside {place}; plaintext letters there could be \
+             {consequence}"
         );
     }
 }
@@ -449,7 +483,7 @@ fn deadline_summary(deadline: Deadline) -> String {
 
 fn clean(out: Option<PathBuf>) -> Result<(), String> {
     let own_folder = out.is_none();
-    let dir = drafts_dir(out)?;
+    let dir = drafts_dir(out.as_deref())?;
     let cleaned = io::drafts::clean(&dir, own_folder).map_err(|e| e.to_string())?;
     println!("Deleted {} drafts from {}.", cleaned.deleted, dir.display());
     for name in &cleaned.kept {
@@ -465,9 +499,9 @@ fn clean(out: Option<PathBuf>) -> Result<(), String> {
 }
 
 /// The folder `--out` names, else the default drafts folder in the data directory.
-fn drafts_dir(out: Option<PathBuf>) -> Result<PathBuf, String> {
+fn drafts_dir(out: Option<&Path>) -> Result<PathBuf, String> {
     match out {
-        Some(dir) => Ok(dir),
+        Some(dir) => Ok(dir.to_owned()),
         None => state::data_dir()
             .map(|d| io::drafts::default_dir(&d))
             .map_err(|e| e.to_string()),

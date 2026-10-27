@@ -9,9 +9,15 @@ const PASSPHRASE: &str = "present day, present time";
 
 /// Run ghostsoap with `GHOSTSOAP_HOME` set to `home` and `input` on standard input.
 fn ghostsoap(home: &Path, args: &[&str], input: &str) -> Output {
+    ghostsoap_with(home, args, input, &[])
+}
+
+/// As `ghostsoap`, with the environment variables `vars` also set for the child only.
+fn ghostsoap_with(home: &Path, args: &[&str], input: &str, vars: &[(&str, &Path)]) -> Output {
     let mut child = Command::new(env!("CARGO_BIN_EXE_ghostsoap"))
         .args(args)
         .env("GHOSTSOAP_HOME", home)
+        .envs(vars.iter().copied())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -106,6 +112,70 @@ fn emls(dir: &Path) -> Vec<std::path::PathBuf> {
         .map(|f| f.unwrap().path())
         .filter(|p| p.extension().is_some_and(|e| e == "eml"))
         .collect()
+}
+
+/// Draft one letter to `out` with the environment variables `vars`; `extra` adds flags.
+fn draft_to(home: &Path, out: &Path, vars: &[(&str, &Path)], extra: &[&str]) -> Output {
+    let mut args = vec![
+        "draft",
+        "--entry",
+        "cotality-au",
+        "--passphrase-stdin",
+        "--out",
+    ];
+    args.push(out.to_str().unwrap());
+    args.extend(extra);
+    ghostsoap_with(home, &args, &format!("{PASSPHRASE}\n"), vars)
+}
+
+#[test]
+fn draft_warns_about_a_repository_or_sync_folder_but_still_writes() {
+    let tmp = tempfile::tempdir().unwrap();
+    let home = tmp.path().join("home");
+    init(&home);
+    // A home folder with a Dropbox in it, a OneDrive folder and a linked Git worktree.
+    let [user, onedrive, repo] = ["user", "OneDrive", "repo"].map(|d| tmp.path().join(d));
+    for dir in [&user.join("Dropbox"), &onedrive, &repo] {
+        fs::create_dir_all(dir).unwrap();
+    }
+    fs::write(
+        repo.join(".git"),
+        "gitdir: ../elsewhere/.git/worktrees/repo\n",
+    )
+    .unwrap();
+    let empty = Path::new("");
+    let vars = [
+        ("HOME", user.as_path()),
+        ("USERPROFILE", &user),
+        ("OneDrive", &onedrive),
+        ("OneDriveCommercial", empty),
+        ("OneDriveConsumer", empty),
+    ];
+    let warning = "warning: the drafts folder is inside the";
+    for (out, expected) in [
+        (repo.join("drafts"), "Git working tree|be committed"),
+        (onedrive.join("drafts"), "OneDrive folder|be uploaded"),
+        (user.join("Dropbox/drafts"), "Dropbox folder|be uploaded"),
+        (tmp.path().join("plain"), ""),
+    ] {
+        let run = draft_to(&home, &out, &vars, &[]);
+        let stderr = text(&run.stderr);
+        assert_eq!(run.status.code(), Some(0), "not a refusal: {stderr}");
+        assert_eq!(emls(&out).len(), 1, "the draft is still written");
+        assert_eq!(
+            stderr.matches(warning).count(),
+            usize::from(!expected.is_empty())
+        );
+        for part in expected.split('|').filter(|p| !p.is_empty()) {
+            assert!(stderr.contains(part), "{part:?} in {stderr}");
+        }
+    }
+    let copy = draft_to(&home, &repo, &vars, &["--copy"]);
+    assert_eq!(copy.status.code(), Some(0));
+    assert!(
+        !text(&copy.stderr).contains(warning),
+        "--copy writes nothing"
+    );
 }
 
 #[test]
