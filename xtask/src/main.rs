@@ -17,7 +17,7 @@ use sha2::{Digest, Sha256};
 
 /// Pages with less main text than this are bot checks or script-only shells.
 const MIN_TEXT: usize = 500;
-const USER_AGENT: &str = "GhostSoap-evidence-check/0.1 (+https://github.com/ryanduguid/GhostSoap)";
+const USER_AGENT: &str = "GhostSoap-evidence-check/0.1 (+https://github.com/EquityBot/GhostSoap)";
 /// Whole-request limit, so one slow or silent site fails instead of stalling the check.
 const TIMEOUT: Duration = Duration::from_secs(30);
 
