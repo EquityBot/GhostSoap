@@ -78,4 +78,4 @@ GhostSoap is not affiliated with, endorsed by or connected to Activision or the 
 
 ---
 
-<p align="center"><sub>Your details, your mailbox, your call.<br>Made in Newcastle, Australia by <a href="https://duguid.com.au/">Ryan Duguid</a>.</sub></p>
+<p align="center"><sub>Your details, your mailbox, your call.<br>Made by <a href="https://github.com/EquityBot">EquityBot</a>. <i>Ad gloriam eius, non meam.</i></sub></p>

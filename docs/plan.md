@@ -246,7 +246,7 @@ GhostSoap/
   .github/      workflows/ci.yml  ISSUE_TEMPLATE/  dependabot.yml
 ```
 
-The GitHub repository would be `ryanduguid/GhostSoap`; creating it needs Ryan's authorisation.
+The GitHub repository is `EquityBot/GhostSoap`.
 
 ## 11. Alternatives considered
 
