@@ -9,7 +9,7 @@
 
 <div align="center">
 
-[![CI](https://img.shields.io/github/actions/workflow/status/ryanduguid/GhostSoap/ci.yml?branch=main&label=CI&labelColor=000000&style=flat)](https://github.com/ryanduguid/GhostSoap/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/EquityBot/GhostSoap/ci.yml?branch=main&label=CI&labelColor=000000&style=flat)](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml)
 [![rust: 1.99+](https://img.shields.io/badge/rust-1.99%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.rust-lang.org/)
 [![licence: FSL-1.1-ALv2](https://img.shields.io/badge/licence-FSL--1.1--ALv2-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
 
