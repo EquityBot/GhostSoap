@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this work, cite it with this metadata and the release tag or commit you used."
+title: "GhostSoap"
+type: software
+authors:
+  - name: "EquityBot"
+abstract: "GhostSoap at no Price: prepare Australian Privacy Act requests to data brokers, for you to send from your own mailbox."
+repository-code: "https://github.com/EquityBot/GhostSoap"
+license-url: "https://github.com/EquityBot/GhostSoap/blob/main/LICENSE"
+keywords:
+  - australia
+  - cli
+  - data-brokers
+  - privacy
+  - privacy-act
+  - rust
