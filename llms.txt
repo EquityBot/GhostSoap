@@ -1,0 +1,25 @@
+# GhostSoap
+
+> A free, local-first command-line tool that prepares Australian Privacy Act requests to
+> data brokers for you to send from your own mailbox. It makes no network connections and
+> does not yet track what you sent or the replies.
+
+Status: milestone M2, version 0.1.0, with no GitHub release or published package. Build
+from source with `cargo build --release`; `rust-toolchain.toml` pins the compiler.
+GhostSoap provides information and templates, not legal advice.
+
+## Start
+
+- [README](https://github.com/EquityBot/GhostSoap#readme): commands, safety, what leaves your machine and what it will not do.
+- [Register](https://github.com/EquityBot/GhostSoap/blob/main/registry/README.md): entry fields and how `registry check` validates them.
+- [Plan](https://github.com/EquityBot/GhostSoap/blob/main/docs/plan.md): legal model, threat model and milestones.
+
+## Docs
+
+- [Provenance](https://github.com/EquityBot/GhostSoap/blob/main/docs/provenance.md): where each register entry's lead came from and what verified it.
+- [Contributing](https://github.com/EquityBot/GhostSoap/blob/main/CONTRIBUTING.md): clean-room rules and the checks to run before a pull request.
+- [Security](https://github.com/EquityBot/GhostSoap/blob/main/SECURITY.md): how to report a vulnerability privately.
+
+## Related
+
+- [EquityBot](https://github.com/EquityBot): other EquityBot tools.

@@ -23,12 +23,15 @@ fn ghostsoap_with(home: &Path, args: &[&str], input: &str, vars: &[(&str, &Path)
         .stderr(Stdio::piped())
         .spawn()
         .expect("run ghostsoap");
-    child
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(input.as_bytes())
-        .unwrap();
+    // A command that reads no input can exit before the write, closing the pipe; its output
+    // and exit status are what the tests check, so a broken pipe here is not a failure.
+    if let Err(e) = child.stdin.take().unwrap().write_all(input.as_bytes()) {
+        assert_eq!(
+            e.kind(),
+            std::io::ErrorKind::BrokenPipe,
+            "write to ghostsoap: {e}"
+        );
+    }
     child.wait_with_output().unwrap()
 }
 

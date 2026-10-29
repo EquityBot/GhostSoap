@@ -9,9 +9,9 @@
 
 <div align="center">
 
-[![CI](https://img.shields.io/github/actions/workflow/status/EquityBot/GhostSoap/ci.yml?branch=main&label=CI&labelColor=000000&style=flat)](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml)
-[![rust: 1.99+](https://img.shields.io/badge/rust-1.99%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.rust-lang.org/)
-[![licence: FSL-1.1-ALv2](https://img.shields.io/badge/licence-FSL--1.1--ALv2-66023C?labelColor=000000&style=flat&color=66023C)](LICENSE)
+[![tests](https://img.shields.io/github/actions/workflow/status/EquityBot/GhostSoap/ci.yml?branch=main&label=tests&labelColor=000000&style=flat)](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml) [![CodeQL](https://img.shields.io/github/actions/workflow/status/EquityBot/GhostSoap/codeql.yml?branch=main&label=CodeQL&labelColor=000000&style=flat)](https://github.com/EquityBot/GhostSoap/actions/workflows/codeql.yml)<br>
+[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/EquityBot/GhostSoap?label=Scorecard&labelColor=000000&style=flat)](https://scorecard.dev/viewer/?uri=github.com/EquityBot/GhostSoap)<br>
+[![rust: 1.99+](https://img.shields.io/badge/rust-1.99%2B-66023C?labelColor=000000&style=flat&color=66023C)](https://www.rust-lang.org/) [![licence: FSL-1.1-ALv2](https://img.shields.io/badge/licence-FSL--1.1--ALv2-66023C?labelColor=000000&style=flat&color=66023C)](#licences)
 
 </div>
 
