@@ -1,0 +1,25 @@
+id = "indeed-au"
+name = "Indeed"
+legal_entity = "Indeed Ireland Operations Limited"
+kinds = ["recruitment"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://hrtechprivacy.com/brands/indeed#privacypolicy", "https://requests.hrtechprivacy.com/create"]
+identity_fields = ["full_name", "email", "phone"]
+exemption_risk = "overseas"
+escalation = []
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://requests.hrtechprivacy.com/create"
+levers = []
+
+[manual_check]
+url = "https://hrtechprivacy.com/brands/indeed#privacypolicy"
+
+[[evidence]]
+url = "https://hrtechprivacy.com/brands/indeed#privacypolicy"
+checked_at = 2026-10-26
+sha256 = "471c959a959e8aad9444183cc098b03dacf472f7639c59534f125247a57035c8"

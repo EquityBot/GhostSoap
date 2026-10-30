@@ -6,7 +6,8 @@ use crate::core::letters::takes_detail;
 use crate::core::register::{Channel, ChannelKind, Entry, Lever, Register};
 
 /// Levers sent when the user names none: they return no personal information and need
-/// nothing from the user beyond identity.
+/// nothing from the user beyond identity. `app11-destroy` is not one: only the user knows
+/// whether they still deal with a business, so they name it with `--lever`.
 const DEFAULT_LEVERS: [Lever; 3] = [
     Lever::App7NoMarketing,
     Lever::App7NoFacilitation,
@@ -216,7 +217,7 @@ priority = "high"
 quality = "verified"
 verified_at = 2026-10-25
 sources = ["https://example.com.au/privacy"]
-levers = ["app7-no-marketing", "app7-source", "app13"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13"]
 opt_in_levers = ["app12"]
 identity_fields = ["full_name", "email"]
 exemption_risk = "none"
@@ -226,7 +227,7 @@ effort = "easy"
 [[channels]]
 kind = "email"
 address = "privacy@example.com.au"
-levers = ["app7-no-marketing", "app13", "app12"]
+levers = ["app7-no-marketing", "app11-destroy", "app13", "app12"]
 
 [[channels]]
 kind = "post"
@@ -328,6 +329,17 @@ entries = ["pollos-au", "fsociety-au"]
     }
 
     #[test]
+    fn a_removal_request_goes_only_when_named() {
+        let register = register();
+        let selection = select(&["start-here"], &[], &[Lever::App11Destroy], None);
+        let steps = plan(&register, &selection).unwrap();
+        assert_eq!(
+            letters(&steps),
+            [("privacy@example.com.au", vec![Lever::App11Destroy])]
+        );
+    }
+
+    #[test]
     fn guarded_levers_need_a_single_entry_and_no_pack() {
         let register = register();
         let err = plan(
@@ -401,7 +413,7 @@ entries = ["pollos-au", "fsociety-au"]
             "unknown entry `nope-au`"
         );
         assert!(plan(&register, &select(&[], &[], &[], None)).is_err());
-        let selection = select(&[], &["pollos-au"], &[Lever::App11Destroy], None);
+        let selection = select(&[], &["pollos-au"], &[Lever::App7NoFacilitation], None);
         let steps = plan(&register, &selection).unwrap();
         assert!(
             matches!(&steps[..], [Step::Skip { reason, .. }] if reason.contains("accepts app7-no-marketing"))

@@ -1,0 +1,35 @@
+id = "ticketek-au"
+name = "Ticketek"
+legal_entity = "Ticketek Pty Ltd"
+abn = "92 010 129 110"
+kinds = ["retail"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://premier.ticketek.com.au/Content/buyers/privacy.aspx", "https://help.ticketek.com.au/hc/en-us/requests/new?ticket_form_id=900001795406", "https://www.teg.com.au/privacy-policy"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "web-form"
+address = "https://help.ticketek.com.au/hc/en-us/requests/new?ticket_form_id=900001795406"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "post"
+address = "GPO Box 1610, Sydney NSW 2001"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "email"
+address = "privacy@teg.com.au"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.teg.com.au/privacy-policy"
+checked_at = 2026-10-26
+sha256 = "d302307d12d73054a1c21ae6d93edd6181e80a0f81b1e88cf42ff8cfc6e915b6"

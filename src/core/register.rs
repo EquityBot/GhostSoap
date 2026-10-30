@@ -18,6 +18,12 @@ pub enum Kind {
     AdTech,
     Directory,
     Loyalty,
+    Recruitment,
+    Telecommunications,
+    FinancialServices,
+    Insurance,
+    Retail,
+    OnlineService,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -225,8 +231,9 @@ pub struct Entry {
 }
 
 impl Entry {
-    /// A site that lists Australians but has no Australian presence: it gets a manual check
-    /// and its own opt-out form, never a letter.
+    /// A site whose responsible entity is overseas with no ABN: a people-search site with no
+    /// Australian presence, or a service whose policy names an overseas company. It gets a
+    /// manual check and its own opt-out form, never a letter.
     pub fn is_overseas(&self) -> bool {
         self.exemption_risk == ExemptionRisk::Overseas
     }
@@ -412,7 +419,7 @@ fn check_entry(entry: &Entry, file: &str, today: NaiveDate, report: &mut Report)
     match (&entry.abn, entry.is_overseas()) {
         (None, false) => errors.push("abn is missing".to_owned()),
         (Some(_), true) => errors.push(
-            "an overseas entry has no Australian presence, so it must not have an abn".to_owned(),
+            "an overseas entry names an entity with no ABN, so it must not have an abn".to_owned(),
         ),
         (Some(abn), false) if !abn_is_valid(abn) => errors.push(format!(
             "ABN `{abn}` is malformed: use 11 digits as `NN NNN NNN NNN` with a valid check digit"

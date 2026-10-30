@@ -1,0 +1,30 @@
+id = "latitude-au"
+name = "Latitude Financial Services"
+legal_entity = "Latitude Finance Australia"
+abn = "42 008 583 588"
+kinds = ["financial-services"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.latitudefinancial.com.au/privacy/", "https://latitudefs.zendesk.com/hc/en-au/requests/new?ticket_form_id=19263713458321", "https://latitudefs.zendesk.com/hc/en-au/articles/360020889237-Making-a-Complaint"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["afca", "oaic"]
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://latitudefs.zendesk.com/hc/en-au/requests/new?ticket_form_id=19263713458321"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "phone"
+address = "13 10 24"
+levers = []
+
+[[evidence]]
+url = "https://www.latitudefinancial.com.au/privacy/"
+checked_at = 2026-10-26
+sha256 = "660c53fa6c6d358ba4457511b6a0ac509d5b96bbcfa085ee004a126985877f4d"

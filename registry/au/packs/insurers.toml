@@ -1,0 +1,13 @@
+id = "insurers"
+name = "Insurers"
+description = "Health and general insurers. To ask insurers you have left to destroy your details, choose them with --entry and add --lever app11-destroy."
+entries = [
+  "medibank-au",
+  "bupa-au",
+  "nib-au",
+  "hcf-au",
+  "iag-au",
+  "suncorp-au",
+  "allianz-au",
+  "qbe-au",
+]

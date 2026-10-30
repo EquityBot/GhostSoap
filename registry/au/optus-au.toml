@@ -1,0 +1,30 @@
+id = "optus-au"
+name = "Optus"
+legal_entity = "Singtel Optus Pty Limited"
+abn = "90 052 833 208"
+kinds = ["telecommunications"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.optus.com.au/about/legal/privacy", "https://www.optus.com.au/about/legal/request-your-data", "https://www.optus.com.au/notices/manage-marketing-preferences"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "medium"
+
+[[channels]]
+kind = "post"
+address = "Optus Privacy Officer, PO BOX 888, North Ryde, NSW, 2113"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "phone"
+address = "133 937"
+levers = []
+
+[[channels]]
+kind = "web-form"
+address = "https://www.optus.com.au/notices/manage-marketing-preferences"
+levers = ["app7-no-marketing"]

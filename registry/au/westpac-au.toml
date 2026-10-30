@@ -1,0 +1,50 @@
+id = "westpac-au"
+name = "Westpac"
+legal_entity = "Westpac Banking Corporation"
+abn = "33 007 457 141"
+kinds = ["financial-services"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.westpac.com.au/privacy/privacy-statement/", "https://banking.westpac.com.au/olfmu/eforms/ConsumerFeedback/#/welcome", "https://eforms.stgeorge.com.au/olfmu/eforms/ConsumerFeedback/#/welcome", "https://eforms.bankofmelbourne.com.au/olfmu/eforms/ConsumerFeedback/#/welcome", "https://eforms.banksa.com.au/olfmu/eforms/ConsumerFeedback/#/welcome"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["afca", "oaic"]
+effort = "medium"
+
+[[channels]]
+kind = "post"
+address = "Reply Paid 5265, Sydney NSW 2001"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "web-form"
+address = "https://banking.westpac.com.au/olfmu/eforms/ConsumerFeedback/#/welcome"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "phone"
+address = "132 032"
+levers = []
+
+[[channels]]
+kind = "phone"
+address = "13 33 30"
+levers = []
+
+[[channels]]
+kind = "phone"
+address = "13 22 66"
+levers = []
+
+[[channels]]
+kind = "phone"
+address = "13 13 76"
+levers = []
+
+[[evidence]]
+url = "https://www.westpac.com.au/privacy/privacy-statement/"
+checked_at = 2026-10-26
+sha256 = "862c6167b76f72e8df7e832f491c88db14e17226f68df8b85f3a17660776774f"

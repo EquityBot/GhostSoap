@@ -17,7 +17,7 @@ Without `--path`, `registry check` validates the register built into the binary.
 | `id` | Permanent lowercase slug, equal to the file name; never reused. A retired entry stays with an `[obsolete]` table (`reason`, optional `replaced_by`) |
 | `name`, `legal_entity` | Trading name; legal entity as in its privacy policy or ABN Lookup |
 | `abn` | `NN NNN NNN NNN`, checked against ABN Lookup; the check digit is validated. Omitted on overseas entries, and only there |
-| `kinds` | `credit-reporting-body`, `property-data`, `people-search`, `marketing-list`, `ad-tech`, `directory`, `loyalty` |
+| `kinds` | `credit-reporting-body`, `property-data`, `people-search`, `marketing-list`, `ad-tech`, `directory`, `loyalty`, `recruitment` (agencies and job boards), `telecommunications`, `financial-services`, `insurance`, `retail`, `online-service` |
 | `priority` | `crucial`, `high`, `standard` |
 | `quality` | `tested` (a GhostSoap request got a reply), `verified` (contact checked against the entity's own privacy policy or contact pages, by a person or an AI agent, with the evidence recorded in provenance), `imported` (licence-compatible dataset), `lead` (not yet checked). Only `tested` and `verified` entries may enter packs |
 | `verified_at` | TOML date of the last check; `registry check` warns after 12 months and rejects a date more than a day ahead |
@@ -25,7 +25,7 @@ Without `--path`, `registry check` validates the register built into the binary.
 | `levers` | The requests this entity is eligible for; listing a lever does not mean it is always sent (see below). `app7-no-marketing`, `app7-no-facilitation`, `app7-source`, `app11-destroy`, `app13`, `app13-notify-recipients`, `app13-statement`, `s20t-correction`, `s20k-ban`, `s21v-correction`, `spam-unsubscribe` |
 | `opt_in_levers` | Levers the user must choose per entity. The access levers `app12`, `s20r-access` and `s21t-access` return personal information, so they are allowed only here |
 | `identity_fields` | `full_name`, `alias_names`, `email`, `phone`, `date_of_birth`, `address`, `previous_addresses`, `postcode`. Document numbers are never collected |
-| `exemption_risk` | `none`, `small-business-possible`, `overseas`. An overseas entry is a site that lists Australians but has no Australian presence found: it has no `abn`, no levers, a `[manual_check]` page and its own web-form opt-out as a channel with `levers = []` |
+| `exemption_risk` | `none`, `small-business-possible`, `overseas`. An overseas entry is a site whose responsible entity is overseas with no ABN found (a people-search site that lists Australians but has no Australian presence, or a service whose privacy policy names an overseas company, such as Indeed and LinkedIn; provisional, since section 5B can reach an overseas organisation that carries on business in Australia whether or not it has an ABN, and GhostSoap has not assessed that): it has no `abn`, no levers, a `[manual_check]` page and its own web-form opt-out as a channel with `levers = []` |
 | `escalation` | Ordered: `afca`, `acma`, `oaic` |
 | `effort` | `easy`, `medium`, `hard`, `impossible` |
 | `[[channels]]` | `kind` (`email`, `web-form`, `post`, `phone`), `address`, `levers` (the entry's levers this channel can carry; `[]` for a contact-only channel such as a phone line) and optional `preferred = true`. Every lever in `levers` and `opt_in_levers` needs at least one channel; a channel may list only the entry's levers; at most one channel is preferred for each lever |

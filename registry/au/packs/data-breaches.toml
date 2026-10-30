@@ -1,0 +1,13 @@
+id = "data-breaches"
+name = "Data breaches"
+description = "Firms whose data breaches exposed Australians' details. Add --lever app11-destroy to ask them to destroy what they no longer need, and send it only to firms you have stopped dealing with (choose them with --entry)."
+entries = [
+  "optus-au",
+  "medibank-au",
+  "latitude-au",
+  "tpg-telecom-au",
+  "qantas-frequent-flyer-au",
+  "canva-au",
+  "dymocks-au",
+  "ticketek-au",
+]
