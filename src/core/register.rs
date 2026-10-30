@@ -188,11 +188,54 @@ pub struct ManualCheck {
     pub url: String,
 }
 
+/// Why an entry was retired. The reasons follow datenanfragen's obsolete records (CC0).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ObsoleteReason {
+    /// Bought by another entity, which now handles requests.
+    Acquired,
+    /// Merged into another entity.
+    Merged,
+    /// The same entity as another entry.
+    Duplicate,
+    /// Closed, with no successor found.
+    Closed,
+    /// Should not have been added: it does not meet the inclusion criteria.
+    OutOfScope,
+}
+
+impl ObsoleteReason {
+    fn name(self) -> &'static str {
+        match self {
+            Self::Acquired => "acquired",
+            Self::Merged => "merged",
+            Self::Duplicate => "duplicate",
+            Self::Closed => "closed",
+            Self::OutOfScope => "out-of-scope",
+        }
+    }
+
+    /// Whether requests now belong to another entry, which must be named.
+    fn needs_redirect(self) -> bool {
+        matches!(self, Self::Acquired | Self::Merged | Self::Duplicate)
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Obsolete {
-    pub reason: String,
+    pub reason: ObsoleteReason,
     pub replaced_by: Option<String>,
+}
+
+impl Obsolete {
+    /// Why a plan skips this entry, and where to go instead.
+    pub fn skip_reason(&self) -> String {
+        match &self.replaced_by {
+            Some(id) => format!("obsolete ({}); use {id} instead", self.reason.name()),
+            None => format!("obsolete ({})", self.reason.name()),
+        }
+    }
 }
 
 /// One entity in `registry/au/<id>.toml`.
@@ -595,8 +638,11 @@ fn check_obsolete(entry: &Entry, errors: &mut Vec<String>) {
     let Some(obsolete) = &entry.obsolete else {
         return;
     };
-    if obsolete.reason.trim().is_empty() {
-        errors.push("obsolete.reason must not be empty".to_owned());
+    if obsolete.reason.needs_redirect() && obsolete.replaced_by.is_none() {
+        errors.push(format!(
+            "obsolete.reason `{}` needs replaced_by",
+            obsolete.reason.name()
+        ));
     }
     if obsolete.replaced_by.as_deref() == Some(entry.id.as_str()) {
         errors.push("obsolete.replaced_by must name another entry".to_owned());
@@ -1070,18 +1116,58 @@ entries = ["example-au"]
     }
 
     #[test]
-    fn rejects_blank_or_self_obsolete_details() {
+    fn rejects_self_obsolete_redirect() {
         let report = check_one(|t| {
             format!(
                 "{t}
 [obsolete]
-reason = \" \"
+reason = \"merged\"
 replaced_by = \"example-au\"
 "
             )
         });
-        assert_error(&report, "obsolete.reason must not be empty");
         assert_error(&report, "must name another entry");
+    }
+
+    #[test]
+    fn rejects_an_unknown_obsolete_reason() {
+        let report = check_one(|t| format!("{t}\n[obsolete]\nreason = \"gone\"\n"));
+        assert_error(&report, "unknown variant");
+    }
+
+    #[test]
+    fn requires_a_redirect_only_where_requests_moved() {
+        for reason in ["acquired", "merged", "duplicate"] {
+            let report = check_one(|t| format!("{t}\n[obsolete]\nreason = \"{reason}\"\n"));
+            assert_error(&report, "needs replaced_by");
+        }
+        for reason in ["closed", "out-of-scope"] {
+            let report = check_one(|t| format!("{t}\n[obsolete]\nreason = \"{reason}\"\n"));
+            assert!(
+                !report
+                    .findings
+                    .iter()
+                    .any(|f| f.message.contains("needs replaced_by")),
+                "{reason}"
+            );
+        }
+    }
+
+    #[test]
+    fn skip_reason_names_the_redirect() {
+        let moved = Obsolete {
+            reason: ObsoleteReason::Acquired,
+            replaced_by: Some("other-au".to_owned()),
+        };
+        assert_eq!(
+            moved.skip_reason(),
+            "obsolete (acquired); use other-au instead"
+        );
+        let closed = Obsolete {
+            reason: ObsoleteReason::Closed,
+            replaced_by: None,
+        };
+        assert_eq!(closed.skip_reason(), "obsolete (closed)");
     }
 
     #[test]
