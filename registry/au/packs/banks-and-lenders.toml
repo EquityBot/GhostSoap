@@ -1,0 +1,13 @@
+id = "banks-and-lenders"
+name = "Banks and lenders"
+description = "Banks, card issuers and buy now, pay later lenders. To ask firms you have left to destroy your details, choose them with --entry and add --lever app11-destroy."
+entries = [
+  "cba-au",
+  "westpac-au",
+  "nab-au",
+  "anz-au",
+  "macquarie-au",
+  "latitude-au",
+  "zip-au",
+  "afterpay-au",
+]

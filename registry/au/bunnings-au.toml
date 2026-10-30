@@ -1,0 +1,35 @@
+id = "bunnings-au"
+name = "Bunnings"
+legal_entity = "Bunnings Group Limited"
+abn = "26 008 672 179"
+kinds = ["retail"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.bunnings.com.au/policies/privacy-policy", "https://www.bunnings.com.au/contact-us"]
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "privacy@bunnings.com.au"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "post"
+address = "Locked Bag 3004, HAWTHORN VIC 3122"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.bunnings.com.au/policies/privacy-policy"
+checked_at = 2026-10-26
+sha256 = "018bc9317257a4a3bc1b58bed47e8e14a2183f93a2f3bcd752ce6056ca44eee8"
+
+[[evidence]]
+url = "https://www.bunnings.com.au/contact-us"
+checked_at = 2026-10-26
+sha256 = "adf82111e52ff444756c0f73247aef40ade5d4d946394d067d22f9fc1cc44bae"

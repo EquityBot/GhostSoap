@@ -1,0 +1,9 @@
+id = "telecommunications"
+name = "Telcos"
+description = "Large phone and internet providers. To ask providers you have left to destroy your details, choose them with --entry and add --lever app11-destroy."
+entries = [
+  "telstra-au",
+  "optus-au",
+  "tpg-telecom-au",
+  "aussie-broadband-au",
+]

@@ -1,0 +1,30 @@
+id = "linkedin-au"
+name = "LinkedIn"
+legal_entity = "LinkedIn Corporation"
+kinds = ["recruitment"]
+priority = "high"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.linkedin.com/legal/privacy-policy", "https://www.linkedin.com/help/linkedin/answer/79728?trk=microsites-frontend_legal_privacy-policy&lang=en", "https://www.linkedin.com/help/linkedin/ask/TSO-DPO"]
+identity_fields = ["full_name", "email", "phone"]
+exemption_risk = "overseas"
+escalation = []
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.linkedin.com/help/linkedin/ask/TSO-DPO"
+levers = []
+
+[manual_check]
+url = "https://www.linkedin.com/help/linkedin/answer/63"
+
+[[evidence]]
+url = "https://www.linkedin.com/legal/privacy-policy"
+checked_at = 2026-10-26
+sha256 = "55fa0b073e1c9bf6f1e23dc853a1ac7921b89e2670912d492cbfc37696343afc"
+
+[[evidence]]
+url = "https://www.linkedin.com/help/linkedin/answer/79728?trk=microsites-frontend_legal_privacy-policy&lang=en"
+checked_at = 2026-10-26
+sha256 = "d74681ebe6450defdf3f876caece109cd738fae5a1eef1acff2010b14b8ed79f"

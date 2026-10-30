@@ -1,0 +1,30 @@
+id = "the-iconic-au"
+name = "THE ICONIC"
+legal_entity = "Internet Services Australia 1 Pty Limited"
+abn = "50 152 631 082"
+kinds = ["retail", "loyalty"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.theiconic.com.au/privacy-policy/"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "easy"
+
+[[channels]]
+kind = "email"
+address = "customer.service@theiconic.com.au"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[channels]]
+kind = "post"
+address = "Level 18, Tower Two, International Towers, 200 Barangaroo Avenue, Barangaroo NSW 2000"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement", "app12"]
+
+[[evidence]]
+url = "https://www.theiconic.com.au/privacy-policy/"
+checked_at = 2026-10-26
+sha256 = "f05dc0cb67dd9f9a1e02e045b622ba29a1a418016437ebbe813de895e8ecccfc"

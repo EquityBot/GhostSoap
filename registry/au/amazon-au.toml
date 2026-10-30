@@ -1,0 +1,25 @@
+id = "amazon-au"
+name = "Amazon Australia"
+legal_entity = "Amazon Commercial Services Pty Limited"
+abn = "30 616 935 623"
+kinds = ["retail"]
+priority = "standard"
+quality = "verified"
+verified_at = 2026-10-26
+sources = ["https://www.amazon.com.au/gp/help/customer/display.html?nodeId=201909010", "https://www.amazon.com.au/gp/help/customer/display.html?nodeId=GDK92DNLSGWTV6MP"]
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+opt_in_levers = ["app12"]
+identity_fields = ["full_name", "email", "phone", "address"]
+exemption_risk = "none"
+escalation = ["oaic"]
+effort = "medium"
+
+[[channels]]
+kind = "web-form"
+address = "https://www.amazon.com.au/gp/help/customer/contact-us?ie=UTF8&ref_=cu_surl"
+levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
+
+[[channels]]
+kind = "web-form"
+address = "https://www.amazon.com.au/gp/privacycentral/dsar/preview.html"
+levers = ["app12"]

@@ -17,7 +17,7 @@
 
 _GhostSoap at no Price._
 
-GhostSoap is a free, local-first tool that helps people in Australia reclaim their privacy. It prepares Privacy Act requests to data brokers for you to send from your own mailbox. Planned milestones add tracking of every deadline and reply, an escalation file when a business does not respond, and a guide to the data hygiene steps email cannot fix.
+GhostSoap is a free, local-first tool that helps people in Australia reclaim their privacy. It prepares Privacy Act requests to data brokers, recruiters and other businesses for you to send from your own mailbox. Planned milestones add tracking of every deadline and reply, an escalation file when a business does not respond, and a guide to the data hygiene steps email cannot fix.
 
 **Status: milestone M2.** GhostSoap has a sourced [register](registry/README.md) of Australian entities and prepares request letters for you to send yourself. It does not yet track what you sent or the replies (milestone M3). The [plan](docs/plan.md) sets out what comes next.
 
@@ -31,7 +31,9 @@ ghostsoap clean                                  # delete the drafts once sent
 ghostsoap law                                    # each request's legal basis and deadline
 ```
 
-`plan` and `draft` take `--pack` or `--entry` (repeatable). Without `--lever`, they ask each business to stop direct marketing, to stop passing your details to other marketers and to say where it got them (APP 7). Other requests are named with `--lever` for one business at a time, and those that need your own words take `--detail`, for example `ghostsoap draft --entry equifax-au --lever s20t-correction --detail "The default listed for 2024 is not mine."`. Each letter includes only the details that business needs. Overseas people-search sites get no letter: GhostSoap has not established that Australian privacy law reaches them (it can reach an overseas business that carries on business in Australia, under section 5B), so it shows their own search page and opt-out form instead.
+`plan` and `draft` take `--pack` or `--entry` (repeatable). Without `--lever`, they ask each business to stop direct marketing, to stop passing your details to other marketers and to say where it got them (APP 7). Other requests are named with `--lever`. Requests that return your details or need your own words go to one business at a time, and those that need your own words take `--detail`, for example `ghostsoap draft --entry equifax-au --lever s20t-correction --detail "The default listed for 2024 is not mine."`. Each letter includes only the details that business needs. Overseas people-search sites, and services whose privacy policy names an overseas company with no ABN (Indeed, LinkedIn), get no letter: GhostSoap has not established that Australian privacy law reaches them (it can reach an overseas business that carries on business in Australia, under section 5B), so it shows their own search page and opt-out form instead.
+
+Packs: `start-here`, `marketing`, `people-search`, `property`, `credit`, `loyalty`, `recruitment`, `data-breaches`, `telecommunications`, `banks-and-lenders`, `insurers` and `retail`. To ask a business you no longer deal with to destroy or de-identify your details (APP 11.2), name that request, for example `ghostsoap draft --entry hays-au --lever app11-destroy` (add the APP 7 levers too if you want both). With `--pack`, the request goes to every business in the pack that accepts it, including any you still deal with or work through, so use a pack only if you have left them all. Only you know whether you still deal with a business, so for consumer firms choose the ones you have left with `--entry`, for example `--entry optus-au --lever app11-destroy`. SEEK is in no pack. `--entry seek-au` alone asks SEEK for the APP 7 requests; add `--lever app11-destroy` to ask it to destroy what it no longer needs. Neither closes your SEEK account. Records of your employment through an agency, for example as a labour-hire worker, may be exempt from the Privacy Act (section 7B(3)); your records as a candidate are not.
 
 Drafts are `.eml` files your mail program opens ready to send, or text files to post or paste into a web form; `draft --copy` prints them for webmail instead. They are written to a `drafts` folder beside your profile (or the folder `--out` names) and stay plaintext until you run `ghostsoap clean`, and your mailbox's Sent folder keeps copies. `draft` warns, without stopping, when it finds the drafts folder inside a Git working tree, where the letters could be committed, or inside a OneDrive, Dropbox or iCloud Drive folder, where they could be uploaded. It looks only in the usual places, so a folder it does not warn about may still be committed, synced or shared. Each draft is dated the day you made it, so check the date if you send it later, and text you give with `--detail` goes into the letter as you wrote it. `draft --mailto` also prints a ready-to-send link for a letter short enough for one; the link holds the whole letter, so it stays in your terminal's history.
 
@@ -47,8 +49,8 @@ Nothing. GhostSoap makes no network connections; you send each letter yourself.
 
 ## What it will do
 
-- Send requests under the Australian Privacy Principles and the credit reporting rules in Part IIIA of the Privacy Act: stop direct marketing, tell me where you got my information, give me access, correct it.
-- Keep a small register of Australian data brokers, each entry sourced and dated.
+- Send requests under the Australian Privacy Principles and the credit reporting rules in Part IIIA of the Privacy Act: stop direct marketing, tell me where you got my information, destroy what you no longer need, give me access, correct it.
+- Keep a register of Australian data brokers, recruiters and large consumer businesses, each entry sourced and dated.
 - Track deadlines and replies in an encrypted file on your computer, and export an escalation pack.
 - Guide wider data hygiene: breach checks, credit bans, the Do Not Call Register, silent numbers and more.
 
