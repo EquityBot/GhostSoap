@@ -185,3 +185,7 @@ Evidence: 52 `[[evidence]]` hashes across 33 of these entries, taken on 26 Octob
 | Australian Marketing Lists | Business contacts only; sole trader |
 | Roy Morgan, Pureprofile | Research panels that say they do not sell or rent personal information; may be added later for APP 12 and 13 |
 | Data Direct, Prospect Shop, Data Ezy | No Australian website or business found |
+
+## Obsolete reasons
+
+The `[obsolete]` reasons and the rule that a moved entry must name its replacement follow the obsolete records of [datenanfragen/data](https://github.com/datenanfragen/data) (CC0-1.0). The names are adapted; no records were copied.

@@ -10,11 +10,22 @@ cargo run -- registry check --path registry/au
 
 Without `--path`, `registry check` validates the register built into the binary.
 
+## What belongs here
+
+An entity belongs in the register when all of these hold:
+
+- It holds personal information about many people in Australia, and it fits one of the `kinds` below. That covers data brokers and people-search sites, recruiters, firms behind large Australian data breaches and large consumer firms.
+- People can reach it: its own pages give a privacy contact or an opt-out.
+- It has an ABN, or it is an overseas entry as `exemption_risk` defines one. An entity that may fall under the small business exemption can stay, marked `small-business-possible`.
+- Its details come from its own pages. Another list may point you to it, but nothing is copied from a list whose licence does not allow it ([clean-room rules](../CONTRIBUTING.md#clean-room-rules)).
+
+Individuals do not belong, and no entry names a person as its contact. A lead you cannot yet verify is worth an issue, not an entry. To propose an entity, use the [new entry form](https://github.com/EquityBot/GhostSoap/issues/new?template=new-entry.yml), and leave your own details out: never include a reply you received, unless everything about you is removed.
+
 ## Entry fields
 
 | Field | Values |
 |---|---|
-| `id` | Permanent lowercase slug, equal to the file name; never reused. A retired entry stays with an `[obsolete]` table (`reason`, optional `replaced_by`) |
+| `id` | Permanent lowercase slug, equal to the file name; never reused. A retired entry stays with an `[obsolete]` table: `reason` is `acquired`, `merged` or `duplicate` (each needs `replaced_by`, the entry that now handles requests), `closed` or `out-of-scope` |
 | `name`, `legal_entity` | Trading name; legal entity as in its privacy policy or ABN Lookup |
 | `abn` | `NN NNN NNN NNN`, checked against ABN Lookup; the check digit is validated. Omitted on overseas entries, and only there |
 | `kinds` | `credit-reporting-body`, `property-data`, `people-search`, `marketing-list`, `ad-tech`, `directory`, `loyalty`, `recruitment` (agencies and job boards), `telecommunications`, `financial-services`, `insurance`, `retail`, `online-service` |
@@ -39,6 +50,8 @@ A pack has `id` (equal to the file name), `name`, `description` and `entries`, a
 ## Evidence hashes and drift
 
 Each `[[evidence]]` table records a source page's state when the entry was verified. A scheduled workflow (`.github/workflows/evidence-drift.yml`) re-fetches every evidence page on the first of each month and opens or updates one issue, 'Register evidence drift', listing pages that changed or could not be read within 30 seconds, and closes that issue once every page matches again. It never commits. When a page changes, recheck the entry against it and update the hash and `checked_at`.
+
+The same run checks the contact channels of every entry that is not obsolete. It looks up each email address's domain through Google Public DNS (`dns.google`) and reports one that does not exist, has no mail or address record, or publishes a null MX record saying it accepts no mail. It also requests each web-form address and reports an HTTP error or a host public DNS says does not exist. A 401, 403, 405, 429 or 5xx, a dropped connection or a failed DNS lookup proves nothing, because sites also answer scripts that way when the form works and such failures pass, so those go to the workflow log and not the issue: a form or domain behind one of them is not confirmed to work. These checks never send an email or submit a form, and a passing domain does not prove the mailbox exists.
 
 `cargo run -p xtask -- evidence-hash <url>` prints a page's hash, computed as follows:
 

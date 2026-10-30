@@ -127,7 +127,7 @@ fn resolve<'a>(register: &'a Register, selection: &Selection) -> Result<Vec<&'a 
 
 fn steps<'a>(entry: &'a Entry, selection: &Selection) -> Vec<Step<'a>> {
     if let Some(obsolete) = &entry.obsolete {
-        let reason = format!("obsolete: {}", obsolete.reason);
+        let reason = obsolete.skip_reason();
         return vec![Step::Skip { entry, reason }];
     }
     if entry.is_overseas() {

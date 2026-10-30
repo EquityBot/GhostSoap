@@ -1,0 +1,48 @@
+name: Propose a register entry
+description: Suggest a business that holds personal information about people in Australia.
+title: "Register: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues are public, so leave out your own details. Never paste a reply you received unless everything about you is removed. See [what belongs in the register](https://github.com/EquityBot/GhostSoap/blob/main/registry/README.md#what-belongs-here).
+  - type: input
+    id: name
+    attributes:
+      label: Business name
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Page on the business's own site
+      description: Ideally its privacy policy or contact page. Leave blank if this is an unverified lead.
+      placeholder: https://
+  - type: input
+    id: checked
+    attributes:
+      label: Date you checked that page
+      placeholder: YYYY-MM-DD
+  - type: input
+    id: lead
+    attributes:
+      label: Public list that led you to it
+      description: Name the list or report, if one did. A lead is welcome; a maintainer verifies it before it becomes an entry.
+  - type: input
+    id: abn
+    attributes:
+      label: ABN, if you found one
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it belongs
+      description: What it does with personal information. Describe the business, not your own dealings with it.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before you submit
+      options:
+        - label: This issue contains no personal details of mine or anyone else's.
+          required: true
