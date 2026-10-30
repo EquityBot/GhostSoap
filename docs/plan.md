@@ -162,7 +162,7 @@ ghostsoap registry check             validate the register (also run in CI)
 ghostsoap export | forget
 ```
 
-Every command supports `--json`; output honours `NO_COLOR`, and no status is shown by colour alone. (`--json` is not yet built; M2 output has no colour.)
+Every command is planned to support `--json`; output honours `NO_COLOR`, and no status is shown by colour alone. (So far `--json` is built only for `plan`, `law` and `registry list`, which hold no personal details, for the agent skill in `skills/ghostsoap`; M2 output has no colour.)
 
 ### Dependencies (initial)
 

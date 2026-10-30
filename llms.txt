@@ -11,6 +11,7 @@ GhostSoap provides information and templates, not legal advice.
 ## Start
 
 - [README](https://github.com/EquityBot/GhostSoap#readme): commands, safety, what leaves your machine and what it will not do.
+- [Agent skill](https://github.com/EquityBot/GhostSoap/blob/main/skills/ghostsoap/SKILL.md): how an AI agent helps choose requests whilst the person keeps their details and sends every letter.
 - [Register](https://github.com/EquityBot/GhostSoap/blob/main/registry/README.md): entry fields and how `registry check` validates them.
 - [Plan](https://github.com/EquityBot/GhostSoap/blob/main/docs/plan.md): legal model, threat model and milestones.
 
