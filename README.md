@@ -59,7 +59,7 @@ The skill is guidance, not a lock. It does not stop an agent that can read your 
 
 ## What leaves your machine
 
-Nothing. GhostSoap makes no network connections; you send each letter yourself. An AI agent you use is separate: what it reads may reach its provider.
+Nothing from GhostSoap itself: it makes no network connections, and you send each letter yourself. An AI agent you use is separate: what it reads may reach its provider.
 
 ## What it will do
 

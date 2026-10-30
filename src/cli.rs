@@ -336,6 +336,7 @@ fn step_json(step: &Step) -> Value {
             "action": "manual",
             "entry": entry.id,
             "note": OVERSEAS_NOTE,
+            "page_step": overseas_look(entry),
             "page": overseas_check(entry),
             "forms": overseas_forms(entry),
             "effort": effort_name(entry),
@@ -546,16 +547,20 @@ fn effort_name(entry: &Entry) -> String {
     format!("{:?}", entry.effort).to_lowercase()
 }
 
-fn print_overseas(entry: &Entry) {
-    let look = if entry.kinds.contains(&Kind::PeopleSearch) {
+fn overseas_look(entry: &Entry) -> &'static str {
+    if entry.kinds.contains(&Kind::PeopleSearch) {
         "Search for yourself at"
     } else {
         "See"
-    };
+    }
+}
+
+fn print_overseas(entry: &Entry) {
     println!(
-        "manual  {}: {OVERSEAS_NOTE} {look} {}, then use its own opt-out or \
+        "manual  {}: {OVERSEAS_NOTE} {} {}, then use its own opt-out or \
          privacy request form at {} (effort: {}).",
         entry.id,
+        overseas_look(entry),
         overseas_check(entry),
         overseas_forms(entry).join(" or "),
         effort_name(entry)

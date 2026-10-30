@@ -10,7 +10,7 @@ GhostSoap prepares Australian Privacy Act requests for a person to send from the
 ## What you run
 
 ```bash
-ghostsoap plan --pack start-here --json   # what would be sent, to whom and why
+ghostsoap plan --pack start-here --json   # the planned requests, to whom and why
 ghostsoap plan --entry quantium-au --json # one business
 ghostsoap law --json                      # each request's legal basis, deadline and charge
 ghostsoap registry list --json            # the packs and businesses to choose from
@@ -18,11 +18,11 @@ ghostsoap registry list --json            # the packs and businesses to choose f
 
 These commands need no profile and no passphrase. Errors go to standard error with a non-zero exit code. `plan` steps have an `action`:
 
-- `letter`: GhostSoap can draft it. `details_used` names the identity fields that business would receive; a letter also holds any `--detail` text the person adds.
-- `manual`: run from overseas, with no letter. Show the person `note`, which says Australian law may not reach it, and give them `page` and `forms`; they use them themselves.
+- `letter`: GhostSoap can draft it. `details_used` names the identity fields the register expects for that business, not their values; a letter also holds any `--detail` text the person adds.
+- `manual`: run from overseas, with no letter. Show the person `note`, which says Australian law may not reach it, and give them `page_step` with `page`, then `forms`; they use them themselves.
 - `skip`: nothing to send; give the `reason`.
 
-Show every item in `warnings`. Without the binary, the same data is in `registry/au/` in the [repository](https://github.com/EquityBot/GhostSoap).
+Show every item in `warnings`. Without the binary, the register entries and packs are in `registry/au/` in the [repository](https://github.com/EquityBot/GhostSoap), but the planned steps, warnings and law table come only from running GhostSoap.
 
 ## What the person does themselves
 

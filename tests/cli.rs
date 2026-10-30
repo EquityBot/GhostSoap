@@ -157,3 +157,23 @@ fn registry_list_json_names_every_pack_entry() {
     }
     assert!(list["entries"][0]["kinds"][0].is_string());
 }
+
+#[test]
+fn plan_json_tells_people_search_and_other_overseas_entries_apart() {
+    let list = json_of(&["registry", "list", "--json"]);
+    let overseas = list["entries"].as_array().expect("entries").iter();
+    let other = overseas
+        .filter(|e| e["overseas"] == true)
+        .find(|e| {
+            !e["kinds"]
+                .as_array()
+                .expect("kinds")
+                .contains(&"people-search".into())
+        })
+        .expect("an overseas entry that is not a people-search site");
+    let id = other["id"].as_str().expect("id");
+    let plan = json_of(&["plan", "--entry", id, "--json"]);
+    assert_eq!(plan["steps"][0]["page_step"], "See");
+    let plan = json_of(&["plan", "--entry", "infotracer-au", "--json"]);
+    assert_eq!(plan["steps"][0]["page_step"], "Search for yourself at");
+}
