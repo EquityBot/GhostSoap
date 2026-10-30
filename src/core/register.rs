@@ -1130,6 +1130,13 @@ replaced_by = \"example-au\"
     }
 
     #[test]
+    fn rejects_an_empty_obsolete_redirect() {
+        let report =
+            check_one(|t| format!("{t}\n[obsolete]\nreason = \"merged\"\nreplaced_by = \"\"\n"));
+        assert_error(&report, "names unknown entry");
+    }
+
+    #[test]
     fn rejects_an_unknown_obsolete_reason() {
         let report = check_one(|t| format!("{t}\n[obsolete]\nreason = \"gone\"\n"));
         assert_error(&report, "unknown variant");

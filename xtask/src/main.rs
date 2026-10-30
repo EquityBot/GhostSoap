@@ -255,9 +255,9 @@ fn check_mail(lookup: &dyn Fn(&str, &str) -> Result<Dns, String>, domain: &str) 
 }
 
 /// Fetch a web form, never submitting it. Sites answer scripts with 401, 403 and 429, or
-/// close the connection, even when the form works; a 5xx may pass; and this machine's
-/// resolver may block a host. So only another HTTP error, or a host public DNS says does
-/// not exist, counts as dead.
+/// close the connection, even when the form works; a form may accept only POST (405); a
+/// 5xx may pass; and this machine's resolver may block a host. So only another HTTP error,
+/// or a host public DNS says does not exist, counts as dead.
 fn check_form(
     agent: &ureq::Agent,
     lookup: &dyn Fn(&str, &str) -> Result<Dns, String>,
@@ -265,7 +265,7 @@ fn check_form(
 ) -> Check {
     match agent.get(url).header("User-Agent", USER_AGENT).call() {
         Ok(_) => Check::Fine,
-        Err(e @ ureq::Error::StatusCode(401 | 403 | 429 | 500..=599)) => {
+        Err(e @ ureq::Error::StatusCode(401 | 403 | 405 | 429 | 500..=599)) => {
             Check::Inconclusive(e.to_string())
         }
         Err(e @ ureq::Error::StatusCode(_)) => Check::Dead(e.to_string()),
@@ -280,12 +280,18 @@ fn check_form(
 }
 
 fn report(changed: &[String], failing: &[String], channels: &[String]) -> String {
-    let mut out = String::from(
-        "The monthly evidence check found register pages that differ from when they were \
-         verified, or contact channels that may no longer work. Recheck each entry against \
-         the page, then update its `[[evidence]]` hash and `checked_at` \
-         (`cargo run -p xtask -- evidence-hash <url>`).\n",
-    );
+    let mut out = String::new();
+    if !changed.is_empty() || !failing.is_empty() {
+        out += "The monthly evidence check found register pages that differ from when they \
+                were verified. Recheck each entry against the page, then update its \
+                `[[evidence]]` hash and `checked_at` \
+                (`cargo run -p xtask -- evidence-hash <url>`).\n";
+    }
+    if !channels.is_empty() {
+        out += "The monthly evidence check found contact channels that may no longer work. \
+                Check each against the business's own pages, then correct its `[[channels]]` \
+                entry and `verified_at`.\n";
+    }
     for (title, lines) in [
         ("Changed", changed),
         ("Failing", failing),
@@ -394,6 +400,18 @@ levers = []
     }
 
     #[test]
+    fn a_channel_only_report_does_not_ask_for_new_hashes() {
+        let line = ["- `example-au`: web form x: gone".to_owned()];
+        let channels_only = report(&[], &[], &line);
+        assert!(channels_only.contains("## Channels"));
+        assert!(channels_only.contains("`[[channels]]`"));
+        assert!(!channels_only.contains("evidence-hash"));
+        let pages_only = report(&line, &[], &[]);
+        assert!(pages_only.contains("evidence-hash"));
+        assert!(!pages_only.contains("`[[channels]]`"));
+    }
+
+    #[test]
     fn a_failed_lookup_is_inconclusive() {
         let broken = |_: &str, _: &str| Err("offline".to_owned());
         assert_eq!(
@@ -466,6 +484,7 @@ levers = []
         let agent = agent(Duration::from_secs(5));
         for status in [
             "401 Unauthorized",
+            "405 Method Not Allowed",
             "403 Forbidden",
             "429 Too Many Requests",
             "500 Internal Server Error",
