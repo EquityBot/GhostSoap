@@ -3,12 +3,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use chrono::{Months, NaiveDate};
-use serde::Deserialize;
 use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 use toml::value::Datetime;
 
 /// What an entity does with personal information.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Kind {
     CreditReportingBody,

@@ -37,6 +37,20 @@ Packs: `start-here`, `marketing`, `people-search`, `property`, `credit`, `loyalt
 
 Drafts are `.eml` files your mail program opens ready to send, or text files to post or paste into a web form; `draft --copy` prints them for webmail instead. They are written to a `drafts` folder beside your profile (or the folder `--out` names) and stay plaintext until you run `ghostsoap clean`, and your mailbox's Sent folder keeps copies. `draft` warns, without stopping, when it finds the drafts folder inside a Git working tree, where the letters could be committed, or inside a OneDrive, Dropbox or iCloud Drive folder, where they could be uploaded. It looks only in the usual places, so a folder it does not warn about may still be committed, synced or shared. Each draft is dated the day you made it, so check the date if you send it later, and text you give with `--detail` goes into the letter as you wrote it. `draft --mailto` also prints a ready-to-send link for a letter short enough for one; the link holds the whole letter, so it stays in your terminal's history.
 
+## With an AI agent
+
+[`skills/ghostsoap/SKILL.md`](skills/ghostsoap/SKILL.md) lets an AI agent help you choose requests and explain them, using `ghostsoap plan --json` and `ghostsoap law --json`, which need no profile. You still run `init` and `draft` and send every letter yourself.
+
+| Agent | How to add it | What it can do |
+| --- | --- | --- |
+| Agent on your computer that reads skills, such as Muse Code | Copy `skills/ghostsoap` into its skills folder | Run `plan` and `law` |
+| Grok Bot | Ask the bot to add the skill from this repository | Depends on where it runs commands: on your computer, `plan` and `law`; otherwise as a hosted agent |
+| ChatGPT Dot and other hosted agents | Point the agent at this repository | Runs on its own computer, not yours: it reads the register or builds GhostSoap there. Never put your profile there |
+
+These routes come from third-party guides and press coverage and have not yet been tested in any of these products.
+
+The skill is guidance, not a lock. It does not stop an agent that can read your files from reading plaintext drafts, so keep agents away from GhostSoap's data folder or use `ghostsoap draft --copy`, which writes no draft files. What an agent reads may reach its provider, including which businesses and requests you choose.
+
 ## Safety
 
 - Your profile is encrypted with [age](https://age-encryption.org/) under your passphrase and kept in your user data folder (`%LOCALAPPDATA%\GhostSoap` on Windows). A lost passphrase cannot be recovered.
@@ -45,7 +59,7 @@ Drafts are `.eml` files your mail program opens ready to send, or text files to 
 
 ## What leaves your machine
 
-Nothing. GhostSoap makes no network connections; you send each letter yourself.
+Nothing from GhostSoap itself: it makes no network connections, and you send each letter yourself. An AI agent you use is separate: what it reads may reach its provider.
 
 ## What it will do
 
