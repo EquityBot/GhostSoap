@@ -9,7 +9,7 @@
 
 <div align="center">
 
-[![tests](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml) [![CodeQL](https://github.com/EquityBot/GhostSoap/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/EquityBot/GhostSoap/actions/workflows/codeql.yml)<br>
+[![tests](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml) [![Codecov](https://codecov.io/gh/EquityBot/GhostSoap/graph/badge.svg)](https://codecov.io/gh/EquityBot/GhostSoap) [![CodeQL](https://github.com/EquityBot/GhostSoap/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/EquityBot/GhostSoap/actions/workflows/codeql.yml) [![Snyk](https://github.com/EquityBot/GhostSoap/actions/workflows/snyk.yml/badge.svg?branch=main)](https://github.com/EquityBot/GhostSoap/actions/workflows/snyk.yml) [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=EquityBot_GhostSoap&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=EquityBot_GhostSoap) [![Codacy code quality](https://app.codacy.com/project/badge/Grade/09b3719406164acc84f055d5b9c4da35)](https://app.codacy.com/gh/EquityBot/GhostSoap/dashboard)<br>
 [![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/EquityBot/GhostSoap.svg)](https://scorecard.dev/viewer/?uri=github.com/EquityBot/GhostSoap)<br>
 [![rust: 1.99+](.github/assets/badges/rust.svg)](https://www.rust-lang.org/) [![licence: FSL-1.1-ALv2](.github/assets/badges/licence.svg)](#licences)
 
