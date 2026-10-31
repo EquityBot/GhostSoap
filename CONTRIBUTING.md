@@ -21,3 +21,5 @@ cargo test --locked
 cargo build --locked --release
 cargo run -- registry check --path registry/au
 ```
+
+New functionality and bug fixes come with automated tests, in `tests/` or a `#[cfg(test)]` module beside the code, and CI runs them on Linux and Windows.
