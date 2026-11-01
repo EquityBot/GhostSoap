@@ -86,6 +86,26 @@ jobs:
           disable_search: true
           fail_ci_if_error: true
 
+  # Annotate each email address a pull request adds to an existing register entry, so a
+  # reviewer checks it on the entity's own pages before users send requests to it.
+  register-emails:
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check out the base branch's register
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          sparse-checkout: registry
+          persist-credentials: false
+      - run: rustup toolchain install
+      - run: cargo run --locked -p xtask -- email-changes base/registry/au registry/au
+
   audit:
     timeout-minutes: 20
     runs-on: ubuntu-latest
