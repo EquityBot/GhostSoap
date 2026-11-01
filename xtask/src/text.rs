@@ -258,7 +258,7 @@ pub fn cloudflare_emails(html: &str) -> Vec<String> {
 }
 
 fn decode_cloudflare(hex: &str) -> Option<String> {
-    if hex.len() < 4 || hex.len() % 2 != 0 {
+    if hex.len() < 4 || !hex.len().is_multiple_of(2) {
         return None;
     }
     let bytes = (0..hex.len())
