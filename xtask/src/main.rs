@@ -225,50 +225,71 @@ fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
     }
 }
 
-/// Email addresses that entries in `base` gained in `head`, as `(file, message)`. A change
-/// that repoints a privacy address would send users' requests elsewhere, so a reviewer must
-/// see each one. New entries are reviewed whole and are not listed.
-fn email_changes(base: &[SourceFile], head: &[SourceFile]) -> Vec<(String, String)> {
+/// Email addresses in `head` that the same entry in `base` did not have, as `(file, message)`.
+/// A change that repoints a privacy address would send users' requests elsewhere, so a
+/// reviewer must see each one. Every address of an entry whose id is not in `base` is listed,
+/// so renaming an entry cannot hide a changed address. Fails on a file that does not parse.
+fn email_changes(
+    base: &[SourceFile],
+    head: &[SourceFile],
+) -> Result<Vec<(String, String)>, String> {
+    // Domains are case-insensitive; a local part may not be, so only the domain is folded.
     let emails = |entry: &Entry| -> Vec<String> {
+        let fold = |address: &str| match address.rsplit_once('@') {
+            Some((local, domain)) => format!("{local}@{}", domain.to_lowercase()),
+            None => address.to_owned(),
+        };
         entry
             .channels
             .iter()
             .filter(|c| c.kind == ChannelKind::Email)
-            .map(|c| c.address.to_lowercase())
+            .map(|c| fold(&c.address))
             .collect()
     };
-    // `registry check` reports a file that does not parse, so it is skipped here.
-    let parsed = |files: &[SourceFile]| -> Vec<(String, Entry)> {
-        let parse = |f: &SourceFile| toml::from_str(&f.text).ok().map(|e| (f.name.clone(), e));
-        files.iter().filter_map(parse).collect()
+    let parsed = |files: &[SourceFile]| -> Result<Vec<(String, Entry)>, String> {
+        let parse = |f: &SourceFile| {
+            toml::from_str(&f.text)
+                .map(|e| (f.name.clone(), e))
+                .map_err(|e| format!("{} does not parse: {e}", f.name))
+        };
+        files.iter().map(parse).collect()
     };
-    let before: BTreeMap<String, Vec<String>> = parsed(base)
+    let before: BTreeMap<String, Vec<String>> = parsed(base)?
         .into_iter()
         .map(|(_, entry)| (entry.id.clone(), emails(&entry)))
         .collect();
     let mut changes = Vec::new();
-    for (file, entry) in parsed(head) {
-        let Some(old) = before.get(&entry.id) else {
-            continue;
-        };
-        for address in emails(&entry).into_iter().filter(|a| !old.contains(a)) {
-            let was = if old.is_empty() {
-                "none".to_owned()
-            } else {
-                old.join(", ")
+    for (file, entry) in parsed(head)? {
+        let old = before.get(&entry.id);
+        for address in emails(&entry)
+            .into_iter()
+            .filter(|a| old.is_none_or(|old| !old.contains(a)))
+        {
+            let message = match old {
+                None => format!(
+                    "new entry `{}` lists email {address}; check it on the entity's own pages",
+                    entry.id
+                ),
+                Some(old) => {
+                    let was = if old.is_empty() {
+                        "none".to_owned()
+                    } else {
+                        old.join(", ")
+                    };
+                    format!(
+                        "`{}` gains email {address} (before: {was}); check it on the entity's own pages",
+                        entry.id
+                    )
+                }
             };
-            let message = format!(
-                "`{}` gains email {address} (before: {was}); check it on the entity's own pages",
-                entry.id
-            );
             changes.push((file.clone(), message));
         }
     }
-    changes
+    Ok(changes)
 }
 
-/// Print a GitHub warning annotation for each email address `head` added to an entry of
-/// `base`. Exits 0 either way, like a stale `verified_at`; an unreadable register exits 1.
+/// Print a GitHub warning annotation for each email address `email_changes` lists. Exits 0
+/// either way, like a stale `verified_at`; an unreadable register or entry exits 1.
 fn emails_changed(base: &Path, head: &Path) -> ExitCode {
     let load = |dir: &Path| {
         ghostsoap::io::register::load(dir)
@@ -277,7 +298,13 @@ fn emails_changed(base: &Path, head: &Path) -> ExitCode {
     let (Ok(base_files), Ok(head_files)) = (load(base), load(head)) else {
         return ExitCode::FAILURE;
     };
-    let changes = email_changes(&base_files.entries, &head_files.entries);
+    let changes = match email_changes(&base_files.entries, &head_files.entries) {
+        Ok(changes) => changes,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
     // A workflow command escapes `%`, CR and LF in its message, and `:` and `,` too in a
     // property value.
     let data = |s: &str| {
@@ -291,10 +318,7 @@ fn emails_changed(base: &Path, head: &Path) -> ExitCode {
         let message = data(message);
         println!("::warning file={path},title=Register email changed::{message}");
     }
-    println!(
-        "{} email address(es) added to existing entries",
-        changes.len()
-    );
+    println!("{} email address(es) to check", changes.len());
     ExitCode::SUCCESS
 }
 
@@ -700,26 +724,57 @@ levers = []
         }
     }
 
+    fn changes(base: &[SourceFile], head: &[SourceFile]) -> Result<Vec<(String, String)>, String> {
+        email_changes(base, head)
+    }
+
     #[test]
     fn warns_of_an_email_address_an_entry_gains() {
         let base = [source(ENTRY)];
         let moved = ENTRY.replace("privacy@Example.com.au", "privacy@attacker.example");
-        let changes = email_changes(&base, &[source(&moved)]);
-        assert_eq!(changes.len(), 1, "{changes:?}");
-        assert_eq!(changes[0].0, "example-au.toml");
-        assert!(changes[0].1.contains("privacy@attacker.example"));
-        assert!(changes[0].1.contains("before: privacy@example.com.au"));
+        let found = changes(&base, &[source(&moved)]).unwrap();
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert_eq!(found[0].0, "example-au.toml");
+        assert!(found[0].1.contains("privacy@attacker.example"));
+        assert!(found[0].1.contains("before: privacy@example.com.au"));
         let local_part = ENTRY.replace("privacy@Example.com.au", "optout@example.com.au");
-        assert_eq!(email_changes(&base, &[source(&local_part)]).len(), 1);
+        assert_eq!(changes(&base, &[source(&local_part)]).unwrap().len(), 1);
     }
 
     #[test]
-    fn ignores_unchanged_addresses_and_new_entries() {
+    fn a_recased_local_part_is_a_different_address_but_a_recased_domain_is_not() {
         let base = [source(ENTRY)];
-        let recased = ENTRY.replace("privacy@Example.com.au", "PRIVACY@example.com.au");
-        assert_eq!(email_changes(&base, &[source(&recased)]), []);
-        let renamed = ENTRY.replace("\"example-au\"", "\"other-au\"");
-        assert_eq!(email_changes(&[source(&renamed)], &base), []);
+        let domain = ENTRY.replace("privacy@Example.com.au", "privacy@EXAMPLE.com.au");
+        assert_eq!(changes(&base, &[source(&domain)]).unwrap(), []);
+        let local_part = ENTRY.replace("privacy@Example.com.au", "Privacy@example.com.au");
+        assert_eq!(changes(&base, &[source(&local_part)]).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn a_renamed_entry_cannot_change_its_email_unflagged() {
+        let base = [source(ENTRY)];
+        let renamed = ENTRY
+            .replace("\"example-au\"", "\"other-au\"")
+            .replace("privacy@Example.com.au", "privacy@attacker.example");
+        let found = changes(&base, &[source(&renamed)]).unwrap();
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].1.contains("new entry `other-au`"));
+        assert!(found[0].1.contains("privacy@attacker.example"));
+    }
+
+    #[test]
+    fn ignores_unchanged_addresses() {
+        let base = [source(ENTRY)];
+        assert_eq!(changes(&base, &base).unwrap(), []);
+    }
+
+    #[test]
+    fn an_entry_that_does_not_parse_is_an_error() {
+        let base = [source(ENTRY)];
+        let broken = [source("id = ")];
+        let error = changes(&base, &broken).unwrap_err();
+        assert!(error.contains("example-au.toml"), "{error}");
+        assert!(changes(&broken, &base).is_err());
     }
 
     #[test]
