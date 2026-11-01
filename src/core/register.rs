@@ -885,6 +885,7 @@ entries = ["example-au"]
             "88000014675",
             "88 000 014 67",
             "8a 000 014 675",
+            "880 00 014 675",
         ] {
             let report = check_one(|t| t.replace("88 000 014 675", abn));
             assert_error(&report, "is malformed");
@@ -1042,6 +1043,7 @@ entries = ["example-au"]
             "https://example.com:bad/path",
             "https://-bad.example/path",
             "https://example.com:+443/path",
+            "https://example.com:0/path",
             &format!("https://{}.com/", "a".repeat(64)),
         ] {
             let report = check_one(|t| t.replace("https://example.com.au/privacy", url));
@@ -1073,6 +1075,32 @@ entries = ["example-au"]
         assert_error(&report, "unknown field `drivers_licence`");
         let report = check_one(|t| t.replace("privacy@example.com.au", "privacy"));
         assert_error(&report, "is not an email address");
+        let channel = |kind: &str, address: &str| {
+            format!("\n[[channels]]\nkind = \"{kind}\"\naddress = \"{address}\"\nlevers = []\n")
+        };
+        let report = check_one(|t| format!("{t}{}", channel("web-form", "http://x.com.au/")));
+        assert_error(&report, "web form `http://x.com.au/` is not an https URL");
+        let report = check_one(|t| format!("{t}{}", channel("post", " ")));
+        assert_error(&report, "a channel address must not be empty");
+    }
+
+    #[test]
+    fn rejects_an_empty_name_or_legal_entity() {
+        let report = check_one(|t| t.replace("name = \"Example\"", "name = \"\""));
+        assert_error(&report, "name and legal_entity must not be empty");
+        let report = check_one(|t| t.replace("\"Example Pty Ltd\"", "\" \""));
+        assert_error(&report, "name and legal_entity must not be empty");
+    }
+
+    #[test]
+    fn rejects_an_obsolete_entry_in_a_pack() {
+        let obsolete = format!("{VALID}\n[obsolete]\nreason = \"closed\"\n");
+        let report = check(
+            &[file("example-au.toml", &obsolete)],
+            &[file("marketing.toml", PACK)],
+            today(),
+        );
+        assert_error(&report, "pack lists obsolete entry `example-au`");
     }
 
     #[test]
@@ -1083,6 +1111,7 @@ entries = ["example-au"]
         assert!(messages(&report, Severity::Warning)[0].contains("more than 12 months old"));
         let report = check_one(|t| t.replace("2026-10-24", "2025-10-24"));
         assert_eq!(report.findings, []);
+        assert_eq!(report.warnings(), 0);
     }
 
     #[test]

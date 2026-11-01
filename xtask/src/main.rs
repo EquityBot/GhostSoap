@@ -4,6 +4,7 @@
 //! ```text
 //! cargo run -p xtask -- evidence-hash <url>...        print the evidence hash of each page
 //! cargo run -p xtask -- evidence-drift [registry/au]  report pages whose hash has changed
+//! cargo run -p xtask -- email-changes <base> <head>   warn of email addresses a change added
 //! ```
 
 mod text;
@@ -13,7 +14,7 @@ use std::path::Path;
 use std::process::ExitCode;
 use std::time::Duration;
 
-use ghostsoap::core::register::{ChannelKind, Entry};
+use ghostsoap::core::register::{ChannelKind, Entry, SourceFile};
 use sha2::{Digest, Sha256};
 
 /// Pages with less main text than this are bot checks or script-only shells.
@@ -29,9 +30,17 @@ fn agent(timeout: Duration) -> ureq::Agent {
         .into()
 }
 
-/// The evidence hash of `url`: SHA-256 of its normalised main text, or of the raw bytes
-/// for a non-HTML response.
-fn evidence_hash(agent: &ureq::Agent, url: &str) -> Result<String, String> {
+/// A fetched evidence page.
+struct Page {
+    sha256: String,
+    /// Lowercase raw HTML followed by the lowercase main text, for finding an email
+    /// address in a link, a footer or entity-encoded text; `None` for a non-HTML page.
+    text: Option<String>,
+}
+
+/// Fetch `url`. Its evidence hash is SHA-256 of its normalised main text, or of the raw
+/// bytes for a non-HTML response.
+fn evidence_page(agent: &ureq::Agent, url: &str) -> Result<Page, String> {
     let mut response = agent
         .get(url)
         .header("User-Agent", USER_AGENT)
@@ -47,27 +56,32 @@ fn evidence_hash(agent: &ureq::Agent, url: &str) -> Result<String, String> {
         .limit(20 * 1024 * 1024)
         .read_to_vec()
         .map_err(|e| e.to_string())?;
-    let digest = if text::is_html(content_type.as_deref(), &bytes) {
-        let text = text::main_text(&String::from_utf8_lossy(&bytes));
-        if text.chars().count() < MIN_TEXT {
+    let (digest, text) = if text::is_html(content_type.as_deref(), &bytes) {
+        let html = String::from_utf8_lossy(&bytes);
+        let main = text::main_text(&html);
+        if main.chars().count() < MIN_TEXT {
             return Err(format!(
                 "only {} characters of main text; the page may need a browser",
-                text.chars().count()
+                main.chars().count()
             ));
         }
-        Sha256::digest(text.as_bytes())
+        let searchable = format!("{html}\n{main}").to_lowercase();
+        (Sha256::digest(main.as_bytes()), Some(searchable))
     } else {
-        Sha256::digest(&bytes)
+        (Sha256::digest(&bytes), None)
     };
-    Ok(digest.iter().map(|b| format!("{b:02x}")).collect())
+    Ok(Page {
+        sha256: digest.iter().map(|b| format!("{b:02x}")).collect(),
+        text,
+    })
 }
 
 fn hash(urls: &[String]) -> ExitCode {
     let agent = agent(TIMEOUT);
     let mut failed = false;
     for url in urls {
-        match evidence_hash(&agent, url) {
-            Ok(sha) => println!("{sha}  {url}"),
+        match evidence_page(&agent, url) {
+            Ok(page) => println!("{}  {url}", page.sha256),
             Err(e) => {
                 failed = true;
                 eprintln!("error: {url}: {e}");
@@ -96,6 +110,7 @@ fn drift(dir: &Path) -> ExitCode {
     let mut failing = Vec::new();
     let mut mail_domains = BTreeMap::new();
     let mut forms = BTreeMap::new();
+    let mut emails = Vec::new();
     for file in &files.entries {
         let entry: Entry = match toml::from_str(&file.text) {
             Ok(entry) => entry,
@@ -104,21 +119,38 @@ fn drift(dir: &Path) -> ExitCode {
                 continue;
             }
         };
+        let mut pages = Vec::new();
         for evidence in &entry.evidence {
-            match evidence_hash(&agent, &evidence.url) {
-                Ok(sha) if sha == evidence.sha256 => {}
-                Ok(_) => changed.push(format!(
-                    "- `{}`: {} (checked {})",
-                    entry.id, evidence.url, evidence.checked_at
-                )),
-                Err(e) => failing.push(format!("- `{}`: {}: {e}", entry.id, evidence.url)),
+            match evidence_page(&agent, &evidence.url) {
+                Ok(page) => {
+                    if page.sha256 != evidence.sha256 {
+                        changed.push(format!(
+                            "- `{}`: {} (checked {})",
+                            entry.id, evidence.url, evidence.checked_at
+                        ));
+                    }
+                    pages.push(page.text);
+                }
+                Err(e) => {
+                    failing.push(format!("- `{}`: {}: {e}", entry.id, evidence.url));
+                    pages.push(None);
+                }
             }
         }
         if entry.obsolete.is_none() {
             collect_channels(&entry, &mut mail_domains, &mut forms);
+            let ids = std::slice::from_ref(&entry.id);
+            for channel in &entry.channels {
+                if channel.kind == ChannelKind::Email {
+                    let what = format!("email {}", channel.address);
+                    let check = email_on_pages(&channel.address, &pages);
+                    record(&mut emails, &what, ids, check);
+                }
+            }
         }
     }
-    let channels = channel_problems(&agent, &mail_domains, &forms);
+    let mut channels = channel_problems(&agent, &mail_domains, &forms);
+    channels.append(&mut emails);
     if !changed.is_empty() || !failing.is_empty() || !channels.is_empty() {
         print!("{}", report(&changed, &failing, &channels));
     }
@@ -154,29 +186,140 @@ fn channel_problems(
 ) -> Vec<String> {
     let lookup = |name: &str, record: &str| dns_query(agent, name, record);
     let mut lines = Vec::new();
-    let mut record = |what: String, ids: &[String], check: Check| match check {
+    for (domain, ids) in mail_domains {
+        let what = format!("email domain {domain}");
+        record(&mut lines, &what, ids, check_mail(&lookup, domain));
+    }
+    for (url, ids) in forms {
+        let what = format!("web form {url}");
+        record(&mut lines, &what, ids, check_form(agent, &lookup, url));
+    }
+    lines
+}
+
+/// Add a failed check to the issue's lines.
+fn record(lines: &mut Vec<String>, what: &str, ids: &[String], check: Check) {
+    match check {
         Check::Fine => {}
         Check::Dead(problem) => {
             lines.push(format!("- `{}`: {what}: {problem}", ids.join("`, `")));
         }
         // The workflow log keeps these; they stay out of the issue so that it can close.
         Check::Inconclusive(why) => eprintln!("inconclusive: {} {what}: {why}", ids.join(", ")),
+    }
+}
+
+/// Whether `address` appears on one of its entry's evidence pages, given each page's
+/// searchable text (`None` for a page that failed or is not HTML). It is missing only when
+/// every page could be searched.
+fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
+    let address = address.to_lowercase();
+    if pages.iter().flatten().any(|text| text.contains(&address)) {
+        Check::Fine
+    } else if pages.is_empty() {
+        Check::Inconclusive("the entry has no evidence page".to_owned())
+    } else if pages.iter().any(Option::is_none) {
+        Check::Inconclusive("not on the evidence pages that could be searched".to_owned())
+    } else {
+        Check::Dead("appears on none of the entry's evidence pages".to_owned())
+    }
+}
+
+/// Email addresses in `head` that the same entry in `base` did not have, as `(file, message)`.
+/// A change that repoints a privacy address would send users' requests elsewhere, so a
+/// reviewer must see each one. Every address of an entry whose id is not in `base` is listed,
+/// so renaming an entry cannot hide a changed address. Fails on a file that does not parse.
+fn email_changes(
+    base: &[SourceFile],
+    head: &[SourceFile],
+) -> Result<Vec<(String, String)>, String> {
+    // Domains are case-insensitive; a local part may not be, so only the domain is folded.
+    let emails = |entry: &Entry| -> Vec<String> {
+        let fold = |address: &str| match address.rsplit_once('@') {
+            Some((local, domain)) => format!("{local}@{}", domain.to_lowercase()),
+            None => address.to_owned(),
+        };
+        entry
+            .channels
+            .iter()
+            .filter(|c| c.kind == ChannelKind::Email)
+            .map(|c| fold(&c.address))
+            .collect()
     };
-    for (domain, ids) in mail_domains {
-        record(
-            format!("email domain {domain}"),
-            ids,
-            check_mail(&lookup, domain),
-        );
+    let parsed = |files: &[SourceFile]| -> Result<Vec<(String, Entry)>, String> {
+        let parse = |f: &SourceFile| {
+            toml::from_str(&f.text)
+                .map(|e| (f.name.clone(), e))
+                .map_err(|e| format!("{} does not parse: {e}", f.name))
+        };
+        files.iter().map(parse).collect()
+    };
+    let before: BTreeMap<String, Vec<String>> = parsed(base)?
+        .into_iter()
+        .map(|(_, entry)| (entry.id.clone(), emails(&entry)))
+        .collect();
+    let mut changes = Vec::new();
+    for (file, entry) in parsed(head)? {
+        let old = before.get(&entry.id);
+        for address in emails(&entry)
+            .into_iter()
+            .filter(|a| old.is_none_or(|old| !old.contains(a)))
+        {
+            let message = match old {
+                None => format!(
+                    "new entry `{}` lists email {address}; check it on the entity's own pages",
+                    entry.id
+                ),
+                Some(old) => {
+                    let was = if old.is_empty() {
+                        "none".to_owned()
+                    } else {
+                        old.join(", ")
+                    };
+                    format!(
+                        "`{}` gains email {address} (before: {was}); check it on the entity's own pages",
+                        entry.id
+                    )
+                }
+            };
+            changes.push((file.clone(), message));
+        }
     }
-    for (url, ids) in forms {
-        record(
-            format!("web form {url}"),
-            ids,
-            check_form(agent, &lookup, url),
-        );
+    Ok(changes)
+}
+
+/// Print a GitHub warning annotation for each email address `email_changes` lists. Exits 0
+/// either way, like a stale `verified_at`; an unreadable register or entry exits 1.
+fn emails_changed(base: &Path, head: &Path) -> ExitCode {
+    let load = |dir: &Path| {
+        ghostsoap::io::register::load(dir)
+            .map_err(|e| eprintln!("error: cannot read {}: {e}", dir.display()))
+    };
+    let (Ok(base_files), Ok(head_files)) = (load(base), load(head)) else {
+        return ExitCode::FAILURE;
+    };
+    let changes = match email_changes(&base_files.entries, &head_files.entries) {
+        Ok(changes) => changes,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    // A workflow command escapes `%`, CR and LF in its message, and `:` and `,` too in a
+    // property value.
+    let data = |s: &str| {
+        s.replace('%', "%25")
+            .replace('\r', "%0D")
+            .replace('\n', "%0A")
+    };
+    for (file, message) in &changes {
+        let path = head.join(file).to_string_lossy().replace('\\', "/");
+        let path = data(&path).replace(':', "%3A").replace(',', "%2C");
+        let message = data(message);
+        println!("::warning file={path},title=Register email changed::{message}");
     }
-    lines
+    println!("{} email address(es) to check", changes.len());
+    ExitCode::SUCCESS
 }
 
 /// One DNS answer: the name does not exist, or the data of its records of the asked type.
@@ -311,8 +454,14 @@ fn main() -> ExitCode {
         Some((command, rest)) if command == "evidence-drift" && rest.len() <= 1 => drift(
             Path::new(rest.first().map_or("registry/au", String::as_str)),
         ),
+        Some((command, [base, head])) if command == "email-changes" => {
+            emails_changed(Path::new(base), Path::new(head))
+        }
         _ => {
-            eprintln!("usage: xtask evidence-hash <url>... | xtask evidence-drift [registry dir]");
+            eprintln!(
+                "usage: xtask evidence-hash <url>... | xtask evidence-drift [registry dir] \
+                 | xtask email-changes <base registry dir> <head registry dir>"
+            );
             ExitCode::from(2)
         }
     }
@@ -513,13 +662,129 @@ levers = []
     }
 
     #[test]
+    fn an_email_must_appear_on_an_evidence_page() {
+        let page = |text: &str| Some(text.to_owned());
+        let found = [page("other"), page("write to privacy@example.com.au.")];
+        assert_eq!(
+            email_on_pages("Privacy@Example.com.au", &found),
+            Check::Fine
+        );
+        let missing = [page("write to privacy@elsewhere.example")];
+        assert!(matches!(
+            email_on_pages("privacy@example.com.au", &missing),
+            Check::Dead(p) if p.contains("none of the entry's evidence pages")
+        ));
+        let unsearched = [page("nothing here"), None];
+        assert!(matches!(
+            email_on_pages("privacy@example.com.au", &unsearched),
+            Check::Inconclusive(_)
+        ));
+        assert!(matches!(
+            email_on_pages("privacy@example.com.au", &[]),
+            Check::Inconclusive(_)
+        ));
+    }
+
+    #[test]
+    fn a_page_is_searched_in_its_markup_and_its_decoded_text() {
+        let filler = "Privacy policy text. ".repeat(30);
+        let html = format!(
+            "<html><body><main>{filler} Email privacy&#64;example.com.au.</main>\
+             <footer><a href=\"mailto:Help@Example.com.au\">Contact</a></footer></body></html>"
+        );
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let _ = stream.read(&mut [0; 1024]);
+            let reply = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\n\
+                 Connection: close\r\n\r\n{html}",
+                html.len()
+            );
+            let _ = stream.write_all(reply.as_bytes());
+        });
+        let page = evidence_page(&agent(Duration::from_secs(5)), &url).unwrap();
+        let pages = [page.text];
+        assert_eq!(
+            email_on_pages("privacy@example.com.au", &pages),
+            Check::Fine
+        );
+        assert_eq!(email_on_pages("help@example.com.au", &pages), Check::Fine);
+        assert!(matches!(
+            email_on_pages("other@example.com.au", &pages),
+            Check::Dead(_)
+        ));
+    }
+
+    fn source(text: &str) -> SourceFile {
+        SourceFile {
+            name: "example-au.toml".to_owned(),
+            text: text.to_owned(),
+        }
+    }
+
+    fn changes(base: &[SourceFile], head: &[SourceFile]) -> Result<Vec<(String, String)>, String> {
+        email_changes(base, head)
+    }
+
+    #[test]
+    fn warns_of_an_email_address_an_entry_gains() {
+        let base = [source(ENTRY)];
+        let moved = ENTRY.replace("privacy@Example.com.au", "privacy@attacker.example");
+        let found = changes(&base, &[source(&moved)]).unwrap();
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert_eq!(found[0].0, "example-au.toml");
+        assert!(found[0].1.contains("privacy@attacker.example"));
+        assert!(found[0].1.contains("before: privacy@example.com.au"));
+        let local_part = ENTRY.replace("privacy@Example.com.au", "optout@example.com.au");
+        assert_eq!(changes(&base, &[source(&local_part)]).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn a_recased_local_part_is_a_different_address_but_a_recased_domain_is_not() {
+        let base = [source(ENTRY)];
+        let domain = ENTRY.replace("privacy@Example.com.au", "privacy@EXAMPLE.com.au");
+        assert_eq!(changes(&base, &[source(&domain)]).unwrap(), []);
+        let local_part = ENTRY.replace("privacy@Example.com.au", "Privacy@example.com.au");
+        assert_eq!(changes(&base, &[source(&local_part)]).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn a_renamed_entry_cannot_change_its_email_unflagged() {
+        let base = [source(ENTRY)];
+        let renamed = ENTRY
+            .replace("\"example-au\"", "\"other-au\"")
+            .replace("privacy@Example.com.au", "privacy@attacker.example");
+        let found = changes(&base, &[source(&renamed)]).unwrap();
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].1.contains("new entry `other-au`"));
+        assert!(found[0].1.contains("privacy@attacker.example"));
+    }
+
+    #[test]
+    fn ignores_unchanged_addresses() {
+        let base = [source(ENTRY)];
+        assert_eq!(changes(&base, &base).unwrap(), []);
+    }
+
+    #[test]
+    fn an_entry_that_does_not_parse_is_an_error() {
+        let base = [source(ENTRY)];
+        let broken = [source("id = ")];
+        let error = changes(&base, &broken).unwrap_err();
+        assert!(error.contains("example-au.toml"), "{error}");
+        assert!(changes(&broken, &base).is_err());
+    }
+
+    #[test]
     fn silent_server_times_out() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/", listener.local_addr().unwrap());
         // Accept the connection and hold it open without replying.
         let server = std::thread::spawn(move || listener.accept().map(|(stream, _)| stream));
         let start = Instant::now();
-        let result = evidence_hash(&agent(Duration::from_millis(300)), &url);
+        let result = evidence_page(&agent(Duration::from_millis(300)), &url).map(|p| p.sha256);
         assert!(
             result.as_ref().is_err_and(|e| e.contains("timeout")),
             "{result:?}"
