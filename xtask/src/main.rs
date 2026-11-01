@@ -33,8 +33,9 @@ fn agent(timeout: Duration) -> ureq::Agent {
 /// A fetched evidence page.
 struct Page {
     sha256: String,
-    /// Lowercase raw HTML followed by the lowercase main text, for finding an email
-    /// address in a link, a footer or entity-encoded text; `None` for a non-HTML page.
+    /// Lowercase raw HTML, main text and Cloudflare-protected addresses, for finding an
+    /// email address in a link, a footer, or entity-encoded or obfuscated text; `None` for
+    /// a non-HTML page.
     text: Option<String>,
 }
 
@@ -65,7 +66,8 @@ fn evidence_page(agent: &ureq::Agent, url: &str) -> Result<Page, String> {
                 main.chars().count()
             ));
         }
-        let searchable = format!("{html}\n{main}").to_lowercase();
+        let hidden = text::cloudflare_emails(&html).join("\n");
+        let searchable = format!("{html}\n{main}\n{hidden}").to_lowercase();
         (Sha256::digest(main.as_bytes()), Some(searchable))
     } else {
         (Sha256::digest(&bytes), None)
@@ -140,12 +142,8 @@ fn drift(dir: &Path) -> ExitCode {
         if entry.obsolete.is_none() {
             collect_channels(&entry, &mut mail_domains, &mut forms);
             let ids = std::slice::from_ref(&entry.id);
-            for channel in &entry.channels {
-                if channel.kind == ChannelKind::Email {
-                    let what = format!("email {}", channel.address);
-                    let check = email_on_pages(&channel.address, &pages);
-                    record(&mut emails, &what, ids, check);
-                }
+            for (address, check) in email_checks(&agent, &entry, pages) {
+                record(&mut emails, &format!("email {address}"), ids, check);
             }
         }
     }
@@ -209,7 +207,36 @@ fn record(lines: &mut Vec<String>, what: &str, ids: &[String], check: Check) {
     }
 }
 
-/// Whether `address` appears on one of its entry's evidence pages, given each page's
+/// Check each email channel of `entry` against its source pages. `pages` holds the
+/// searchable text of its evidence pages; its other sources, such as a page behind a bot
+/// check that cannot have evidence, are fetched only when an address is not on those.
+fn email_checks(
+    agent: &ureq::Agent,
+    entry: &Entry,
+    mut pages: Vec<Option<String>>,
+) -> Vec<(String, Check)> {
+    let addresses: Vec<&str> = entry
+        .channels
+        .iter()
+        .filter(|c| c.kind == ChannelKind::Email)
+        .map(|c| c.address.as_str())
+        .collect();
+    if addresses
+        .iter()
+        .any(|a| email_on_pages(a, &pages) != Check::Fine)
+    {
+        let tracked = |url: &String| entry.evidence.iter().any(|e| &e.url == url);
+        for url in entry.sources.iter().filter(|url| !tracked(url)) {
+            pages.push(evidence_page(agent, url).ok().and_then(|page| page.text));
+        }
+    }
+    addresses
+        .into_iter()
+        .map(|a| (a.to_owned(), email_on_pages(a, &pages)))
+        .collect()
+}
+
+/// Whether `address` appears on one of its entry's source pages, given each page's
 /// searchable text (`None` for a page that failed or is not HTML). It is missing only when
 /// every page could be searched.
 fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
@@ -217,11 +244,11 @@ fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
     if pages.iter().flatten().any(|text| text.contains(&address)) {
         Check::Fine
     } else if pages.is_empty() {
-        Check::Inconclusive("the entry has no evidence page".to_owned())
+        Check::Inconclusive("the entry has no source page".to_owned())
     } else if pages.iter().any(Option::is_none) {
-        Check::Inconclusive("not on the evidence pages that could be searched".to_owned())
+        Check::Inconclusive("not on the source pages that could be searched".to_owned())
     } else {
-        Check::Dead("appears on none of the entry's evidence pages".to_owned())
+        Check::Dead("appears on none of the entry's source pages".to_owned())
     }
 }
 
@@ -662,7 +689,7 @@ levers = []
     }
 
     #[test]
-    fn an_email_must_appear_on_an_evidence_page() {
+    fn an_email_must_appear_on_a_source_page() {
         let page = |text: &str| Some(text.to_owned());
         let found = [page("other"), page("write to privacy@example.com.au.")];
         assert_eq!(
@@ -672,7 +699,7 @@ levers = []
         let missing = [page("write to privacy@elsewhere.example")];
         assert!(matches!(
             email_on_pages("privacy@example.com.au", &missing),
-            Check::Dead(p) if p.contains("none of the entry's evidence pages")
+            Check::Dead(p) if p.contains("none of the entry's source pages")
         ));
         let unsearched = [page("nothing here"), None];
         assert!(matches!(
@@ -685,13 +712,10 @@ levers = []
         ));
     }
 
-    #[test]
-    fn a_page_is_searched_in_its_markup_and_its_decoded_text() {
+    /// Serve one HTML page whose main element holds 500 or more characters, then `main`.
+    fn serve_html(main: &str) -> String {
         let filler = "Privacy policy text. ".repeat(30);
-        let html = format!(
-            "<html><body><main>{filler} Email privacy&#64;example.com.au.</main>\
-             <footer><a href=\"mailto:Help@Example.com.au\">Contact</a></footer></body></html>"
-        );
+        let html = format!("<html><body><main>{filler} {main}</main></body></html>");
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/", listener.local_addr().unwrap());
         std::thread::spawn(move || {
@@ -704,6 +728,17 @@ levers = []
             );
             let _ = stream.write_all(reply.as_bytes());
         });
+        url
+    }
+
+    #[test]
+    fn a_page_is_searched_in_its_markup_and_its_decoded_text() {
+        let url = serve_html(
+            "Email privacy&#64;example.com.au. \
+             <a href=\"mailto:Help@Example.com.au\">Contact</a> \
+             <a href=\"/cdn-cgi/l/email-protection\" \
+             data-cfemail=\"5a32333e3e3f341a3f223b372a363f74393537743b2f\">[email protected]</a>",
+        );
         let page = evidence_page(&agent(Duration::from_secs(5)), &url).unwrap();
         let pages = [page.text];
         assert_eq!(
@@ -711,10 +746,20 @@ levers = []
             Check::Fine
         );
         assert_eq!(email_on_pages("help@example.com.au", &pages), Check::Fine);
+        assert_eq!(email_on_pages("hidden@example.com.au", &pages), Check::Fine);
         assert!(matches!(
             email_on_pages("other@example.com.au", &pages),
             Check::Dead(_)
         ));
+    }
+
+    #[test]
+    fn an_email_is_searched_on_sources_without_evidence() {
+        let url = serve_html("Email privacy@example.com.au.");
+        let entry: Entry =
+            toml::from_str(&ENTRY.replace("https://example.com.au/privacy", &url)).unwrap();
+        let checks = email_checks(&agent(Duration::from_secs(5)), &entry, Vec::new());
+        assert_eq!(checks, [("privacy@Example.com.au".to_owned(), Check::Fine)]);
     }
 
     fn source(text: &str) -> SourceFile {

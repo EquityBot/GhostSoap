@@ -110,7 +110,7 @@ Levers: every entry with an ABN lists `app11-destroy` (sent only when the user n
 | `chandler-macleod-au` | Maintainer's request | Privacy policy and contact pages on www.chandlermacleod.com, www.rgfstaffing.com.au | 84 603 568 403: RGF STAFFING ANZ PTY LTD, active from 06 Jan 2015 |
 | `charterhouse-au` | Maintainer's request | Privacy policy and contact pages on www.charterhouse.com.au | 40 078 713 774: CHARTERHOUSE RECRUITMENT PTY LTD, active from 01 Mar 2000 |
 | `coles-au` | Large Australian firm | Privacy policy and contact pages on www.coles.com.au | 11 004 089 936: COLES GROUP LIMITED, active from 09 Feb 2000 |
-| `dymocks-au` | Large Australian data breach | Privacy policy and contact pages on www.dymocks.group | 59 008 453 110: DYMOCKS HOLDINGS PTY LTD, active from 01 Nov 1999 |
+| `dymocks-au` | Large Australian data breach | Privacy policy on www.dymocks.com.au (rechecked 2 November 2026; see below) | 64 074 571 083: DYMOCKS PTY LTD, active from 05 Dec 1999 (ABN Lookup, 2 November 2026) |
 | `ebay-au` | Large Australian firm | Privacy policy and contact pages on www.ebay.com.au, www.ebayinc.com | 64 652 016 681: eBay Marketplaces GmbH, active from 01 Jun 2018 |
 | `harvey-norman-au` | Large Australian firm | Privacy policy and contact pages on www.harveynorman.com.au, www.harveynormanholdings.com.au | 14 818 873 384: THE TRUSTEE FOR THE ECOMM STORE NO 2 TRUST, active from 08 Sep 2010 |
 | `hays-au` | Maintainer's request | Privacy policy and contact pages on www.hays.com.au | 47 001 407 281: HAYS SPECIALIST RECRUITMENT (AUSTRALIA) PTY LIMITED, active from 16 Feb 2000 |
@@ -165,6 +165,16 @@ Evidence: 52 `[[evidence]]` hashes across 33 of these entries, taken on 26 Octob
 - `allianz-au`: the policy names the dispute-resolution page for privacy requests; its complaints form has no privacy topic.
 - `telstra-au`, `optus-au`, `tpg-telecom-au`, `aussie-broadband-au`: members of the Telecommunications Industry Ombudsman, which `escalation` cannot yet name.
 - Rejected: MyDeal (closed; the site refused connections), PeopleIN (its policy covers its own staff and host employers, not its agencies' candidates).
+
+### Evidence drift recheck (2 November 2026)
+
+The first monthly drift check ([issue 26](https://github.com/EquityBot/GhostSoap/issues/26)) was worked through on 2 November 2026 by an AI agent for the maintainer, from public pages only: no form was submitted, no account created and no one signed in. Each flagged page was read in a browser (Firecrawl for 3 pages behind a bot check) and its entry's claims were matched against the text; new hashes were taken twice with `cargo run -p xtask -- evidence-hash` and matched.
+
+- Hash updated, claims unchanged: `canva-au`, `equifax-au` (contact and credit-ban pages), `equifax-marketing-au` (donotcontact.com.au), `everyday-rewards-au` (both HTML pages; the policy page still links the August 2026 PDF, whose hash is unchanged), `michael-page-au` and `records-finder-au` (all 5 pages; the Australian search page shows a 'Databases Updated' date, so it may drift every month).
+- `lead-lists-au`: the privacy policy now sends requests to a new Privacy Requests page, updated 28 October 2026, which gives `suppressions@leadlists.com.au` (was `suppression@`) and a postal address in Chadstone. The page answers a plain fetch with a bot check, so it has no hash.
+- `dymocks-au`: www.dymocks.group now redirects to the policy on www.dymocks.com.au, which names Dymocks Pty Ltd, gives `privacy@dymocks.com.au` (was `privacy@dymocks.group`) and the same Level 6, 428 George Street address, and links a data deletion request form. That page answers a plain fetch with 403, so the entry has no hash.
+- Evidence removed: the 2 Coles HTML pages and Harvey Norman's policy now answer a plain fetch with a script-only bot check (0 characters of main text). Their claims still match the pages in a browser; Coles's PDF policy keeps its hash.
+- Contact channels: the addresses of `aussie-broadband-au`, `careerone-au`, `hays-au`, `manpowergroup-au`, `robert-half-au` and `smrtr-au` are on their pages behind Cloudflare's email obfuscation, which the check now decodes; those of `chandler-macleod-au` and `peoplebank-au` are on the RGF Staffing policy and Thryv's on its privacy policy, sources without evidence, which the check now searches.
 
 ### Rejected candidates (M1)
 

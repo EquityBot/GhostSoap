@@ -5,7 +5,7 @@ abn = "26 000 602 862"
 kinds = ["credit-reporting-body"]
 priority = "crucial"
 quality = "verified"
-verified_at = 2026-10-24
+verified_at = 2026-11-02
 sources = ["https://www.equifax.com.au/credit-reporting-policy", "https://www.equifax.com.au/contact", "https://www.equifax.com.au/personal/products/credit-and-identity-products", "https://www.equifax.com.au/personal/corrections-portal", "https://www.equifax.com.au/eform/submit/credit-ban", "https://www.equifax.com.au/eform/submit/complaints-form"]
 levers = ["s20t-correction"]
 opt_in_levers = ["s20r-access", "s20k-ban"]
@@ -54,8 +54,8 @@ sha256 = "7778d413ce89cada85159267cb40976f9189b088cd77cbf0dee865e5ea7dfd72"
 
 [[evidence]]
 url = "https://www.equifax.com.au/contact"
-checked_at = 2026-10-24
-sha256 = "b3859a399f75a35d75fe8c2041cf4eb57b4dd0bf6511489db51136c62102bf81"
+checked_at = 2026-11-02
+sha256 = "6031976a8530c3fa32eb7430e5a41a11cc95f76fc4e333c5f0f594e4284289fc"
 
 [[evidence]]
 url = "https://www.equifax.com.au/personal/products/credit-and-identity-products"
@@ -69,5 +69,5 @@ sha256 = "a59e502c73dc52851831e5553e8ee57dccb653459cdb8896271b7f6ae635fa56"
 
 [[evidence]]
 url = "https://www.equifax.com.au/eform/submit/credit-ban"
-checked_at = 2026-10-24
-sha256 = "52c91f70960defd41b361559e6b4921439daec6794386499dd552532e0db8f4f"
+checked_at = 2026-11-02
+sha256 = "1d077c96fdb342a1c7ef11aa385ba1a90697a845b80c55c4fa9141bdd7beb848"
