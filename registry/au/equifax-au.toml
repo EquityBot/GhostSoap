@@ -53,11 +53,6 @@ checked_at = 2026-10-24
 sha256 = "7778d413ce89cada85159267cb40976f9189b088cd77cbf0dee865e5ea7dfd72"
 
 [[evidence]]
-url = "https://www.equifax.com.au/contact"
-checked_at = 2026-11-02
-sha256 = "6031976a8530c3fa32eb7430e5a41a11cc95f76fc4e333c5f0f594e4284289fc"
-
-[[evidence]]
 url = "https://www.equifax.com.au/personal/products/credit-and-identity-products"
 checked_at = 2026-10-24
 sha256 = "c20f72dfd65dbed954440fb3494f30d4fa1c11e057effd2e551a7d9d63509068"
@@ -66,8 +61,3 @@ sha256 = "c20f72dfd65dbed954440fb3494f30d4fa1c11e057effd2e551a7d9d63509068"
 url = "https://www.equifax.com.au/personal/corrections-portal"
 checked_at = 2026-10-24
 sha256 = "a59e502c73dc52851831e5553e8ee57dccb653459cdb8896271b7f6ae635fa56"
-
-[[evidence]]
-url = "https://www.equifax.com.au/eform/submit/credit-ban"
-checked_at = 2026-11-02
-sha256 = "1d077c96fdb342a1c7ef11aa385ba1a90697a845b80c55c4fa9141bdd7beb848"
