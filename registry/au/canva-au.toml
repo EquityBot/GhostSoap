@@ -32,4 +32,4 @@ levers = ["app7-no-marketing"]
 [[evidence]]
 url = "https://www.canva.com/policies/privacy-policy/"
 checked_at = 2026-11-02
-sha256 = "b51d2e8073e901dbbbc0a76031ff92589e3da591ef367a4b41df145cd7eff0db"
+sha256 = "c06899afe969c0503724158b07be3f46bc002fade3161d321820ef59c3f7f93f"
