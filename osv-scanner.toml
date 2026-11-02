@@ -1,0 +1,12 @@
+# OSV-Scanner reads this file next to Cargo.lock, and OpenSSF Scorecard's Vulnerabilities check runs
+# OSV-Scanner. These are the advisories .cargo/audit.toml already ignores, with the same reasons;
+# review both files together, on every age upgrade. fuzz/osv-scanner.toml repeats them for
+# fuzz/Cargo.lock.
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0387"
+reason = "crypto-bigint timing variability, via p256 in age 0.12.1; GhostSoap uses only age::scrypt, which never calls it (.cargo/audit.toml)"
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0374"
+reason = "basic-toml unmaintained; parses age's own i18n configuration at build time, never GhostSoap's files (.cargo/audit.toml)"
