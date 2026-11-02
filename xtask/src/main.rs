@@ -3,7 +3,9 @@
 //!
 //! ```text
 //! cargo run -p xtask -- evidence-hash <url>...        print the evidence hash of each page
-//! cargo run -p xtask -- evidence-drift [registry/au]  report pages whose hash has changed
+//! cargo run -p xtask -- evidence-drift [registry/au [text dir]]
+//!                                                     report pages whose hash has changed,
+//!                                                     optionally saving each page's text
 //! cargo run -p xtask -- email-changes <base> <head>   warn of email addresses a change added
 //! ```
 
@@ -33,19 +35,41 @@ fn agent(timeout: Duration) -> ureq::Agent {
 /// A fetched evidence page.
 struct Page {
     sha256: String,
-    /// Lowercase raw HTML followed by the lowercase main text, for finding an email
-    /// address in a link, a footer or entity-encoded text; `None` for a non-HTML page.
+    /// The normalised main text the hash covers; `None` for a non-HTML page.
+    main: Option<String>,
+    /// Lowercase raw HTML, main text and Cloudflare-protected addresses, for finding an
+    /// email address in a link, a footer, or entity-encoded or obfuscated text; `None` for
+    /// a non-HTML page.
     text: Option<String>,
+}
+
+/// Why an evidence page could not be hashed.
+#[derive(Debug)]
+enum PageError {
+    /// 401, 403 or 429: sites answer scripts this way even when the page is up.
+    Refused(String),
+    Failed(String),
+}
+
+impl std::fmt::Display for PageError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Refused(e) | Self::Failed(e) => f.write_str(e),
+        }
+    }
 }
 
 /// Fetch `url`. Its evidence hash is SHA-256 of its normalised main text, or of the raw
 /// bytes for a non-HTML response.
-fn evidence_page(agent: &ureq::Agent, url: &str) -> Result<Page, String> {
+fn evidence_page(agent: &ureq::Agent, url: &str) -> Result<Page, PageError> {
     let mut response = agent
         .get(url)
         .header("User-Agent", USER_AGENT)
         .call()
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| match e {
+            ureq::Error::StatusCode(401 | 403 | 429) => PageError::Refused(e.to_string()),
+            _ => PageError::Failed(e.to_string()),
+        })?;
     let content_type = response
         .headers()
         .get("content-type")
@@ -55,25 +79,53 @@ fn evidence_page(agent: &ureq::Agent, url: &str) -> Result<Page, String> {
         .with_config()
         .limit(20 * 1024 * 1024)
         .read_to_vec()
-        .map_err(|e| e.to_string())?;
-    let (digest, text) = if text::is_html(content_type.as_deref(), &bytes) {
+        .map_err(|e| PageError::Failed(e.to_string()))?;
+    let (digest, main, text) = if text::is_html(content_type.as_deref(), &bytes) {
         let html = String::from_utf8_lossy(&bytes);
         let main = text::main_text(&html);
         if main.chars().count() < MIN_TEXT {
-            return Err(format!(
+            return Err(PageError::Failed(format!(
                 "only {} characters of main text; the page may need a browser",
                 main.chars().count()
-            ));
+            )));
         }
-        let searchable = format!("{html}\n{main}").to_lowercase();
-        (Sha256::digest(main.as_bytes()), Some(searchable))
+        let hidden = text::cloudflare_emails(&html).join("\n");
+        let searchable = format!("{html}\n{main}\n{hidden}").to_lowercase();
+        (
+            Sha256::digest(main.as_bytes()),
+            Some(main),
+            Some(searchable),
+        )
     } else {
-        (Sha256::digest(&bytes), None)
+        (Sha256::digest(&bytes), None, None)
     };
     Ok(Page {
-        sha256: digest.iter().map(|b| format!("{b:02x}")).collect(),
+        sha256: hex(&digest),
+        main,
         text,
     })
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// Save a page's main text as `<entry id>-<URL hash>.txt` under `dir`, so a later run's
+/// copy can be diffed against it. The URL is the first line; after a blank line each
+/// sentence starts a line, and joining those lines with spaces gives the hashed text.
+fn save_text(dir: &Path, id: &str, url: &str, main: &str) {
+    let (name, body) = text_file(id, url, main);
+    if let Err(e) =
+        std::fs::create_dir_all(dir).and_then(|()| std::fs::write(dir.join(&name), body))
+    {
+        eprintln!("warning: cannot save the text of {url}: {e}");
+    }
+}
+
+/// The file name and contents `save_text` writes.
+fn text_file(id: &str, url: &str, main: &str) -> (String, String) {
+    let name = format!("{id}-{}.txt", hex(&Sha256::digest(url.as_bytes())[..4]));
+    (name, format!("{url}\n\n{}\n", main.replace(". ", ".\n")))
 }
 
 fn hash(urls: &[String]) -> ExitCode {
@@ -96,8 +148,9 @@ fn hash(urls: &[String]) -> ExitCode {
 }
 
 /// Prints a Markdown report of changed and failing evidence pages, or nothing if every
-/// page still matches. Exits 0 either way; a register that cannot be read exits 1.
-fn drift(dir: &Path) -> ExitCode {
+/// page still matches, and saves each HTML page's text under `text_dir` if given. Exits 0
+/// either way; a register that cannot be read exits 1.
+fn drift(dir: &Path, text_dir: Option<&Path>) -> ExitCode {
     let files = match ghostsoap::io::register::load(dir) {
         Ok(files) => files,
         Err(e) => {
@@ -119,6 +172,7 @@ fn drift(dir: &Path) -> ExitCode {
                 continue;
             }
         };
+        let ids = std::slice::from_ref(&entry.id);
         let mut pages = Vec::new();
         for evidence in &entry.evidence {
             match evidence_page(&agent, &evidence.url) {
@@ -129,23 +183,25 @@ fn drift(dir: &Path) -> ExitCode {
                             entry.id, evidence.url, evidence.checked_at
                         ));
                     }
+                    if let (Some(dir), Some(main)) = (text_dir, &page.main) {
+                        save_text(dir, &entry.id, &evidence.url, main);
+                    }
                     pages.push(page.text);
                 }
-                Err(e) => {
-                    failing.push(format!("- `{}`: {}: {e}", entry.id, evidence.url));
+                Err(PageError::Refused(e)) => {
+                    record(&mut failing, &evidence.url, ids, Check::Inconclusive(e));
+                    pages.push(None);
+                }
+                Err(PageError::Failed(e)) => {
+                    record(&mut failing, &evidence.url, ids, Check::Dead(e));
                     pages.push(None);
                 }
             }
         }
         if entry.obsolete.is_none() {
             collect_channels(&entry, &mut mail_domains, &mut forms);
-            let ids = std::slice::from_ref(&entry.id);
-            for channel in &entry.channels {
-                if channel.kind == ChannelKind::Email {
-                    let what = format!("email {}", channel.address);
-                    let check = email_on_pages(&channel.address, &pages);
-                    record(&mut emails, &what, ids, check);
-                }
+            for (address, check) in email_checks(&agent, &entry, pages) {
+                record(&mut emails, &format!("email {address}"), ids, check);
             }
         }
     }
@@ -209,20 +265,75 @@ fn record(lines: &mut Vec<String>, what: &str, ids: &[String], check: Check) {
     }
 }
 
-/// Whether `address` appears on one of its entry's evidence pages, given each page's
+/// Check each email channel of `entry` against its source pages. `pages` holds the
+/// searchable text of its evidence pages; its other sources, such as a page behind a bot
+/// check that cannot have evidence, are fetched only when an address is not on those.
+fn email_checks(
+    agent: &ureq::Agent,
+    entry: &Entry,
+    mut pages: Vec<Option<String>>,
+) -> Vec<(String, Check)> {
+    let addresses: Vec<&str> = entry
+        .channels
+        .iter()
+        .filter(|c| c.kind == ChannelKind::Email)
+        .map(|c| c.address.as_str())
+        .collect();
+    if addresses
+        .iter()
+        .any(|a| email_on_pages(a, &pages) != Check::Fine)
+    {
+        let tracked = |url: &String| entry.evidence.iter().any(|e| &e.url == url);
+        for url in entry.sources.iter().filter(|url| !tracked(url)) {
+            pages.push(evidence_page(agent, url).ok().and_then(|page| page.text));
+        }
+    }
+    addresses
+        .into_iter()
+        .map(|a| (a.to_owned(), email_on_pages(a, &pages)))
+        .collect()
+}
+
+/// Whether `address` appears on one of its entry's source pages, given each page's
 /// searchable text (`None` for a page that failed or is not HTML). It is missing only when
 /// every page could be searched.
 fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
     let address = address.to_lowercase();
-    if pages.iter().flatten().any(|text| text.contains(&address)) {
+    if pages
+        .iter()
+        .flatten()
+        .any(|text| has_address(text, &address))
+    {
         Check::Fine
     } else if pages.is_empty() {
-        Check::Inconclusive("the entry has no evidence page".to_owned())
+        Check::Inconclusive("the entry has no source page".to_owned())
     } else if pages.iter().any(Option::is_none) {
-        Check::Inconclusive("not on the evidence pages that could be searched".to_owned())
+        Check::Inconclusive("not on the source pages that could be searched".to_owned())
     } else {
-        Check::Dead("appears on none of the entry's evidence pages".to_owned())
+        Check::Dead("appears on none of the entry's source pages".to_owned())
     }
+}
+
+/// Whether `text` contains `address` as a whole address, not inside a longer one such as
+/// `not` + address or address + `.au`. A sentence's full stop may follow it, and a
+/// percent-escape in a link, such as `%20`, may precede it unless it encodes a character an
+/// address can contain, such as `%2B`.
+fn has_address(text: &str, address: &str) -> bool {
+    let local = |c: char| c.is_ascii_alphanumeric() || "._%+-".contains(c);
+    let domain = |c: char| c.is_ascii_alphanumeric() || c == '-';
+    let escaped_boundary = |before: &[u8]| match before {
+        [.., b'%', h, l] if h.is_ascii_hexdigit() && l.is_ascii_hexdigit() => {
+            let hex = |d: u8| char::from(d).to_digit(16).unwrap_or(0) as u8;
+            !local(char::from(hex(*h) * 16 + hex(*l)))
+        }
+        _ => false,
+    };
+    text.match_indices(address).any(|(i, _)| {
+        let after = &text[i + address.len()..];
+        (!text[..i].ends_with(local) || escaped_boundary(&text.as_bytes()[..i]))
+            && !after.starts_with(domain)
+            && !(after.starts_with('.') && after[1..].starts_with(domain))
+    })
 }
 
 /// Email addresses in `head` that the same entry in `base` did not have, as `(file, message)`.
@@ -451,15 +562,17 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.split_first() {
         Some((command, urls)) if command == "evidence-hash" && !urls.is_empty() => hash(urls),
-        Some((command, rest)) if command == "evidence-drift" && rest.len() <= 1 => drift(
+        Some((command, rest)) if command == "evidence-drift" && rest.len() <= 2 => drift(
             Path::new(rest.first().map_or("registry/au", String::as_str)),
+            rest.get(1).map(Path::new),
         ),
         Some((command, [base, head])) if command == "email-changes" => {
             emails_changed(Path::new(base), Path::new(head))
         }
         _ => {
             eprintln!(
-                "usage: xtask evidence-hash <url>... | xtask evidence-drift [registry dir] \
+                "usage: xtask evidence-hash <url>... \
+                 | xtask evidence-drift [registry dir [page text dir]] \
                  | xtask email-changes <base registry dir> <head registry dir>"
             );
             ExitCode::from(2)
@@ -662,17 +775,38 @@ levers = []
     }
 
     #[test]
-    fn an_email_must_appear_on_an_evidence_page() {
+    fn an_email_must_appear_on_a_source_page() {
         let page = |text: &str| Some(text.to_owned());
         let found = [page("other"), page("write to privacy@example.com.au.")];
+        let linked = [page(
+            "<a href=\"/share?body=write%20privacy@example.com.au\">",
+        )];
+        assert_eq!(
+            email_on_pages("privacy@example.com.au", &linked),
+            Check::Fine
+        );
+        for escape in ["%2b", "%2e", "%61"] {
+            let longer = [page(&format!("?to=user{escape}privacy@example.com.au"))];
+            assert!(matches!(
+                email_on_pages("privacy@example.com.au", &longer),
+                Check::Dead(_)
+            ));
+        }
         assert_eq!(
             email_on_pages("Privacy@Example.com.au", &found),
             Check::Fine
         );
+        let longer = [page(
+            "notprivacy@example.com.au, privacy@example.com.au.example.org",
+        )];
+        assert!(matches!(
+            email_on_pages("privacy@example.com.au", &longer),
+            Check::Dead(_)
+        ));
         let missing = [page("write to privacy@elsewhere.example")];
         assert!(matches!(
             email_on_pages("privacy@example.com.au", &missing),
-            Check::Dead(p) if p.contains("none of the entry's evidence pages")
+            Check::Dead(p) if p.contains("none of the entry's source pages")
         ));
         let unsearched = [page("nothing here"), None];
         assert!(matches!(
@@ -685,13 +819,10 @@ levers = []
         ));
     }
 
-    #[test]
-    fn a_page_is_searched_in_its_markup_and_its_decoded_text() {
+    /// Serve one HTML page whose main element holds 500 or more characters, then `main`.
+    fn serve_html(main: &str) -> String {
         let filler = "Privacy policy text. ".repeat(30);
-        let html = format!(
-            "<html><body><main>{filler} Email privacy&#64;example.com.au.</main>\
-             <footer><a href=\"mailto:Help@Example.com.au\">Contact</a></footer></body></html>"
-        );
+        let html = format!("<html><body><main>{filler} {main}</main></body></html>");
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/", listener.local_addr().unwrap());
         std::thread::spawn(move || {
@@ -704,6 +835,17 @@ levers = []
             );
             let _ = stream.write_all(reply.as_bytes());
         });
+        url
+    }
+
+    #[test]
+    fn a_page_is_searched_in_its_markup_and_its_decoded_text() {
+        let url = serve_html(
+            "Email privacy&#64;example.com.au. \
+             <a href=\"mailto:Help@Example.com.au\">Contact</a> \
+             <a href=\"/cdn-cgi/l/email-protection\" \
+             data-cfemail=\"5a32333e3e3f341a3f223b372a363f74393537743b2f\">[email protected]</a>",
+        );
         let page = evidence_page(&agent(Duration::from_secs(5)), &url).unwrap();
         let pages = [page.text];
         assert_eq!(
@@ -711,10 +853,76 @@ levers = []
             Check::Fine
         );
         assert_eq!(email_on_pages("help@example.com.au", &pages), Check::Fine);
+        assert_eq!(email_on_pages("hidden@example.com.au", &pages), Check::Fine);
         assert!(matches!(
             email_on_pages("other@example.com.au", &pages),
             Check::Dead(_)
         ));
+    }
+
+    #[test]
+    fn an_email_is_searched_on_sources_without_evidence() {
+        let url = serve_html("Email privacy@example.com.au.");
+        let entry: Entry =
+            toml::from_str(&ENTRY.replace("https://example.com.au/privacy", &url)).unwrap();
+        let checks = email_checks(&agent(Duration::from_secs(5)), &entry, Vec::new());
+        assert_eq!(checks, [("privacy@Example.com.au".to_owned(), Check::Fine)]);
+    }
+
+    #[test]
+    fn an_email_missing_from_evidence_is_searched_on_the_other_sources() {
+        let url = serve_html("Email privacy@example.com.au.");
+        let sources = format!("sources = [\"https://example.com.au/privacy\", \"{url}\"]");
+        let evidence = format!(
+            "\n[[evidence]]\nurl = \"https://example.com.au/privacy\"\n\
+             checked_at = 2026-10-30\nsha256 = \"{}\"\n",
+            "0".repeat(64)
+        );
+        let toml = ENTRY.replace("sources = [\"https://example.com.au/privacy\"]", &sources);
+        let entry: Entry = toml::from_str(&(toml + &evidence)).unwrap();
+        let evidence_page = vec![Some("a policy that names no address".to_owned())];
+        let checks = email_checks(&agent(Duration::from_secs(5)), &entry, evidence_page);
+        assert_eq!(checks, [("privacy@Example.com.au".to_owned(), Check::Fine)]);
+    }
+
+    #[test]
+    fn a_page_refused_to_scripts_is_not_a_failure() {
+        let agent = agent(Duration::from_secs(5));
+        for status in ["401 Unauthorized", "403 Forbidden", "429 Too Many Requests"] {
+            let page = evidence_page(&agent, &serve_once(status)).map(|p| p.sha256);
+            assert!(
+                matches!(page, Err(PageError::Refused(_))),
+                "{status}: {page:?}"
+            );
+        }
+        for status in ["404 Not Found", "410 Gone", "500 Internal Server Error"] {
+            let page = evidence_page(&agent, &serve_once(status)).map(|p| p.sha256);
+            assert!(
+                matches!(page, Err(PageError::Failed(_))),
+                "{status}: {page:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn saved_text_rejoins_to_the_hashed_text() {
+        let url = serve_html("First sentence. Second sentence. Third.");
+        let page = evidence_page(&agent(Duration::from_secs(5)), &url).unwrap();
+        let main = page.main.unwrap();
+        let (name, saved) = text_file("example-au", &url, &main);
+        assert!(
+            name.starts_with("example-au-") && name.ends_with(".txt"),
+            "{name}"
+        );
+        assert_ne!(
+            name,
+            text_file("example-au", "https://example.com.au/", &main).0
+        );
+        let (head, body) = saved.split_once("\n\n").unwrap();
+        assert_eq!(head, url);
+        assert!(body.contains("Second sentence.\nThird."), "{body}");
+        let rejoined = body.trim_end_matches('\n').replace('\n', " ");
+        assert_eq!(hex(&Sha256::digest(rejoined.as_bytes())), page.sha256);
     }
 
     fn source(text: &str) -> SourceFile {
@@ -786,7 +994,7 @@ levers = []
         let start = Instant::now();
         let result = evidence_page(&agent(Duration::from_millis(300)), &url).map(|p| p.sha256);
         assert!(
-            result.as_ref().is_err_and(|e| e.contains("timeout")),
+            matches!(&result, Err(PageError::Failed(e)) if e.contains("timeout")),
             "{result:?}"
         );
         assert!(start.elapsed() < Duration::from_secs(10));

@@ -5,7 +5,7 @@ abn = "14 818 873 384"
 kinds = ["retail"]
 priority = "standard"
 quality = "verified"
-verified_at = 2026-10-26
+verified_at = 2026-11-02
 sources = ["https://www.harveynorman.com.au/privacy-policy", "https://www.harveynormanholdings.com.au/privacy-policy"]
 levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
 opt_in_levers = ["app12"]
@@ -28,8 +28,3 @@ levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app11-des
 kind = "phone"
 address = "02 9201 6111"
 levers = []
-
-[[evidence]]
-url = "https://www.harveynorman.com.au/privacy-policy"
-checked_at = 2026-10-26
-sha256 = "db0c4e5daafd56008fda9aa126c41662892d93f3d89cddf7a12d8be12e0cc4d9"
