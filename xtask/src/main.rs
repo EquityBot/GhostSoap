@@ -3,7 +3,9 @@
 //!
 //! ```text
 //! cargo run -p xtask -- evidence-hash <url>...        print the evidence hash of each page
-//! cargo run -p xtask -- evidence-drift [registry/au]  report pages whose hash has changed
+//! cargo run -p xtask -- evidence-drift [registry/au [text dir]]
+//!                                                     report pages whose hash has changed,
+//!                                                     optionally saving each page's text
 //! cargo run -p xtask -- email-changes <base> <head>   warn of email addresses a change added
 //! ```
 
@@ -33,20 +35,41 @@ fn agent(timeout: Duration) -> ureq::Agent {
 /// A fetched evidence page.
 struct Page {
     sha256: String,
+    /// The normalised main text the hash covers; `None` for a non-HTML page.
+    main: Option<String>,
     /// Lowercase raw HTML, main text and Cloudflare-protected addresses, for finding an
     /// email address in a link, a footer, or entity-encoded or obfuscated text; `None` for
     /// a non-HTML page.
     text: Option<String>,
 }
 
+/// Why an evidence page could not be hashed.
+#[derive(Debug)]
+enum PageError {
+    /// 401, 403 or 429: sites answer scripts this way even when the page is up.
+    Refused(String),
+    Failed(String),
+}
+
+impl std::fmt::Display for PageError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Refused(e) | Self::Failed(e) => f.write_str(e),
+        }
+    }
+}
+
 /// Fetch `url`. Its evidence hash is SHA-256 of its normalised main text, or of the raw
 /// bytes for a non-HTML response.
-fn evidence_page(agent: &ureq::Agent, url: &str) -> Result<Page, String> {
+fn evidence_page(agent: &ureq::Agent, url: &str) -> Result<Page, PageError> {
     let mut response = agent
         .get(url)
         .header("User-Agent", USER_AGENT)
         .call()
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| match e {
+            ureq::Error::StatusCode(401 | 403 | 429) => PageError::Refused(e.to_string()),
+            _ => PageError::Failed(e.to_string()),
+        })?;
     let content_type = response
         .headers()
         .get("content-type")
@@ -56,26 +79,48 @@ fn evidence_page(agent: &ureq::Agent, url: &str) -> Result<Page, String> {
         .with_config()
         .limit(20 * 1024 * 1024)
         .read_to_vec()
-        .map_err(|e| e.to_string())?;
-    let (digest, text) = if text::is_html(content_type.as_deref(), &bytes) {
+        .map_err(|e| PageError::Failed(e.to_string()))?;
+    let (digest, main, text) = if text::is_html(content_type.as_deref(), &bytes) {
         let html = String::from_utf8_lossy(&bytes);
         let main = text::main_text(&html);
         if main.chars().count() < MIN_TEXT {
-            return Err(format!(
+            return Err(PageError::Failed(format!(
                 "only {} characters of main text; the page may need a browser",
                 main.chars().count()
-            ));
+            )));
         }
         let hidden = text::cloudflare_emails(&html).join("\n");
         let searchable = format!("{html}\n{main}\n{hidden}").to_lowercase();
-        (Sha256::digest(main.as_bytes()), Some(searchable))
+        (
+            Sha256::digest(main.as_bytes()),
+            Some(main),
+            Some(searchable),
+        )
     } else {
-        (Sha256::digest(&bytes), None)
+        (Sha256::digest(&bytes), None, None)
     };
     Ok(Page {
-        sha256: digest.iter().map(|b| format!("{b:02x}")).collect(),
+        sha256: hex(&digest),
+        main,
         text,
     })
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// Save a page's main text as `<entry id>-<URL hash>.txt` under `dir`, so a later run's
+/// copy can be diffed against it. The URL is the first line; after a blank line each
+/// sentence starts a line, and joining those lines with spaces gives the hashed text.
+fn save_text(dir: &Path, id: &str, url: &str, main: &str) {
+    let name = format!("{id}-{}.txt", hex(&Sha256::digest(url.as_bytes())[..4]));
+    let body = format!("{url}\n\n{}\n", main.replace(". ", ".\n"));
+    if let Err(e) =
+        std::fs::create_dir_all(dir).and_then(|()| std::fs::write(dir.join(&name), body))
+    {
+        eprintln!("warning: cannot save the text of {url}: {e}");
+    }
 }
 
 fn hash(urls: &[String]) -> ExitCode {
@@ -98,8 +143,9 @@ fn hash(urls: &[String]) -> ExitCode {
 }
 
 /// Prints a Markdown report of changed and failing evidence pages, or nothing if every
-/// page still matches. Exits 0 either way; a register that cannot be read exits 1.
-fn drift(dir: &Path) -> ExitCode {
+/// page still matches, and saves each HTML page's text under `text_dir` if given. Exits 0
+/// either way; a register that cannot be read exits 1.
+fn drift(dir: &Path, text_dir: Option<&Path>) -> ExitCode {
     let files = match ghostsoap::io::register::load(dir) {
         Ok(files) => files,
         Err(e) => {
@@ -121,6 +167,7 @@ fn drift(dir: &Path) -> ExitCode {
                 continue;
             }
         };
+        let ids = std::slice::from_ref(&entry.id);
         let mut pages = Vec::new();
         for evidence in &entry.evidence {
             match evidence_page(&agent, &evidence.url) {
@@ -131,17 +178,23 @@ fn drift(dir: &Path) -> ExitCode {
                             entry.id, evidence.url, evidence.checked_at
                         ));
                     }
+                    if let (Some(dir), Some(main)) = (text_dir, &page.main) {
+                        save_text(dir, &entry.id, &evidence.url, main);
+                    }
                     pages.push(page.text);
                 }
-                Err(e) => {
-                    failing.push(format!("- `{}`: {}: {e}", entry.id, evidence.url));
+                Err(PageError::Refused(e)) => {
+                    record(&mut failing, &evidence.url, ids, Check::Inconclusive(e));
+                    pages.push(None);
+                }
+                Err(PageError::Failed(e)) => {
+                    record(&mut failing, &evidence.url, ids, Check::Dead(e));
                     pages.push(None);
                 }
             }
         }
         if entry.obsolete.is_none() {
             collect_channels(&entry, &mut mail_domains, &mut forms);
-            let ids = std::slice::from_ref(&entry.id);
             for (address, check) in email_checks(&agent, &entry, pages) {
                 record(&mut emails, &format!("email {address}"), ids, check);
             }
@@ -504,15 +557,17 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.split_first() {
         Some((command, urls)) if command == "evidence-hash" && !urls.is_empty() => hash(urls),
-        Some((command, rest)) if command == "evidence-drift" && rest.len() <= 1 => drift(
+        Some((command, rest)) if command == "evidence-drift" && rest.len() <= 2 => drift(
             Path::new(rest.first().map_or("registry/au", String::as_str)),
+            rest.get(1).map(Path::new),
         ),
         Some((command, [base, head])) if command == "email-changes" => {
             emails_changed(Path::new(base), Path::new(head))
         }
         _ => {
             eprintln!(
-                "usage: xtask evidence-hash <url>... | xtask evidence-drift [registry dir] \
+                "usage: xtask evidence-hash <url>... \
+                 | xtask evidence-drift [registry dir [page text dir]] \
                  | xtask email-changes <base registry dir> <head registry dir>"
             );
             ExitCode::from(2)
@@ -825,6 +880,51 @@ levers = []
         assert_eq!(checks, [("privacy@Example.com.au".to_owned(), Check::Fine)]);
     }
 
+    #[test]
+    fn a_page_refused_to_scripts_is_not_a_failure() {
+        let agent = agent(Duration::from_secs(5));
+        for status in ["401 Unauthorized", "403 Forbidden", "429 Too Many Requests"] {
+            let page = evidence_page(&agent, &serve_once(status)).map(|p| p.sha256);
+            assert!(
+                matches!(page, Err(PageError::Refused(_))),
+                "{status}: {page:?}"
+            );
+        }
+        for status in ["404 Not Found", "410 Gone", "500 Internal Server Error"] {
+            let page = evidence_page(&agent, &serve_once(status)).map(|p| p.sha256);
+            assert!(
+                matches!(page, Err(PageError::Failed(_))),
+                "{status}: {page:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn saved_text_rejoins_to_the_hashed_text() {
+        let url = serve_html("First sentence. Second sentence. Third.");
+        let page = evidence_page(&agent(Duration::from_secs(5)), &url).unwrap();
+        let main = page.main.unwrap();
+        let dir = std::env::temp_dir().join(format!("xtask-text-{}", std::process::id()));
+        save_text(&dir, "example-au", &url, &main);
+        let files: Vec<_> = std::fs::read_dir(&dir)
+            .unwrap()
+            .map(|f| f.unwrap().path())
+            .collect();
+        assert_eq!(files.len(), 1);
+        let name = files[0].file_name().unwrap().to_string_lossy().into_owned();
+        assert!(
+            name.starts_with("example-au-") && name.ends_with(".txt"),
+            "{name}"
+        );
+        let saved = std::fs::read_to_string(&files[0]).unwrap();
+        std::fs::remove_dir_all(&dir).unwrap();
+        let (head, body) = saved.split_once("\n\n").unwrap();
+        assert_eq!(head, url);
+        assert!(body.contains("Second sentence.\nThird."), "{body}");
+        let rejoined = body.trim_end_matches('\n').replace('\n', " ");
+        assert_eq!(hex(&Sha256::digest(rejoined.as_bytes())), page.sha256);
+    }
+
     fn source(text: &str) -> SourceFile {
         SourceFile {
             name: "example-au.toml".to_owned(),
@@ -894,7 +994,7 @@ levers = []
         let start = Instant::now();
         let result = evidence_page(&agent(Duration::from_millis(300)), &url).map(|p| p.sha256);
         assert!(
-            result.as_ref().is_err_and(|e| e.contains("timeout")),
+            matches!(&result, Err(PageError::Failed(e)) if e.contains("timeout")),
             "{result:?}"
         );
         assert!(start.elapsed() < Duration::from_secs(10));
