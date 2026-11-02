@@ -260,9 +260,12 @@ pub fn eml(letter: &Letter) -> String {
 /// browsers reliably accept.
 pub fn mailto(letter: &Letter) -> Option<String> {
     const LIMIT: usize = 2000;
+    // The address is encoded as well, keeping its `@`: a register address may hold `?`, `%`,
+    // `#` or `&` (RFC 5322 allows them), which would otherwise end it and add fields to the link.
+    let to: Vec<String> = letter.to.split('@').map(percent_encode).collect();
     let link = format!(
         "mailto:{}?subject={}&body={}",
-        letter.to,
+        to.join("@"),
         percent_encode(&letter.subject),
         percent_encode(&letter.body.replace('\n', "\r\n"))
     );
@@ -363,6 +366,32 @@ mod tests {
              &body=Caf%C3%A9%20%26%20co%0D%0A50%25"
         );
         assert_eq!(mailto(&letter(&"x".repeat(2000))), None);
+    }
+
+    #[test]
+    fn a_register_address_cannot_add_fields_to_a_mailto_link() {
+        // The register check accepts this address, and unencoded it would copy the request to
+        // attacker@evil.example.
+        let to = "x?cc=attacker%40evil.example%2Cy@broker.example.com.au";
+        assert!(crate::core::register::is_email(to));
+        let link = mailto(&Letter {
+            to: to.to_owned(),
+            ..letter("Hello")
+        })
+        .unwrap();
+        let (address, fields) = link
+            .strip_prefix("mailto:")
+            .unwrap()
+            .split_once('?')
+            .unwrap();
+        assert_eq!(
+            address,
+            "x%3Fcc%3Dattacker%2540evil.example%252Cy@broker.example.com.au"
+        );
+        assert_eq!(
+            fields,
+            "subject=Privacy%20Act%20request%20%5BGS-TEST1%5D&body=Hello"
+        );
     }
 
     #[test]
