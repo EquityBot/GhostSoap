@@ -66,15 +66,62 @@ fuzz_target!(|data: &[u8]| {
             let eml = letters::eml(&letter);
             let headers = eml.split("\r\n\r\n").next().unwrap();
             assert_eq!(headers.split("\r\n").count(), 6, "{headers:?}");
-            // Its address cannot end early and add fields to the mailto link.
-            if let Some(link) = letters::mailto(&letter) {
-                let fields = link.split_once('?').map(|(_, f)| f).unwrap();
-                assert!(
-                    fields.starts_with("subject=") && !link.contains('#'),
-                    "{link}"
-                );
-                assert_eq!(fields.matches('&').count(), 1, "{link}");
+            // A whole request is usually too long for a mailto link, so a short one is checked too.
+            let short = letters::Letter {
+                body: "Hello".to_owned(),
+                ..letter.clone()
+            };
+            for letter in [&letter, &short] {
+                if let Some(link) = letters::mailto(letter) {
+                    check_mailto(letter, &link);
+                }
             }
         }
     }
 });
+
+/// The link holds exactly the letter's address, subject and body: an address cannot end
+/// early and add fields.
+fn check_mailto(letter: &letters::Letter, link: &str) {
+    let (to, fields) = link
+        .strip_prefix("mailto:")
+        .and_then(|l| l.split_once('?'))
+        .unwrap();
+    let (subject, body) = fields
+        .strip_prefix("subject=")
+        .and_then(|f| f.split_once("&body="))
+        .unwrap_or_else(|| panic!("{link}"));
+    assert_eq!(decode(to).as_deref(), Some(letter.to.as_str()), "{link}");
+    assert_eq!(
+        decode(subject).as_deref(),
+        Some(letter.subject.as_str()),
+        "{link}"
+    );
+    assert_eq!(
+        decode(body),
+        Some(letter.body.replace('\n', "\r\n")),
+        "{link}"
+    );
+    assert!(
+        !link.contains('#') && fields.matches('&').count() == 1,
+        "{link}"
+    );
+}
+
+/// A percent-decoded link component; `None` if an escape is malformed or the result is not UTF-8.
+fn decode(text: &str) -> Option<String> {
+    let mut out = Vec::new();
+    let mut bytes = text.bytes();
+    while let Some(byte) = bytes.next() {
+        if byte != b'%' {
+            out.push(byte);
+            continue;
+        }
+        let hex = [bytes.next()?, bytes.next()?];
+        if !hex.iter().all(u8::is_ascii_hexdigit) {
+            return None;
+        }
+        out.push(u8::from_str_radix(std::str::from_utf8(&hex).ok()?, 16).ok()?);
+    }
+    String::from_utf8(out).ok()
+}
