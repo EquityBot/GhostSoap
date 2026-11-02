@@ -258,14 +258,21 @@ fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
 
 /// Whether `text` contains `address` as a whole address, not inside a longer one such as
 /// `not` + address or address + `.au`. A sentence's full stop may follow it, and a
-/// percent-escape such as `%20` in a link may precede it.
+/// percent-escape in a link, such as `%20`, may precede it unless it encodes a character an
+/// address can contain, such as `%2B`.
 fn has_address(text: &str, address: &str) -> bool {
     let local = |c: char| c.is_ascii_alphanumeric() || "._%+-".contains(c);
     let domain = |c: char| c.is_ascii_alphanumeric() || c == '-';
-    let escaped = |before: &[u8]| matches!(before, [.., b'%', h, l] if h.is_ascii_hexdigit() && l.is_ascii_hexdigit());
+    let escaped_boundary = |before: &[u8]| match before {
+        [.., b'%', h, l] if h.is_ascii_hexdigit() && l.is_ascii_hexdigit() => {
+            let hex = |d: u8| char::from(d).to_digit(16).unwrap_or(0) as u8;
+            !local(char::from(hex(*h) * 16 + hex(*l)))
+        }
+        _ => false,
+    };
     text.match_indices(address).any(|(i, _)| {
         let after = &text[i + address.len()..];
-        (!text[..i].ends_with(local) || escaped(&text.as_bytes()[..i]))
+        (!text[..i].ends_with(local) || escaped_boundary(&text.as_bytes()[..i]))
             && !after.starts_with(domain)
             && !(after.starts_with('.') && after[1..].starts_with(domain))
     })
@@ -718,6 +725,13 @@ levers = []
             email_on_pages("privacy@example.com.au", &linked),
             Check::Fine
         );
+        for escape in ["%2b", "%2e", "%61"] {
+            let longer = [page(&format!("?to=user{escape}privacy@example.com.au"))];
+            assert!(matches!(
+                email_on_pages("privacy@example.com.au", &longer),
+                Check::Dead(_)
+            ));
+        }
         assert_eq!(
             email_on_pages("Privacy@Example.com.au", &found),
             Check::Fine
