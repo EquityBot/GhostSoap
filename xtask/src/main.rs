@@ -114,13 +114,18 @@ fn hex(bytes: &[u8]) -> String {
 /// copy can be diffed against it. The URL is the first line; after a blank line each
 /// sentence starts a line, and joining those lines with spaces gives the hashed text.
 fn save_text(dir: &Path, id: &str, url: &str, main: &str) {
-    let name = format!("{id}-{}.txt", hex(&Sha256::digest(url.as_bytes())[..4]));
-    let body = format!("{url}\n\n{}\n", main.replace(". ", ".\n"));
+    let (name, body) = text_file(id, url, main);
     if let Err(e) =
         std::fs::create_dir_all(dir).and_then(|()| std::fs::write(dir.join(&name), body))
     {
         eprintln!("warning: cannot save the text of {url}: {e}");
     }
+}
+
+/// The file name and contents `save_text` writes.
+fn text_file(id: &str, url: &str, main: &str) -> (String, String) {
+    let name = format!("{id}-{}.txt", hex(&Sha256::digest(url.as_bytes())[..4]));
+    (name, format!("{url}\n\n{}\n", main.replace(". ", ".\n")))
 }
 
 fn hash(urls: &[String]) -> ExitCode {
@@ -904,20 +909,15 @@ levers = []
         let url = serve_html("First sentence. Second sentence. Third.");
         let page = evidence_page(&agent(Duration::from_secs(5)), &url).unwrap();
         let main = page.main.unwrap();
-        let dir = std::env::temp_dir().join(format!("xtask-text-{}", std::process::id()));
-        save_text(&dir, "example-au", &url, &main);
-        let files: Vec<_> = std::fs::read_dir(&dir)
-            .unwrap()
-            .map(|f| f.unwrap().path())
-            .collect();
-        assert_eq!(files.len(), 1);
-        let name = files[0].file_name().unwrap().to_string_lossy().into_owned();
+        let (name, saved) = text_file("example-au", &url, &main);
         assert!(
             name.starts_with("example-au-") && name.ends_with(".txt"),
             "{name}"
         );
-        let saved = std::fs::read_to_string(&files[0]).unwrap();
-        std::fs::remove_dir_all(&dir).unwrap();
+        assert_ne!(
+            name,
+            text_file("example-au", "https://example.com.au/", &main).0
+        );
         let (head, body) = saved.split_once("\n\n").unwrap();
         assert_eq!(head, url);
         assert!(body.contains("Second sentence.\nThird."), "{body}");
