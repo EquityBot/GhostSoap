@@ -5,8 +5,8 @@ abn = "53 634 428 470"
 kinds = ["marketing-list"]
 priority = "high"
 quality = "verified"
-verified_at = 2026-10-24
-sources = ["https://leadlists.com.au/privacy-policy/", "https://leadlists.com.au/contact-us/"]
+verified_at = 2026-11-02
+sources = ["https://leadlists.com.au/privacy-policy/", "https://leadlists.com.au/privacy-requests/", "https://leadlists.com.au/contact-us/"]
 levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement"]
 opt_in_levers = ["app12"]
 identity_fields = ["full_name", "email", "phone", "address"]
@@ -16,9 +16,14 @@ effort = "easy"
 
 [[channels]]
 kind = "email"
-address = "suppression@leadlists.com.au"
+address = "suppressions@leadlists.com.au"
 levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
 preferred = true
+
+[[channels]]
+kind = "post"
+address = "Privacy Officer, Lead Lists Data Solutions, Suite 60, Level 2, 1341 Dandenong Rd, Chadstone VIC 3148"
+levers = ["app7-no-marketing", "app7-no-facilitation", "app7-source", "app13", "app13-notify-recipients", "app13-statement", "app12"]
 
 [[channels]]
 kind = "phone"
@@ -27,5 +32,5 @@ levers = []
 
 [[evidence]]
 url = "https://leadlists.com.au/privacy-policy/"
-checked_at = 2026-10-24
-sha256 = "910c2ea7301eec5d996d78b3a6acc4c3ecd17853b7509498eee8c710daa39fc2"
+checked_at = 2026-11-02
+sha256 = "679c8de7a59a4872c7589a0fe78fdbfea13b4258b896970b58265583ba0eec7b"

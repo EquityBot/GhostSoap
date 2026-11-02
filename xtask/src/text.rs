@@ -240,6 +240,40 @@ fn after(lower: &str, from: usize, needle: &str) -> usize {
         .map_or(lower.len(), |j| from + j + needle.len())
 }
 
+/// Email addresses hidden by Cloudflare's email obfuscation, which replaces each address in
+/// a page with `data-cfemail="<hex>"` or a `/cdn-cgi/l/email-protection#<hex>` link. The
+/// first byte of the hex is a key XORed with each following byte. Cloudflare writes both
+/// forms in double-quoted attributes, so the hex must end at a double quote; any other
+/// character there makes the payload malformed.
+pub fn cloudflare_emails(html: &str) -> Vec<String> {
+    let mut emails = Vec::new();
+    for marker in ["data-cfemail=\"", "/cdn-cgi/l/email-protection#"] {
+        for (i, _) in html.match_indices(marker) {
+            let rest = &html[i + marker.len()..];
+            let end = rest
+                .find(|c: char| !c.is_ascii_hexdigit())
+                .unwrap_or(rest.len());
+            if rest[end..].starts_with('"') {
+                emails.extend(decode_cloudflare(&rest[..end]));
+            }
+        }
+    }
+    emails
+}
+
+fn decode_cloudflare(hex: &str) -> Option<String> {
+    if hex.len() < 4 || !hex.len().is_multiple_of(2) {
+        return None;
+    }
+    let bytes = (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16))
+        .collect::<Result<Vec<u8>, _>>()
+        .ok()?;
+    let (key, rest) = bytes.split_first()?;
+    String::from_utf8(rest.iter().map(|b| b ^ key).collect()).ok()
+}
+
 fn decode_entities(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
@@ -402,5 +436,21 @@ mod tests {
         assert!(is_html(None, b"<HTML lang=\"en\">"));
         assert!(!is_html(Some("application/pdf"), page));
         assert!(!is_html(None, b"%PDF-1.7"));
+    }
+
+    #[test]
+    fn decodes_cloudflare_protected_emails() {
+        let html = "<a href=\"/cdn-cgi/l/email-protection\" class=\"__cf_email__\" \
+            data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337\">[email protected]</a> \
+            <a href=\"/cdn-cgi/l/email-protection#5a323f362a1a3f223b372a363f74393537743b2f\">Help</a> \
+            <span data-cfemail=\"zz\"></span><span data-cfemail=\"4\"></span>\
+            <span data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337z\"></span>\
+            <span data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337'x\"></span>\
+            <a href=\"/cdn-cgi/l/email-protection#4232302b3423213b02273a232f322e276c212d2f6c2337'x\">";
+        assert_eq!(
+            cloudflare_emails(html),
+            ["privacy@example.com.au", "help@example.com.au"]
+        );
+        assert!(cloudflare_emails("<p>privacy@example.com.au</p>").is_empty());
     }
 }

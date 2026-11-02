@@ -5,7 +5,7 @@ abn = "11 004 089 936"
 kinds = ["retail"]
 priority = "standard"
 quality = "verified"
-verified_at = 2026-10-26
+verified_at = 2026-11-02
 sources = ["https://www.coles.com.au/content/dam/coles/cusp/about-coles/documents/coles_group_privacy_policy_september_2025.pdf", "https://www.coles.com.au/privacy", "https://www.coles.com.au/help/accounts/delete-your-coles-account"]
 levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-notify-recipients", "app13-statement"]
 opt_in_levers = ["app12"]
@@ -33,13 +33,3 @@ levers = []
 url = "https://www.coles.com.au/content/dam/coles/cusp/about-coles/documents/coles_group_privacy_policy_september_2025.pdf"
 checked_at = 2026-10-26
 sha256 = "29adbc5d5c12d46560b01b06c12ca7069edb071647790378426043bf15b82316"
-
-[[evidence]]
-url = "https://www.coles.com.au/privacy"
-checked_at = 2026-10-26
-sha256 = "dd1b09e2a5e277cd06f930fb7a6eeb82a3f1f8204a95690e293fc9cd82e31c53"
-
-[[evidence]]
-url = "https://www.coles.com.au/help/accounts/delete-your-coles-account"
-checked_at = 2026-10-26
-sha256 = "a7cff50450d9b61599ce0a0ed1217e34ca3f574814807cd417ce27edcabe3a40"
