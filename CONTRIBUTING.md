@@ -23,3 +23,5 @@ cargo run -- registry check --path registry/au
 ```
 
 New functionality and bug fixes come with automated tests, in `tests/` or a `#[cfg(test)]` module beside the code, and CI runs them on Linux and Windows.
+
+Changes to the register check or the letters should also survive the fuzz targets in `fuzz/`, which CI runs for 5 minutes each every Monday. They need a nightly toolchain and `cargo install cargo-fuzz`; run one with `cargo +nightly fuzz run register_letters` (or `letter_text`); CI seeds them from `registry/au` and `letters/au`. A crash leaves its input in `fuzz/artifacts/`; turn it into a test before fixing it.

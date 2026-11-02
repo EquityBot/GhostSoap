@@ -15,7 +15,7 @@ updates:
       # Policy pins move by hand to a reviewed release-policy commit.
       - dependency-name: "ryanduguid/release-policy/.github/workflows/*"
   - package-ecosystem: cargo
-    directory: /
+    directories: [/, /fuzz]
     schedule:
       interval: weekly
     cooldown:
