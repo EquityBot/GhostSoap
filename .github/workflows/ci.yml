@@ -33,6 +33,7 @@ jobs:
           persist-credentials: false
       # rustup reads the pinned version from rust-toolchain.toml.
       - run: rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       # Coverage needs llvm-tools and a prebuilt cargo-llvm-cov, with no fallback to compiling it.
       - name: Install llvm-tools
         if: matrix.os == 'ubuntu-latest'
@@ -47,9 +48,14 @@ jobs:
       - run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - if: matrix.os != 'ubuntu-latest'
         run: cargo test --locked --workspace
-      - name: Run the tests with line coverage
+      # GhostSoap makes no network connections (README), so the tests run in a network
+      # namespace with no interfaces: a connection attempt fails instead of going out.
+      # The runner's own user runs them, so file-permission tests still see an ordinary user.
+      - name: Run the tests with line coverage and no network
         if: matrix.os == 'ubuntu-latest'
-        run: cargo llvm-cov --locked --workspace --lcov --output-path coverage-rust.lcov
+        run: >-
+          sudo unshare --net -- sudo -u "$USER" env "PATH=$PATH" CARGO_NET_OFFLINE=true
+          cargo llvm-cov --locked --workspace --lcov --output-path coverage-rust.lcov
       - name: Keep the coverage report for the Codecov upload
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -114,5 +120,8 @@ jobs:
         with:
           persist-credentials: false
       - run: rustup toolchain install
-      - run: cargo install cargo-audit --locked --version 0.22.2
+      - uses: taiki-e/install-action@68a389c788b2cd04016ce8c80ee23b80d2ab3d68 # v2.88.1
+        with:
+          tool: cargo-audit@0.22.2
+          fallback: none
       - run: cargo audit --deny warnings
