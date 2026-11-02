@@ -204,7 +204,7 @@ Data under `checklist/au/`, one TOML file per item, with why it matters, the ste
 - My Health Record privacy settings
 - Loyalty programme marketing opt-outs (feeds APP 7 requests)
 - Social media profile audit
-- ASIC director address: from 1 July 2027 an officeholder can lodge a service address; under ASIC's CP 391 proposal (11 September 2026) a residential address becomes available on paid register extracts from 1 August 2028 unless one is lodged (confirm ASIC's final position before inclusion)
+- ASIC director address: under ASIC's CP 391 proposal (11 September 2026), an officeholder could lodge a service address from 1 July 2027, and a residential address would become available on paid register extracts from 1 August 2028 unless one is lodged (confirm ASIC's final position before inclusion)
 - Doxxing or serious invasion of privacy: report to police and eSafety; a community legal centre for the statutory tort
 
 The checklist is guidance: it links to the official page and records progress; it submits nothing.
