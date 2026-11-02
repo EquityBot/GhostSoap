@@ -242,7 +242,8 @@ fn after(lower: &str, from: usize, needle: &str) -> usize {
 
 /// Email addresses hidden by Cloudflare's email obfuscation, which replaces each address in
 /// a page with `data-cfemail="<hex>"` or a `/cdn-cgi/l/email-protection#<hex>` link. The
-/// first byte of the hex is a key XORed with each following byte.
+/// first byte of the hex is a key XORed with each following byte. Either form ends at the
+/// attribute's closing quote; any other character there makes the payload malformed.
 pub fn cloudflare_emails(html: &str) -> Vec<String> {
     let mut emails = Vec::new();
     for marker in ["data-cfemail=\"", "/cdn-cgi/l/email-protection#"] {
@@ -251,7 +252,9 @@ pub fn cloudflare_emails(html: &str) -> Vec<String> {
             let end = rest
                 .find(|c: char| !c.is_ascii_hexdigit())
                 .unwrap_or(rest.len());
-            emails.extend(decode_cloudflare(&rest[..end]));
+            if rest[end..].starts_with(['"', '\'']) {
+                emails.extend(decode_cloudflare(&rest[..end]));
+            }
         }
     }
     emails
@@ -439,7 +442,8 @@ mod tests {
         let html = "<a href=\"/cdn-cgi/l/email-protection\" class=\"__cf_email__\" \
             data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337\">[email protected]</a> \
             <a href=\"/cdn-cgi/l/email-protection#5a323f362a1a3f223b372a363f74393537743b2f\">Help</a> \
-            <span data-cfemail=\"zz\"></span><span data-cfemail=\"4\"></span>";
+            <span data-cfemail=\"zz\"></span><span data-cfemail=\"4\"></span>\
+            <span data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337z\"></span>";
         assert_eq!(
             cloudflare_emails(html),
             ["privacy@example.com.au", "help@example.com.au"]

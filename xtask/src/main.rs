@@ -241,7 +241,11 @@ fn email_checks(
 /// every page could be searched.
 fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
     let address = address.to_lowercase();
-    if pages.iter().flatten().any(|text| text.contains(&address)) {
+    if pages
+        .iter()
+        .flatten()
+        .any(|text| has_address(text, &address))
+    {
         Check::Fine
     } else if pages.is_empty() {
         Check::Inconclusive("the entry has no source page".to_owned())
@@ -250,6 +254,19 @@ fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
     } else {
         Check::Dead("appears on none of the entry's source pages".to_owned())
     }
+}
+
+/// Whether `text` contains `address` as a whole address, not inside a longer one such as
+/// `not` + address or address + `.au`. A sentence's full stop may follow it.
+fn has_address(text: &str, address: &str) -> bool {
+    let local = |c: char| c.is_ascii_alphanumeric() || "._%+-".contains(c);
+    let domain = |c: char| c.is_ascii_alphanumeric() || c == '-';
+    text.match_indices(address).any(|(i, _)| {
+        let after = &text[i + address.len()..];
+        !text[..i].ends_with(local)
+            && !after.starts_with(domain)
+            && !(after.starts_with('.') && after[1..].starts_with(domain))
+    })
 }
 
 /// Email addresses in `head` that the same entry in `base` did not have, as `(file, message)`.
@@ -696,6 +713,13 @@ levers = []
             email_on_pages("Privacy@Example.com.au", &found),
             Check::Fine
         );
+        let longer = [page(
+            "notprivacy@example.com.au, privacy@example.com.au.example.org",
+        )];
+        assert!(matches!(
+            email_on_pages("privacy@example.com.au", &longer),
+            Check::Dead(_)
+        ));
         let missing = [page("write to privacy@elsewhere.example")];
         assert!(matches!(
             email_on_pages("privacy@example.com.au", &missing),
@@ -759,6 +783,22 @@ levers = []
         let entry: Entry =
             toml::from_str(&ENTRY.replace("https://example.com.au/privacy", &url)).unwrap();
         let checks = email_checks(&agent(Duration::from_secs(5)), &entry, Vec::new());
+        assert_eq!(checks, [("privacy@Example.com.au".to_owned(), Check::Fine)]);
+    }
+
+    #[test]
+    fn an_email_missing_from_evidence_is_searched_on_the_other_sources() {
+        let url = serve_html("Email privacy@example.com.au.");
+        let sources = format!("sources = [\"https://example.com.au/privacy\", \"{url}\"]");
+        let evidence = format!(
+            "\n[[evidence]]\nurl = \"https://example.com.au/privacy\"\n\
+             checked_at = 2026-10-30\nsha256 = \"{}\"\n",
+            "0".repeat(64)
+        );
+        let toml = ENTRY.replace("sources = [\"https://example.com.au/privacy\"]", &sources);
+        let entry: Entry = toml::from_str(&(toml + &evidence)).unwrap();
+        let evidence_page = vec![Some("a policy that names no address".to_owned())];
+        let checks = email_checks(&agent(Duration::from_secs(5)), &entry, evidence_page);
         assert_eq!(checks, [("privacy@Example.com.au".to_owned(), Check::Fine)]);
     }
 
