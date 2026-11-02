@@ -38,8 +38,3 @@ sha256 = "3c92ba03b5906df0786c6aa79ec8391153461adc563f0d5500081576f886c604"
 url = "https://recordsfinder.com/do-not-sell-share-my-personal-information/"
 checked_at = 2026-11-02
 sha256 = "5bb3cad71d41e919aa4fa683c045678f5bae92bc219a6451e6e13b740d9ab8a8"
-
-[[evidence]]
-url = "https://recordsfinder.com/australia/"
-checked_at = 2026-11-02
-sha256 = "82c868efaaa940aa19fb41e4d2e04e4280e2587d67dd1b570b54546f44382593"
