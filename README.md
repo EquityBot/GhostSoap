@@ -13,6 +13,8 @@
 [![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/EquityBot/GhostSoap.svg)](https://scorecard.dev/viewer/?uri=github.com/EquityBot/GhostSoap)<br>
 [![rust: 1.99+](.github/assets/badges/rust.svg)](https://www.rust-lang.org/) [![licence: FSL-1.1-ALv2](.github/assets/badges/licence.svg)](#licences)
 
+[First run](#first-run) · [Using it](#using-it) · [With an AI agent](#with-an-ai-agent) · [Safety](#safety) · [What leaves your machine](#what-leaves-your-machine) · [Building](#building) · [Licences](#licences)
+
 </div>
 
 _GhostSoap at no Price._
@@ -20,6 +22,27 @@ _GhostSoap at no Price._
 GhostSoap is a free, local-first tool that helps people in Australia reclaim their privacy. It prepares Privacy Act requests to data brokers, recruiters and other businesses for you to send from your own mailbox. Planned milestones add tracking of every deadline and reply, an escalation file when a business does not respond, and a guide to the data hygiene steps email cannot fix.
 
 **Status: milestone M2.** GhostSoap has a sourced [register](registry/README.md) of Australian entities and prepares request letters for you to send yourself. It does not yet track what you sent or the replies (milestone M3). The [plan](docs/plan.md) sets out what comes next.
+
+## First run
+
+There is no prebuilt download yet, so you need [Git](https://git-scm.com/) and [Rust](https://rustup.rs/). This builds GhostSoap and shows what it would send. It needs none of your details and sends nothing.
+
+```bash
+git clone https://github.com/EquityBot/GhostSoap
+cd GhostSoap
+cargo install --locked --path .
+ghostsoap plan --pack start-here
+```
+
+You should see a list of businesses, each with how to contact it and what would be asked, starting with:
+
+```text
+letter  equifax-marketing-au  by email to customercomplaintsAU@equifax.com
+    app7-no-marketing (APP 7.6(c), 7.7(a); a reasonable period, OAIC guide 30 days)
+    app7-no-facilitation (APP 7.6(d), 7.7(a); a reasonable period, OAIC guide 30 days)
+    app7-source (APP 7.6(e), 7.7(b); a reasonable period, OAIC guide 30 days)
+    details used: full name, email, phone, address
+```
 
 ## Using it
 
@@ -87,8 +110,10 @@ cargo build --release
 
 ## Licences
 
-- Code: licensed under the Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2). You may use, modify and redistribute it for any purpose except a Competing Use as defined in LICENSE (making it available to others in a competing commercial product or service), and each version becomes available under Apache-2.0 two years after it is made available. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+- Code: licensed under the Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2). You may use, modify and redistribute it for any purpose except a Competing Use as defined in LICENSE (making it available to others in a competing commercial product or service), and each version becomes available under Apache-2.0 2 years after it is made available. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 - Register and checklist data (`registry/` and, from milestone M4, `checklist/`): [CC0-1.0](LICENSE-DATA), so other privacy projects can reuse it.
+
+The banner's lettering and emblem are drawn from Cascadia Mono and Besley glyphs (SIL OFL 1.1).
 
 GhostSoap is not affiliated with, endorsed by or connected to Activision or the Call of Duty franchise. The name is a nod to it, nothing more.
 
