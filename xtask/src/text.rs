@@ -246,13 +246,17 @@ fn after(lower: &str, from: usize, needle: &str) -> usize {
 /// attribute's closing quote; any other character there makes the payload malformed.
 pub fn cloudflare_emails(html: &str) -> Vec<String> {
     let mut emails = Vec::new();
-    for marker in ["data-cfemail=\"", "/cdn-cgi/l/email-protection#"] {
+    let forms: [(&str, &[char]); 2] = [
+        ("data-cfemail=\"", &['"']),
+        ("/cdn-cgi/l/email-protection#", &['"', '\'']),
+    ];
+    for (marker, quotes) in forms {
         for (i, _) in html.match_indices(marker) {
             let rest = &html[i + marker.len()..];
             let end = rest
                 .find(|c: char| !c.is_ascii_hexdigit())
                 .unwrap_or(rest.len());
-            if rest[end..].starts_with(['"', '\'']) {
+            if rest[end..].starts_with(quotes) {
                 emails.extend(decode_cloudflare(&rest[..end]));
             }
         }
@@ -443,7 +447,8 @@ mod tests {
             data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337\">[email protected]</a> \
             <a href=\"/cdn-cgi/l/email-protection#5a323f362a1a3f223b372a363f74393537743b2f\">Help</a> \
             <span data-cfemail=\"zz\"></span><span data-cfemail=\"4\"></span>\
-            <span data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337z\"></span>";
+            <span data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337z\"></span>\
+            <span data-cfemail=\"4232302b3423213b02273a232f322e276c212d2f6c2337'x\"></span>";
         assert_eq!(
             cloudflare_emails(html),
             ["privacy@example.com.au", "help@example.com.au"]

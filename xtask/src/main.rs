@@ -257,13 +257,15 @@ fn email_on_pages(address: &str, pages: &[Option<String>]) -> Check {
 }
 
 /// Whether `text` contains `address` as a whole address, not inside a longer one such as
-/// `not` + address or address + `.au`. A sentence's full stop may follow it.
+/// `not` + address or address + `.au`. A sentence's full stop may follow it, and a
+/// percent-escape such as `%20` in a link may precede it.
 fn has_address(text: &str, address: &str) -> bool {
     let local = |c: char| c.is_ascii_alphanumeric() || "._%+-".contains(c);
     let domain = |c: char| c.is_ascii_alphanumeric() || c == '-';
+    let escaped = |before: &[u8]| matches!(before, [.., b'%', h, l] if h.is_ascii_hexdigit() && l.is_ascii_hexdigit());
     text.match_indices(address).any(|(i, _)| {
         let after = &text[i + address.len()..];
-        !text[..i].ends_with(local)
+        (!text[..i].ends_with(local) || escaped(&text.as_bytes()[..i]))
             && !after.starts_with(domain)
             && !(after.starts_with('.') && after[1..].starts_with(domain))
     })
@@ -709,6 +711,13 @@ levers = []
     fn an_email_must_appear_on_a_source_page() {
         let page = |text: &str| Some(text.to_owned());
         let found = [page("other"), page("write to privacy@example.com.au.")];
+        let linked = [page(
+            "<a href=\"/share?body=write%20privacy@example.com.au\">",
+        )];
+        assert_eq!(
+            email_on_pages("privacy@example.com.au", &linked),
+            Check::Fine
+        );
         assert_eq!(
             email_on_pages("Privacy@Example.com.au", &found),
             Check::Fine
