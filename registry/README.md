@@ -21,6 +21,8 @@ An entity belongs in the register when all of these hold:
 
 Individuals do not belong, and no entry names a person as its contact. A lead you cannot yet verify is worth an issue, not an entry. To propose an entity, use the [new entry form](https://github.com/EquityBot/GhostSoap/issues/new?template=new-entry.yml), and leave your own details out: never include a reply you received, unless everything about you is removed.
 
+A listed business that asks to be taken out of the register stays in it unless it shows that it no longer meets the tests above: for example, that it holds no personal information about people in Australia, or that the Privacy Act does not reach it. The entry is then retired with `reason = "out-of-scope"` and that evidence recorded in provenance. The work that requests cause it is not a reason to remove an entry: the register exists so people can make them.
+
 ## Entry fields
 
 | Field | Values |
