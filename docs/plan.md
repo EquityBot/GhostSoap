@@ -32,7 +32,7 @@ GhostSoap's edge is to be honest about Australian law, use the levers that law a
 
 Australia has no general right to erasure today. The tranche 2 Privacy Act reform is an exposure draft (submissions closed 18 September 2026); commentary says its erasure right is limited to large digital platforms. GhostSoap therefore uses these levers, each stored in a law table with its source and deadline:
 
-Every row below was read in the primary text on 25 October 2026: the Privacy Act 1988 compilation C2026C00227 (in force from 4 June 2026; the next compilation starts 10 December 2026), the Spam Act 2003 compilation C2016C00614, the Spam Regulations 2021 (F2021L00285), the Criminal Code compilation C2026C00243 and the OAIC's APP guidelines (paragraph numbers given). The law table in `src/core/law.rs` holds the same values with their citations, and `ghostsoap law` prints it.
+Every row below was read in the primary text on 25 October 2026: the Privacy Act 1988 compilation C2026C00227 (in force from 4 June 2026; versions start 10 December 2026 and 1 January 2027, and the monthly evidence check reports each once the Federal Register records it as latest), the Spam Act 2003 compilation C2016C00614, the Spam Regulations 2021 (F2021L00285), the Criminal Code compilation C2026C00243 and the OAIC's APP guidelines (paragraph numbers given). The law table in `src/core/law.rs` holds the same values with their citations, and `ghostsoap law` prints it.
 
 | Lever | Request | Deadline basis |
 |---|---|---|

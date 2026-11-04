@@ -7,7 +7,8 @@
 //! ```text
 //! cargo run -p xtask -- evidence-hash <url>...        print the evidence hash of each page
 //! cargo run -p xtask -- evidence-drift [registry/au [text dir]]
-//!                                                     report pages whose hash has changed,
+//!                                                     report pages whose hash has changed
+//!                                                     and laws newer than the law table,
 //!                                                     optionally saving each page's text
 //! cargo run -p xtask -- email-changes <base> <head>   warn of email addresses a change added
 //! ```
@@ -19,6 +20,7 @@ use std::path::Path;
 use std::process::ExitCode;
 use std::time::Duration;
 
+use ghostsoap::core::law::SOURCES;
 use ghostsoap::core::register::{ChannelKind, Entry, SourceFile};
 use sha2::{Digest, Sha256};
 
@@ -27,6 +29,12 @@ const MIN_TEXT: usize = 500;
 const USER_AGENT: &str = "GhostSoap-evidence-check/0.1 (+https://github.com/EquityBot/GhostSoap)";
 /// Whole-request limit, so one slow or silent site fails instead of stalling the check.
 const TIMEOUT: Duration = Duration::from_secs(30);
+/// Each law in `SOURCES`: the name its line starts with and its Federal Register title.
+const LAWS: [(&str, &str); 3] = [
+    ("Privacy Act 1988", "C2004A03712"),
+    ("Spam Act 2003", "C2004A01214"),
+    ("Spam Regulations 2021", "F2021L00285"),
+];
 
 fn agent(timeout: Duration) -> ureq::Agent {
     ureq::Agent::config_builder()
@@ -210,10 +218,58 @@ fn drift(dir: &Path, text_dir: Option<&Path>) -> ExitCode {
     }
     let mut channels = channel_problems(&agent, &mail_domains, &forms);
     channels.append(&mut emails);
-    if !changed.is_empty() || !failing.is_empty() || !channels.is_empty() {
-        print!("{}", report(&changed, &failing, &channels));
+    let laws = law_changes(&|title| latest_version(&agent, title));
+    if !changed.is_empty() || !failing.is_empty() || !channels.is_empty() || !laws.is_empty() {
+        print!("{}", report(&changed, &failing, &channels, &laws));
     }
     ExitCode::SUCCESS
+}
+
+/// The Federal Register's latest version of a title.
+fn latest_version(agent: &ureq::Agent, title: &str) -> Result<String, String> {
+    let body = agent
+        .get("https://api.prod.legislation.gov.au/v1/Versions")
+        .query(
+            "$filter",
+            format!("titleId eq '{title}' and isLatest eq true"),
+        )
+        .query("$select", "registerId")
+        .header("User-Agent", USER_AGENT)
+        .call()
+        .map_err(|e| e.to_string())?
+        .body_mut()
+        .read_to_string()
+        .map_err(|e| e.to_string())?;
+    parse_latest(&body)
+}
+
+fn parse_latest(body: &str) -> Result<String, String> {
+    let reply: serde_json::Value = serde_json::from_str(body).map_err(|e| e.to_string())?;
+    match reply["value"].as_array().map(Vec::as_slice) {
+        Some([version]) => version["registerId"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| "a version has no register ID".to_owned()),
+        versions => Err(format!("expected one latest version, got {versions:?}")),
+    }
+}
+
+/// Laws whose latest version is not the one `SOURCES` records, and laws that could not
+/// be checked.
+fn law_changes(latest: &dyn Fn(&str) -> Result<String, String>) -> Vec<String> {
+    let mut lines = Vec::new();
+    for (name, title) in LAWS {
+        let source = SOURCES.iter().find(|s| s.starts_with(name));
+        match (source, latest(title)) {
+            (None, _) => lines.push(format!("- {name}: not in `SOURCES`")),
+            (Some(source), Ok(id)) if !source.contains(&id) => {
+                lines.push(format!("- {name}: {id} is now the latest version"));
+            }
+            (Some(_), Ok(_)) => {}
+            (_, Err(e)) => lines.push(format!("- {name}: inconclusive: {e}")),
+        }
+    }
+    lines
 }
 
 /// Group each mail domain and web form by the entries that use it, so each is checked once.
@@ -536,7 +592,7 @@ fn check_form(
     }
 }
 
-fn report(changed: &[String], failing: &[String], channels: &[String]) -> String {
+fn report(changed: &[String], failing: &[String], channels: &[String], laws: &[String]) -> String {
     let mut out = String::new();
     if !changed.is_empty() || !failing.is_empty() {
         out += "The monthly evidence check found register pages that differ from when they \
@@ -549,10 +605,16 @@ fn report(changed: &[String], failing: &[String], channels: &[String]) -> String
                 Check each against the business's own pages, then correct its `[[channels]]` \
                 entry and `verified_at`.\n";
     }
+    if !laws.is_empty() {
+        out += "The monthly evidence check found a law version the law table has not read. \
+                Reread each lever's provisions in it, then update `src/core/law.rs` and \
+                `docs/plan.md`.\n";
+    }
     for (title, lines) in [
         ("Changed", changed),
         ("Failing", failing),
         ("Channels", channels),
+        ("Laws", laws),
     ] {
         if !lines.is_empty() {
             out += &format!("\n## {title}\n\n{}\n", lines.join("\n"));
@@ -667,13 +729,46 @@ levers = []
     #[test]
     fn a_channel_only_report_does_not_ask_for_new_hashes() {
         let line = ["- `example-au`: web form x: gone".to_owned()];
-        let channels_only = report(&[], &[], &line);
+        let channels_only = report(&[], &[], &line, &[]);
         assert!(channels_only.contains("## Channels"));
         assert!(channels_only.contains("`[[channels]]`"));
         assert!(!channels_only.contains("evidence-hash"));
-        let pages_only = report(&line, &[], &[]);
+        let pages_only = report(&line, &[], &[], &[]);
         assert!(pages_only.contains("evidence-hash"));
         assert!(!pages_only.contains("`[[channels]]`"));
+    }
+
+    #[test]
+    fn reports_a_law_with_a_version_the_table_has_not_read() {
+        let lines = law_changes(&|title| match title {
+            "C2004A03712" => Ok("C2026C99999".to_owned()),
+            "C2004A01214" => Ok("C2016C00614".to_owned()),
+            _ => Err("timed out".to_owned()),
+        });
+        assert_eq!(
+            lines,
+            [
+                "- Privacy Act 1988: C2026C99999 is now the latest version",
+                "- Spam Regulations 2021: inconclusive: timed out",
+            ]
+        );
+        let report = report(&[], &[], &[], &lines);
+        assert!(report.contains("## Laws"));
+        assert!(report.contains("`src/core/law.rs`"));
+    }
+
+    #[test]
+    fn every_checked_law_has_a_source_line() {
+        assert!(law_changes(&|_| Ok(String::new())).is_empty());
+    }
+
+    #[test]
+    fn parses_the_latest_version() {
+        let one = r#"{"value":[{"registerId":"C2026C00227"}]}"#;
+        assert_eq!(parse_latest(one).as_deref(), Ok("C2026C00227"));
+        assert!(parse_latest(r#"{"value":[]}"#).is_err());
+        assert!(parse_latest(r#"{"value":[{}]}"#).is_err());
+        assert!(parse_latest("not json").is_err());
     }
 
     #[test]
