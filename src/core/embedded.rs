@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! The shipped register, embedded at compile time by `build.rs`, so an installed binary
 //! (or a later WebAssembly build) needs no register files on disk.
 

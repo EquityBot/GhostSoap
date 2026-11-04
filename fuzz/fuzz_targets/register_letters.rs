@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 #![no_main]
 //! A register entry file, which pull requests add, through the register check and on to the
 //! letters a checked entry produces.

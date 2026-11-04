@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! The law table: each lever's legal basis, deadline and charge rule, with citations.
 //!
 //! Every value was read in the primary text on 25 October 2026: the Privacy Act 1988

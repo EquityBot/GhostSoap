@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! Page text normalisation for evidence hashes, as specified in `registry/README.md`.
 
 /// Elements whose content is never page text.

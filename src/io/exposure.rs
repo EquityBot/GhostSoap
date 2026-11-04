@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! Places where plaintext drafts could leave the machine: a Git working tree, whose files can
 //! be committed and pushed, or a folder a sync service uploads.
 //!

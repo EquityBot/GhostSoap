@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! Terminal input: profile questions and the passphrase.
 
 use std::io::{self, BufRead, Lines, StdinLock, Write};

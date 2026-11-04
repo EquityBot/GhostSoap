@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! Snapshot tests for every lever letter, and the rule that a letter shows only the
 //! entry's identity fields (plan section 8, M2). Run with `UPDATE_SNAPSHOTS=1` to rewrite
 //! the snapshots after a deliberate change, then review the diff.

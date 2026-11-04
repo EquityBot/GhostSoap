@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! The M2 commands end to end: init, plan, draft, clean and law.
 
 use std::fs;

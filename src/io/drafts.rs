@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! The drafts folder: plaintext letters waiting to be sent (plan section 5).
 //!
 //! Each folder has a manifest, `.ghostsoap-drafts`, holding the latest record for each name.

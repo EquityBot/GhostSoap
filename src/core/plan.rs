@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! Choosing entries and levers for a round of requests (plan sections 5 and 6a).
 
 use std::collections::BTreeSet;
