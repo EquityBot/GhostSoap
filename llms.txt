@@ -24,3 +24,7 @@ GhostSoap provides information and templates, not legal advice.
 ## Related
 
 - [EquityBot](https://github.com/EquityBot): other EquityBot tools.
+
+## Reuse
+
+- [Reusing this code](https://github.com/EquityBot/GhostSoap/blob/main/AGENTS.md#reusing-this-code): Ryan Duguid's work under FSL-1.1-ALv2; keep its notices and licence; public credit is requested.
