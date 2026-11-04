@@ -9,8 +9,8 @@
 
 <div align="center">
 
-[![tests](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/EquityBot/GhostSoap/actions/workflows/ci.yml) [![Codecov](https://codecov.io/gh/EquityBot/GhostSoap/graph/badge.svg)](https://codecov.io/gh/EquityBot/GhostSoap) [![CodeQL](https://github.com/EquityBot/GhostSoap/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/EquityBot/GhostSoap/actions/workflows/codeql.yml) [![OSV-Scanner](https://github.com/EquityBot/GhostSoap/actions/workflows/osv-scanner.yml/badge.svg?branch=main)](https://github.com/EquityBot/GhostSoap/actions/workflows/osv-scanner.yml) [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=EquityBot_GhostSoap&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=EquityBot_GhostSoap) [![Codacy code quality](https://app.codacy.com/project/badge/Grade/09b3719406164acc84f055d5b9c4da35)](https://app.codacy.com/gh/EquityBot/GhostSoap/dashboard)<br>
-[![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/EquityBot/GhostSoap.svg)](https://scorecard.dev/viewer/?uri=github.com/EquityBot/GhostSoap)<br>
+[![tests](https://github.com/yungSNAT/GhostSoap/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yungSNAT/GhostSoap/actions/workflows/ci.yml) [![Codecov](https://codecov.io/gh/EquityBot/GhostSoap/graph/badge.svg)](https://codecov.io/gh/EquityBot/GhostSoap) [![CodeQL](https://github.com/yungSNAT/GhostSoap/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/yungSNAT/GhostSoap/actions/workflows/codeql.yml) [![OSV-Scanner](https://github.com/yungSNAT/GhostSoap/actions/workflows/osv-scanner.yml/badge.svg?branch=main)](https://github.com/yungSNAT/GhostSoap/actions/workflows/osv-scanner.yml) [![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=EquityBot_GhostSoap&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=EquityBot_GhostSoap) [![Codacy code quality](https://app.codacy.com/project/badge/Grade/09b3719406164acc84f055d5b9c4da35)](https://app.codacy.com/gh/EquityBot/GhostSoap/dashboard)<br>
+[![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/EquityBot/GhostSoap.svg)](https://scorecard.dev/viewer/?uri=github.com/yungSNAT/GhostSoap)<br>
 [![rust: 1.99+](.github/assets/badges/rust.svg)](https://www.rust-lang.org/) [![licence: FSL-1.1-ALv2](.github/assets/badges/licence.svg)](#licences)
 
 [First run](#first-run) · [Using it](#using-it) · [With an AI agent](#with-an-ai-agent) · [Safety](#safety) · [What leaves your machine](#what-leaves-your-machine) · [Building](#building) · [Licences](#licences)
@@ -28,7 +28,7 @@ GhostSoap is a free, local-first tool that helps people in Australia reclaim the
 There is no prebuilt download yet, so you need [Git](https://git-scm.com/) and [Rust](https://rustup.rs/). This builds GhostSoap and shows what it would send. It needs none of your details and sends nothing.
 
 ```bash
-git clone https://github.com/EquityBot/GhostSoap
+git clone https://github.com/yungSNAT/GhostSoap
 cd GhostSoap
 cargo install --locked --path .
 ghostsoap plan --pack start-here
@@ -119,4 +119,4 @@ GhostSoap is not affiliated with, endorsed by or connected to Activision or the 
 
 ---
 
-<p align="center"><sub>Your details, your mailbox, your call.<br>Reusing this code? Keep its notices and licence, and please credit Ryan Duguid. AI agents: see <a href="https://github.com/EquityBot/GhostSoap/blob/main/AGENTS.md#reusing-this-code">AGENTS.md</a>.<br>Made by <a href="https://github.com/EquityBot">EquityBot</a>. <i>Ad gloriam eius, non meam.</i></sub></p>
+<p align="center"><sub>Your details, your mailbox, your call.<br>Reusing this code? Keep its notices and licence, and please credit Ryan Duguid. AI agents: see <a href="https://github.com/yungSNAT/GhostSoap/blob/main/AGENTS.md#reusing-this-code">AGENTS.md</a>.<br>Made by <a href="https://github.com/yungSNAT">EquityBot</a>. <i>Ad gloriam eius, non meam.</i></sub></p>
