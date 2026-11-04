@@ -20,7 +20,6 @@ use std::path::Path;
 use std::process::ExitCode;
 use std::time::Duration;
 
-use ghostsoap::core::law::SOURCES;
 use ghostsoap::core::register::{ChannelKind, Entry, SourceFile};
 use sha2::{Digest, Sha256};
 
@@ -29,11 +28,14 @@ const MIN_TEXT: usize = 500;
 const USER_AGENT: &str = "GhostSoap-evidence-check/0.1 (+https://github.com/EquityBot/GhostSoap)";
 /// Whole-request limit, so one slow or silent site fails instead of stalling the check.
 const TIMEOUT: Duration = Duration::from_secs(30);
-/// Each law in `SOURCES`: the name its line starts with and its Federal Register title.
-const LAWS: [(&str, &str); 3] = [
+/// The plan records the version of each law that the levers were read from.
+const PLAN: &str = include_str!("../../docs/plan.md");
+/// Each law the plan pins, with its Federal Register title.
+const LAWS: [(&str, &str); 4] = [
     ("Privacy Act 1988", "C2004A03712"),
     ("Spam Act 2003", "C2004A01214"),
     ("Spam Regulations 2021", "F2021L00285"),
+    ("Criminal Code", "C2004A04868"),
 ];
 
 fn agent(timeout: Duration) -> ureq::Agent {
@@ -248,28 +250,23 @@ fn parse_latest(body: &str) -> Result<String, String> {
     match reply["value"].as_array().map(Vec::as_slice) {
         Some([version]) => version["registerId"]
             .as_str()
+            .filter(|id| !id.is_empty())
             .map(str::to_owned)
             .ok_or_else(|| "a version has no register ID".to_owned()),
         versions => Err(format!("expected one latest version, got {versions:?}")),
     }
 }
 
-/// Laws whose latest version is not the one `SOURCES` records, and laws that could not
-/// be checked.
+/// Laws whose latest version is not one the plan records, and laws that could not be
+/// checked.
 fn law_changes(latest: &dyn Fn(&str) -> Result<String, String>) -> Vec<String> {
-    let mut lines = Vec::new();
-    for (name, title) in LAWS {
-        let source = SOURCES.iter().find(|s| s.starts_with(name));
-        match (source, latest(title)) {
-            (None, _) => lines.push(format!("- {name}: not in `SOURCES`")),
-            (Some(source), Ok(id)) if !source.contains(&id) => {
-                lines.push(format!("- {name}: {id} is now the latest version"));
-            }
-            (Some(_), Ok(_)) => {}
-            (_, Err(e)) => lines.push(format!("- {name}: inconclusive: {e}")),
-        }
-    }
-    lines
+    LAWS.iter()
+        .filter_map(|(name, title)| match latest(title) {
+            Ok(id) if PLAN.contains(&id) => None,
+            Ok(id) => Some(format!("- {name}: {id} is now the latest version")),
+            Err(e) => Some(format!("- {name}: inconclusive: {e}")),
+        })
+        .collect()
 }
 
 /// Group each mail domain and web form by the entries that use it, so each is checked once.
@@ -607,8 +604,8 @@ fn report(changed: &[String], failing: &[String], channels: &[String], laws: &[S
     }
     if !laws.is_empty() {
         out += "The monthly evidence check found a law version the law table has not read. \
-                Reread each lever's provisions in it, then update `src/core/law.rs` and \
-                `docs/plan.md`.\n";
+                Reread each lever's provisions in it, then update `docs/plan.md` and any \
+                `src/core/law.rs` line that cites it.\n";
     }
     for (title, lines) in [
         ("Changed", changed),
@@ -743,7 +740,8 @@ levers = []
         let lines = law_changes(&|title| match title {
             "C2004A03712" => Ok("C2026C99999".to_owned()),
             "C2004A01214" => Ok("C2016C00614".to_owned()),
-            _ => Err("timed out".to_owned()),
+            "F2021L00285" => Err("timed out".to_owned()),
+            _ => Ok("C2026C00243".to_owned()),
         });
         assert_eq!(
             lines,
@@ -758,8 +756,14 @@ levers = []
     }
 
     #[test]
-    fn every_checked_law_has_a_source_line() {
-        assert!(law_changes(&|_| Ok(String::new())).is_empty());
+    fn the_plan_records_every_version_in_the_law_table() {
+        let pins: Vec<&str> = ghostsoap::core::law::SOURCES
+            .iter()
+            .flat_map(|s| s.split([' ', ',']))
+            .filter(|word| word.starts_with("C20") || word.starts_with("F20"))
+            .collect();
+        assert_eq!(pins.len(), 3);
+        assert!(pins.iter().all(|pin| PLAN.contains(pin)));
     }
 
     #[test]
@@ -768,6 +772,7 @@ levers = []
         assert_eq!(parse_latest(one).as_deref(), Ok("C2026C00227"));
         assert!(parse_latest(r#"{"value":[]}"#).is_err());
         assert!(parse_latest(r#"{"value":[{}]}"#).is_err());
+        assert!(parse_latest(r#"{"value":[{"registerId":""}]}"#).is_err());
         assert!(parse_latest("not json").is_err());
     }
 
