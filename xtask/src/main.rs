@@ -28,14 +28,12 @@ const MIN_TEXT: usize = 500;
 const USER_AGENT: &str = "GhostSoap-evidence-check/0.1 (+https://github.com/EquityBot/GhostSoap)";
 /// Whole-request limit, so one slow or silent site fails instead of stalling the check.
 const TIMEOUT: Duration = Duration::from_secs(30);
-/// The plan records the version of each law that the levers were read from.
-const PLAN: &str = include_str!("../../docs/plan.md");
-/// Each law the plan pins, with its Federal Register title.
-const LAWS: [(&str, &str); 4] = [
-    ("Privacy Act 1988", "C2004A03712"),
-    ("Spam Act 2003", "C2004A01214"),
-    ("Spam Regulations 2021", "F2021L00285"),
-    ("Criminal Code", "C2004A04868"),
+/// Each law the plan pins: its name, Federal Register title and the version read.
+const LAWS: [(&str, &str, &str); 4] = [
+    ("Privacy Act 1988", "C2004A03712", "C2026C00227"),
+    ("Spam Act 2003", "C2004A01214", "C2016C00614"),
+    ("Spam Regulations 2021", "F2021L00285", "F2021L00285"),
+    ("Criminal Code", "C2004A04868", "C2026C00243"),
 ];
 
 fn agent(timeout: Duration) -> ureq::Agent {
@@ -257,12 +255,11 @@ fn parse_latest(body: &str) -> Result<String, String> {
     }
 }
 
-/// Laws whose latest version is not one the plan records, and laws that could not be
-/// checked.
+/// Laws whose latest version is not the one read, and laws that could not be checked.
 fn law_changes(latest: &dyn Fn(&str) -> Result<String, String>) -> Vec<String> {
     LAWS.iter()
-        .filter_map(|(name, title)| match latest(title) {
-            Ok(id) if PLAN.contains(&id) => None,
+        .filter_map(|(name, title, read)| match latest(title) {
+            Ok(id) if id == *read => None,
             Ok(id) => Some(format!("- {name}: {id} is now the latest version")),
             Err(e) => Some(format!("- {name}: inconclusive: {e}")),
         })
@@ -604,8 +601,8 @@ fn report(changed: &[String], failing: &[String], channels: &[String], laws: &[S
     }
     if !laws.is_empty() {
         out += "The monthly evidence check found a law version the law table has not read. \
-                Reread each lever's provisions in it, then update `docs/plan.md` and any \
-                `src/core/law.rs` line that cites it.\n";
+                Reread each lever's provisions in it, then update `LAWS` in xtask, \
+                `docs/plan.md` and any `src/core/law.rs` line that cites it.\n";
     }
     for (title, lines) in [
         ("Changed", changed),
@@ -756,14 +753,16 @@ levers = []
     }
 
     #[test]
-    fn the_plan_records_every_version_in_the_law_table() {
+    fn the_plan_and_the_law_table_record_every_version_read() {
+        let plan = include_str!("../../docs/plan.md");
+        assert!(LAWS.iter().all(|(_, _, read)| plan.contains(read)));
         let pins: Vec<&str> = ghostsoap::core::law::SOURCES
             .iter()
             .flat_map(|s| s.split([' ', ',']))
             .filter(|word| word.starts_with("C20") || word.starts_with("F20"))
             .collect();
         assert_eq!(pins.len(), 3);
-        assert!(pins.iter().all(|pin| PLAN.contains(pin)));
+        assert!(pins.iter().all(|pin| LAWS.iter().any(|law| law.2 == *pin)));
     }
 
     #[test]
