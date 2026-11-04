@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! Register entries and packs: the model and its validation. Pure functions, no I/O.
 
 use std::collections::{BTreeMap, BTreeSet};

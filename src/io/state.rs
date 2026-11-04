@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! The encrypted state file (plan section 5, 'Storage and secrets'). M2 holds the profile;
 //! M3 adds requests and events.
 

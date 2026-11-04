@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! Embeds the register in the binary: generates `include_str!` calls for every entry in
 //! `registry/au` and every pack in `registry/au/packs`, sorted by file name.
 

@@ -1,3 +1,6 @@
+// Copyright 2026 Ryan Duguid
+// SPDX-License-Identifier: FSL-1.1-ALv2
+
 //! Letters: templates in `letters/au`, a strict renderer, and the message formats a draft
 //! is written in (plan section 5, 'Letters').
 
