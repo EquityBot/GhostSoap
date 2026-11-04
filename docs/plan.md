@@ -247,7 +247,7 @@ GhostSoap/
   .github/      workflows/ci.yml  ISSUE_TEMPLATE/  dependabot.yml
 ```
 
-The GitHub repository is `EquityBot/GhostSoap`.
+The GitHub repository is `yungSNAT/GhostSoap`.
 
 ## 11. Alternatives considered
 

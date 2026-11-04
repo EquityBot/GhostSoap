@@ -19,7 +19,7 @@ An entity belongs in the register when all of these hold:
 - It has an ABN, or it is an overseas entry as `exemption_risk` defines one. An entity that may fall under the small business exemption can stay, marked `small-business-possible`.
 - Its details come from its own pages. Another list may point you to it, but nothing is copied from a list whose licence does not allow it ([clean-room rules](../CONTRIBUTING.md#clean-room-rules)).
 
-Individuals do not belong, and no entry names a person as its contact. A lead you cannot yet verify is worth an issue, not an entry. To propose an entity, use the [new entry form](https://github.com/EquityBot/GhostSoap/issues/new?template=new-entry.yml), and leave your own details out: never include a reply you received, unless everything about you is removed.
+Individuals do not belong, and no entry names a person as its contact. A lead you cannot yet verify is worth an issue, not an entry. To propose an entity, use the [new entry form](https://github.com/yungSNAT/GhostSoap/issues/new?template=new-entry.yml), and leave your own details out: never include a reply you received, unless everything about you is removed.
 
 A listed business that asks to be taken out of the register stays in it unless evidence shows that it does not meet the tests above: for example, that it holds no personal information about people in Australia, or that the Privacy Act does not reach it. The entry is then retired with `reason = "out-of-scope"` and that evidence recorded in provenance. The work that requests cause it is not a reason to remove an entry: the register exists so people can make them.
 
@@ -59,7 +59,7 @@ On a pull request, CI compares the register with the base branch's and adds a wa
 
 `cargo run -p xtask -- evidence-hash <url>` prints a page's hash, computed as follows:
 
-1. GET the URL, following redirects, with the user agent `GhostSoap-evidence-check/0.1 (+https://github.com/EquityBot/GhostSoap)` and a 30-second limit for the whole request.
+1. GET the URL, following redirects, with the user agent `GhostSoap-evidence-check/0.1 (+https://github.com/yungSNAT/GhostSoap)` and a 30-second limit for the whole request.
 2. The response is HTML if its `Content-Type` contains `html` in any letter case or, when it has no `Content-Type`, if its body starts (after any byte order mark and whitespace) with `<!doctype html` or `<html` in any letter case. Hash any other response (for example a PDF) as its raw bytes.
 3. Decode an HTML body as UTF-8 (invalid bytes replaced). Ignoring comments and the content of `script`, `style`, `noscript`, `template`, `svg` and `iframe` elements, take the content of the first `<main>` element (including any `<main>` nested in it), or else `<body>`, or else the whole document. Markup starts with `<` followed by an ASCII letter, `/` and an ASCII letter, `!` or `?`; any other `<` is text. Inside `template` and `svg`, CDATA sections are skipped too. A `>` inside a quoted attribute value does not end a tag. `script`, `style`, `noscript` and `iframe` end at their first end tag (so `</scripture>` does not end a script); `template` and `svg` nest, and `<svg/>` closes itself.
 4. Replace every tag in that content with a space.

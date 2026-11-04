@@ -22,7 +22,7 @@ These commands need no profile and no passphrase. Errors go to standard error wi
 - `manual`: run from overseas, with no letter. Show the person `note`, which says Australian law may not reach it, and give them `page_step` with `page`, then `forms`; they use them themselves.
 - `skip`: nothing to send; give the `reason`.
 
-Show every item in `warnings`. Without the binary, the register entries and packs are in `registry/au/` in the [repository](https://github.com/EquityBot/GhostSoap), but the planned steps, warnings and law table come only from running GhostSoap.
+Show every item in `warnings`. Without the binary, the register entries and packs are in `registry/au/` in the [repository](https://github.com/yungSNAT/GhostSoap), but the planned steps, warnings and law table come only from running GhostSoap.
 
 ## What the person does themselves
 

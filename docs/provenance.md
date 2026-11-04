@@ -168,7 +168,7 @@ Evidence: 52 `[[evidence]]` hashes across 33 of these entries, taken on 26 Octob
 
 ### Evidence drift recheck (2 November 2026)
 
-The first monthly drift check ([issue 26](https://github.com/EquityBot/GhostSoap/issues/26)) was worked through on 2 November 2026 by an AI agent for the maintainer, from public pages only: no form was submitted, no account created and no one signed in. Each flagged page was read in a browser (Firecrawl for 3 pages behind a bot check) and its entry's claims were matched against the text; new hashes were taken twice with `cargo run -p xtask -- evidence-hash` and matched.
+The first monthly drift check ([issue 26](https://github.com/yungSNAT/GhostSoap/issues/26)) was worked through on 2 November 2026 by an AI agent for the maintainer, from public pages only: no form was submitted, no account created and no one signed in. Each flagged page was read in a browser (Firecrawl for 3 pages behind a bot check) and its entry's claims were matched against the text; new hashes were taken twice with `cargo run -p xtask -- evidence-hash` and matched.
 
 - `canva-au`: hash updated, claims unchanged. Canva published a new policy version later the same day ('last updated on November 02, 2026', was August 25); a sentence diff of the 2 versions shows only its EEA representative's address changed, which the register does not record, so the hash was taken again (3 matching fetches).
 - Hash updated, claims unchanged: `equifax-marketing-au` (donotcontact.com.au), `everyday-rewards-au` (both HTML pages; the policy page still links the August 2026 PDF, whose hash is unchanged), `michael-page-au` and `records-finder-au` (4 pages).

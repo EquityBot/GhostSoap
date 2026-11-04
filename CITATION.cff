@@ -3,10 +3,10 @@ message: "If you use this work, cite it with this metadata and the release tag o
 title: "GhostSoap"
 type: software
 authors:
-  - name: "EquityBot"
+  - name: "yungSNAT"
 abstract: "GhostSoap at no Price: prepare Australian Privacy Act requests to data brokers, for you to send from your own mailbox."
-repository-code: "https://github.com/EquityBot/GhostSoap"
-license-url: "https://github.com/EquityBot/GhostSoap/blob/main/LICENSE"
+repository-code: "https://github.com/yungSNAT/GhostSoap"
+license-url: "https://github.com/yungSNAT/GhostSoap/blob/main/LICENSE"
 keywords:
   - australia
   - cli
