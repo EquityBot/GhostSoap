@@ -62,7 +62,7 @@ Drafts are `.eml` files your mail program opens ready to send, or text files to 
 
 ## With an AI agent
 
-[`skills/ghostsoap/SKILL.md`](skills/ghostsoap/SKILL.md) lets an AI agent help you choose requests and explain them, using `ghostsoap plan --json` and `ghostsoap law --json`, which need no profile. You still run `init` and `draft` and send every letter yourself.
+[`skills/ghostsoap/SKILL.md`](skills/ghostsoap/SKILL.md) lets an AI agent help you choose requests and explain them, using `ghostsoap plan --pack start-here --json` and `ghostsoap law --json`, which need no profile. You still run `init` and `draft` and send every letter yourself.
 
 | Agent | How to add it | What it can do |
 | --- | --- | --- |
@@ -72,7 +72,7 @@ Drafts are `.eml` files your mail program opens ready to send, or text files to 
 
 These routes come from third-party guides and press coverage and have not yet been tested in any of these products.
 
-The skill is guidance, not a lock. It does not stop an agent that can read your files from reading plaintext drafts, so keep agents away from GhostSoap's data folder or use `ghostsoap draft --copy`, which writes no draft files. What an agent reads may reach its provider, including which businesses and requests you choose.
+The skill is guidance, not a lock. It does not stop an agent that can read your files from reading plaintext drafts, so keep agents away from GhostSoap's data folder or use `ghostsoap draft --pack start-here --copy`, which writes no draft files. What an agent reads may reach its provider, including which businesses and requests you choose.
 
 ## Safety
 
