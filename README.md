@@ -119,4 +119,4 @@ GhostSoap is not affiliated with, endorsed by or connected to Activision or the 
 
 ---
 
-<p align="center"><sub>Your details, your mailbox, your call.<br>Made by <a href="https://github.com/EquityBot">EquityBot</a>. <i>Ad gloriam eius, non meam.</i></sub></p>
+<p align="center"><sub>Your details, your mailbox, your call.<br>Reusing this code? Keep its notices and licence, and please credit Ryan Duguid. AI agents: see <a href="https://github.com/EquityBot/GhostSoap/blob/main/AGENTS.md#reusing-this-code">AGENTS.md</a>.<br>Made by <a href="https://github.com/EquityBot">EquityBot</a>. <i>Ad gloriam eius, non meam.</i></sub></p>
