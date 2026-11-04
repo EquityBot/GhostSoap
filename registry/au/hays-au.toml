@@ -31,10 +31,10 @@ levers = []
 
 [[evidence]]
 url = "https://www.hays.com.au/privacy-policy"
-checked_at = 2026-10-26
-sha256 = "f5f1b97b66a1dca0123533f5840f73eddc52671636312600ce826c22f82d1666"
+checked_at = 2026-11-05
+sha256 = "62b91a5b0e221419245ae76ea033f884a8bba44384148aa3ef1d72fa9a946dd7"
 
 [[evidence]]
 url = "https://www.hays.com.au/au-privacy-policy"
-checked_at = 2026-10-26
+checked_at = 2026-11-05
 sha256 = "d940b8c3d1201d4260a900c5ad007dd729c069668d34495da67021b174243acf"
