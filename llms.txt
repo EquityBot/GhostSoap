@@ -10,21 +10,21 @@ GhostSoap provides information and templates, not legal advice.
 
 ## Start
 
-- [README](https://github.com/EquityBot/GhostSoap#readme): commands, safety, what leaves your machine and what it will not do.
-- [Agent skill](https://github.com/EquityBot/GhostSoap/blob/main/skills/ghostsoap/SKILL.md): how an AI agent helps choose requests whilst the person keeps their details and sends every letter.
-- [Register](https://github.com/EquityBot/GhostSoap/blob/main/registry/README.md): entry fields and how `registry check` validates them.
-- [Plan](https://github.com/EquityBot/GhostSoap/blob/main/docs/plan.md): legal model, threat model and milestones.
+- [README](https://github.com/yungSNAT/GhostSoap#readme): commands, safety, what leaves your machine and what it will not do.
+- [Agent skill](https://github.com/yungSNAT/GhostSoap/blob/main/skills/ghostsoap/SKILL.md): how an AI agent helps choose requests whilst the person keeps their details and sends every letter.
+- [Register](https://github.com/yungSNAT/GhostSoap/blob/main/registry/README.md): entry fields and how `registry check` validates them.
+- [Plan](https://github.com/yungSNAT/GhostSoap/blob/main/docs/plan.md): legal model, threat model and milestones.
 
 ## Docs
 
-- [Provenance](https://github.com/EquityBot/GhostSoap/blob/main/docs/provenance.md): where each register entry's lead came from and what verified it.
-- [Contributing](https://github.com/EquityBot/GhostSoap/blob/main/CONTRIBUTING.md): clean-room rules and the checks to run before a pull request.
-- [Security](https://github.com/EquityBot/GhostSoap/blob/main/SECURITY.md): how to report a vulnerability privately.
+- [Provenance](https://github.com/yungSNAT/GhostSoap/blob/main/docs/provenance.md): where each register entry's lead came from and what verified it.
+- [Contributing](https://github.com/yungSNAT/GhostSoap/blob/main/CONTRIBUTING.md): clean-room rules and the checks to run before a pull request.
+- [Security](https://github.com/yungSNAT/GhostSoap/blob/main/SECURITY.md): how to report a vulnerability privately.
 
 ## Related
 
-- [EquityBot](https://github.com/EquityBot): other EquityBot tools.
+- [yungSNAT](https://github.com/yungSNAT): other yungSNAT tools.
 
 ## Reuse
 
-- [Reusing this code](https://github.com/EquityBot/GhostSoap/blob/main/AGENTS.md#reusing-this-code): Ryan Duguid's work under FSL-1.1-ALv2; keep its notices and licence; public credit is requested.
+- [Reusing this code](https://github.com/yungSNAT/GhostSoap/blob/main/AGENTS.md#reusing-this-code): Ryan Duguid's work under FSL-1.1-ALv2; keep its notices and licence; public credit is requested.
