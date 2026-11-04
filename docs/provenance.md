@@ -177,6 +177,26 @@ The first monthly drift check ([issue 26](https://github.com/EquityBot/GhostSoap
 - Evidence removed: the 2 Coles HTML pages and Harvey Norman's policy now answer a plain fetch with a script-only bot check (0 characters of main text); Equifax's contact page and credit ban form show the current date as a date field example ('E.g., 02/11/2026'), so their hashes change every day, and Records Finder's Australian search page shows the date its database was last updated, which changed within the day. Their claims still match the pages in a browser; Coles's PDF policy and Equifax's other 3 pages keep their hashes.
 - Contact channels: the addresses of `aussie-broadband-au`, `careerone-au`, `hays-au`, `manpowergroup-au`, `robert-half-au` and `smrtr-au` are on their pages behind Cloudflare's email obfuscation, which the check now decodes; those of `chandler-macleod-au` and `peoplebank-au` are on the RGF Staffing policy and Thryv's on its privacy policy, sources without evidence, which the check now searches.
 
+### Evidence refresh, 5 November 2026
+
+- Rechecked the 3 pages flagged by the 3 November local drift run. Hays'
+  Australian privacy email, telephone and postal channel and THE ICONIC's
+  email, legal entity, ABN and postal channel match their current pages.
+  Hays' Australian email is also present behind Cloudflare obfuscation.
+  No channel or request eligibility changed.
+- Refreshed the Hays and THE ICONIC evidence digests only after 2 fetches
+  with the existing xtask returned matching, distinct hashes. Hays'
+  secondary Australian-policy digest is unchanged; its check date is fresh.
+- Removed only the donotcontact.com.au evidence baseline from
+  `equifax-marketing-au`: the form's main text includes the current
+  'Complaint Date', so its hash changes with the date. Its source URL,
+  web-form channel and separate Equifax privacy evidence remain.
+- The live contact sections were read. The earlier workflow run's text
+  artifact was unavailable from the artifact API, so a complete historical
+  policy-text comparison was not possible. The refresh establishes the
+  checked contact fields and current page state, not an unchanged policy.
+  No email was sent and no form was submitted.
+
 ### Rejected candidates (M1)
 
 | Candidate | Reason |

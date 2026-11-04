@@ -34,8 +34,3 @@ levers = ["app7-no-marketing", "app7-no-facilitation"]
 url = "https://www.equifax.com.au/privacy"
 checked_at = 2026-10-24
 sha256 = "aaeaf4225ee4cbade081ece48db356b14608b81ff2148ae93b5b8f705ff04257"
-
-[[evidence]]
-url = "https://www.donotcontact.com.au/"
-checked_at = 2026-11-02
-sha256 = "736dd3915c42f1a772efd5ee100c050f61d106524e148b1af409c617ef644ce7"
