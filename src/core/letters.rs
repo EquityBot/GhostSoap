@@ -18,7 +18,7 @@ const OPENING: &str = include_str!("../../letters/au/opening.txt");
 const CLOSING: &str = include_str!("../../letters/au/closing.txt");
 
 /// The paragraph template for `lever`. The match makes a missing letter a compile error.
-fn template(lever: Lever) -> &'static str {
+pub(crate) fn template(lever: Lever) -> &'static str {
     match lever {
         Lever::App7NoMarketing => include_str!("../../letters/au/app7-no-marketing.txt"),
         Lever::App7NoFacilitation => include_str!("../../letters/au/app7-no-facilitation.txt"),

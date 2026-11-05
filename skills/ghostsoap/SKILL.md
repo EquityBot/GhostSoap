@@ -44,6 +44,7 @@ If you can read their files, tell them so before they run `draft`: these rules a
 - Do not send letters, fill in web forms, solve CAPTCHAs or scrape people-search sites.
 - Make access requests only about the person themselves: requesting someone else's information may be an offence.
 - Do not promise deletion. Australian law has no general right to erasure.
+- If the person edits a draft or writes their own words, tell them `ghostsoap check <file>` warns of claims the law table does not support, and let them run it. No warning does not mean a letter is sound, so never say it does.
 
 ## On a cloud computer
 
