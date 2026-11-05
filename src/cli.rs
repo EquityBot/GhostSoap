@@ -11,6 +11,7 @@ use std::time::SystemTime;
 use clap::{Args, CommandFactory, Parser, Subcommand};
 use serde_json::{Value, json};
 
+use crate::core::check;
 use crate::core::embedded;
 use crate::core::law::{self, Deadline};
 use crate::core::letters::{self, Letter, Request};
@@ -24,6 +25,14 @@ use crate::io::prompt::Input;
 use crate::io::state::{self, State};
 
 const LEGAL_NOTICE: &str = "GhostSoap provides information and templates, not legal advice.";
+const CHECK_LIMITS: &str = "This check matches words. It flags a sentence that holds a word for \
+                            erasing and a legal source or a word of duty, so a flag may be \
+                            harmless. It also flags the GDPR, California's privacy law, foreign \
+                            article numbers and time periods written as a number and a unit, \
+                            such as '30 days' or 'a month'. It passes the law table's own \
+                            wording wherever it appears, even where that row does not apply to \
+                            the business you are writing to. It looks for nothing else, so no \
+                            flag does not mean the text is accurate, complete or legally sound.";
 const OVERSEAS_NOTE: &str = "run from overseas; GhostSoap has not established that Australian \
                              privacy law reaches it, so it drafts no letter.";
 
@@ -83,6 +92,16 @@ pub enum Command {
         /// Print JSON for scripts and AI agents.
         #[arg(long)]
         json: bool,
+    },
+    /// Warn about legal claims the law table does not support, in an edited draft or your
+    /// own words. It never blocks, and no flag does not mean the text is sound.
+    ///
+    /// Exits 0 whether or not it flags anything. Exits 1 if it cannot read the file or
+    /// refuses it, because it is empty, HTML or a base64 or quoted-printable mail body, whose
+    /// words it cannot match. Exits 2 on a usage error.
+    Check {
+        /// The text to check, such as an edited draft or `--detail` words saved to a file.
+        file: PathBuf,
     },
     /// Work with the register of Australian entities.
     Registry {
@@ -177,6 +196,7 @@ pub fn run(cli: Cli) -> ExitCode {
             }
             Ok(())
         }
+        Some(Command::Check { file }) => check_file(&file),
         Some(Command::Registry {
             command: RegistryCommand::Check { path },
         }) => return registry_command(path),
@@ -717,6 +737,26 @@ fn show_law_json() {
             "notice": LEGAL_NOTICE,
         })
     );
+}
+
+/// Print the claims to recheck in `file`, repeating only the words of each pattern: the
+/// text may hold personal details. Flags never change the exit status; text the check
+/// cannot match is an error, so that it never reports no claims for it.
+fn check_file(file: &Path) -> Result<(), String> {
+    let failed = |why: String| format!("{why}\n{CHECK_LIMITS}\n{LEGAL_NOTICE}");
+    let text = std::fs::read_to_string(file)
+        .map_err(|e| failed(format!("cannot read {}: {e}", file.display())))?;
+    if let Some(why) = check::refusal(&text) {
+        return Err(failed(format!("cannot check {}: {why}", file.display())));
+    }
+    let flags = check::check(&text);
+    for flag in &flags {
+        println!("line {}: '{}': {}", flag.line, flag.found, flag.why);
+    }
+    println!("Claims to recheck: {}.", flags.len());
+    println!("{CHECK_LIMITS}");
+    println!("{LEGAL_NOTICE}");
+    Ok(())
 }
 
 fn registry_command(path: Option<PathBuf>) -> ExitCode {

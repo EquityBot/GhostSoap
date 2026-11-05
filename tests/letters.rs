@@ -9,6 +9,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use chrono::NaiveDate;
+use ghostsoap::core::check::{check, refusal};
 use ghostsoap::core::embedded;
 use ghostsoap::core::letters::{self, Letter, Request};
 use ghostsoap::core::profile::Profile;
@@ -155,6 +156,22 @@ fn a_telstra_letter_names_the_tio_before_the_oaic() {
         0,
     );
     snapshot("telstra", &letter);
+}
+
+#[test]
+fn check_flags_nothing_in_a_template_letter() {
+    let entry = entry();
+    for lever in Lever::ALL {
+        for channel in 0..entry.channels.len() {
+            if !entry.channels[channel].levers.contains(&lever) {
+                continue;
+            }
+            let letter = compose(&entry, &profile(), &[lever], channel);
+            let flags = check(&letters::eml(&letter));
+            assert!(flags.is_empty(), "{}: {flags:?}", lever.name());
+            assert_eq!(refusal(&letters::eml(&letter)), None, "{}", lever.name());
+        }
+    }
 }
 
 #[test]

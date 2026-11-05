@@ -53,6 +53,120 @@ fn json_of(args: &[&str]) -> serde_json::Value {
     serde_json::from_slice(&out.stdout).expect("stdout is one JSON document")
 }
 
+/// `ghostsoap check` on a file holding `bytes`.
+fn check_bytes(bytes: &[u8]) -> Output {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("draft.txt");
+    std::fs::write(&path, bytes).unwrap();
+    ghostsoap(&["check", path.to_str().unwrap()])
+}
+
+/// Every run, flagged, refused or failed, says what the check cannot show.
+fn assert_check_limits(output: &str) {
+    assert!(output.contains("no flag does not mean the"), "{output}");
+    assert!(output.contains("legally sound"), "{output}");
+    assert!(output.contains("not legal advice"), "{output}");
+}
+
+#[test]
+fn check_warns_of_a_claimed_right_to_erasure_without_blocking() {
+    let out = check_bytes(b"Dear Privacy Officer\n\nI exercise my right to erasure.\n");
+    assert_eq!(out.status.code(), Some(0));
+    let stdout = text(&out.stdout);
+    assert!(stdout.contains("line 3: 'right ... erasure': "), "{stdout}");
+    assert!(stdout.contains("is a draft, not law"), "{stdout}");
+    assert!(stdout.contains("Claims to recheck: 1."), "{stdout}");
+    assert_check_limits(&stdout);
+}
+
+#[test]
+fn check_of_a_plain_request_flags_nothing_and_calls_it_nothing() {
+    let out = check_bytes(b"Please stop sending me direct marketing.\n");
+    assert_eq!(out.status.code(), Some(0));
+    let stdout = text(&out.stdout);
+    assert!(stdout.contains("Claims to recheck: 0."), "{stdout}");
+    assert_check_limits(&stdout);
+}
+
+#[test]
+fn check_repeats_nothing_personal_from_the_file() {
+    let out = check_bytes(b"Example Test Person demands this under the GDPR\n");
+    let stdout = text(&out.stdout);
+    assert!(stdout.contains("'gdpr'"), "{stdout}");
+    assert!(!stdout.contains("Example Test Person"), "{stdout}");
+}
+
+#[test]
+fn check_says_it_passes_the_tables_wording_whoever_the_letter_goes_to() {
+    let out = check_bytes(b"Telco: reply within 30 days from the day the request is made.\n");
+    assert_eq!(out.status.code(), Some(0));
+    let stdout = text(&out.stdout);
+    assert!(stdout.contains("Claims to recheck: 0."), "{stdout}");
+    assert!(stdout.contains("the law table's own wording"), "{stdout}");
+    assert!(
+        stdout.contains("does not apply to the business"),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("fixed time periods"), "{stdout}");
+}
+
+#[test]
+fn check_refuses_text_it_cannot_match_and_reports_no_count() {
+    let refused: [(&[u8], &str); 7] = [
+        (b"", "no words"),
+        (b"\n \n", "no words"),
+        (
+            b"Content-Transfer-Encoding: base64\n\nSSBleGVyY2lzZQ==\n",
+            "encoded",
+        ),
+        (b"<html><body><p>Dear Sir</p></body></html>\n", "HTML"),
+        (b"<p>I claim my right to erasure</p>\n", "HTML"),
+        (b"My right to &#101rasure\n", "HTML"),
+        (b"My right to &#x65rasure\n", "HTML"),
+    ];
+    for (bytes, why) in refused {
+        let out = check_bytes(bytes);
+        assert_eq!(out.status.code(), Some(1), "{bytes:?}");
+        let stderr = text(&out.stderr);
+        assert!(stderr.starts_with("error: cannot check"), "{stderr}");
+        assert!(stderr.contains(why), "{stderr}");
+        assert_check_limits(&stderr);
+        assert!(!stderr.contains("Claims to recheck"), "{stderr}");
+        assert!(
+            !text(&out.stdout).contains("Claims to recheck"),
+            "{bytes:?}"
+        );
+    }
+}
+
+#[test]
+fn check_help_states_the_exit_status() {
+    let out = ghostsoap(&["check", "--help"]);
+    assert_eq!(out.status.code(), Some(0));
+    let stdout = text(&out.stdout);
+    assert!(
+        stdout.contains("Exits 0 whether or not it flags"),
+        "{stdout}"
+    );
+    assert!(stdout.contains("Exits 1"), "{stdout}");
+    assert!(stdout.contains("Exits 2"), "{stdout}");
+}
+
+#[test]
+fn check_reports_a_file_it_cannot_read() {
+    for out in [
+        ghostsoap(&["check", "no-such-file.txt"]),
+        check_bytes(&[0xff, 0xfe, 0x00]),
+    ] {
+        assert_eq!(out.status.code(), Some(1));
+        let stderr = text(&out.stderr);
+        assert!(stderr.starts_with("error: cannot read"), "{stderr}");
+        assert_check_limits(&stderr);
+        assert!(!stderr.contains("Claims to recheck"), "{stderr}");
+        assert!(!text(&out.stdout).contains("Claims to recheck"));
+    }
+}
+
 #[test]
 fn plan_json_lists_steps_with_their_levers() {
     let plan = json_of(&["plan", "--pack", "start-here", "--json"]);
