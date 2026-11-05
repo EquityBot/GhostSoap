@@ -335,6 +335,13 @@ fn law_lists_every_lever_with_its_sources() {
         "    deadline: within a reasonable period, but not longer than 10 days, after the request is made (section 20R(3))",
         "spam-unsubscribe: Stop sending me commercial electronic messages",
         "    Privacy Act 1988 (Cth), compilation C2026C00227, in force from 4 June 2026",
+        "Law status, read 5 November 2026 unless a line says otherwise:",
+        "    Children's Online Privacy Code (read 6 November 2026): s 26GC(10) requires",
+        "    From 1 January 2027: the Interactive Gambling Amendment (Gambling Reform) Act 2026, sch 1 items 46 and 47, adds s 33C(1)(h) and inserts 'and subsection 62P(2)' in APP 7.8(aa).",
+        "APP 7.8 limits APP 7, which the app7 levers rest on, so reread it then.",
+        "    Tranche 2: the Privacy Amendment (Personal Data Protection) Bill 2026 is an Exposure Draft, not law",
+        "    OAIC complaints: as at February 2026",
+        "more than 12 months after you became aware of the act or practice (s 41(1)(c)).",
     ] {
         assert!(stdout.contains(line), "missing {line:?}");
     }

@@ -8,8 +8,9 @@
 //! cargo run -p xtask -- evidence-hash <url>...        print the evidence hash of each page
 //! cargo run -p xtask -- evidence-drift [registry/au [text dir]]
 //!                                                     report pages whose hash has changed
-//!                                                     and laws newer than the law table,
-//!                                                     optionally saving each page's text
+//!                                                     and laws or legal pages newer than
+//!                                                     the law table, optionally saving
+//!                                                     each page's text
 //! cargo run -p xtask -- email-changes <base> <head>   warn of email addresses a change added
 //! ```
 
@@ -35,6 +36,17 @@ const LAWS: [(&str, &str, &str); 4] = [
     ("Spam Regulations 2021", "F2021L00285", "F2021L00285"),
     ("Criminal Code", "C2004A04868", "C2026C00243"),
 ];
+
+/// Pages outside the register that the escalation targets rest on: a name, a file name
+/// for the saved text, the URL and the evidence hash of the text read.
+const LEGAL_PAGES: [LegalPage; 1] = [(
+    "OAIC recognised external dispute resolution schemes register",
+    "oaic-edr-register",
+    "https://www.oaic.gov.au/privacy/privacy-registers/recognised-external-dispute-resolution-schemes-register",
+    "2e23acc8194089cd50cefeb1d29a4d26df08480b6656738214cde865edbb430d",
+)];
+
+type LegalPage<'a> = (&'a str, &'a str, &'a str, &'a str);
 
 fn agent(timeout: Duration) -> ureq::Agent {
     ureq::Agent::config_builder()
@@ -218,7 +230,8 @@ fn drift(dir: &Path, text_dir: Option<&Path>) -> ExitCode {
     }
     let mut channels = channel_problems(&agent, &mail_domains, &forms);
     channels.append(&mut emails);
-    let laws = law_changes(&|title| latest_version(&agent, title));
+    let mut laws = law_changes(&|title| latest_version(&agent, title));
+    laws.append(&mut legal_page_changes(&agent, &LEGAL_PAGES, text_dir));
     if !changed.is_empty() || !failing.is_empty() || !channels.is_empty() || !laws.is_empty() {
         print!("{}", report(&changed, &failing, &channels, &laws));
     }
@@ -266,7 +279,39 @@ fn law_changes(latest: &dyn Fn(&str) -> Result<String, String>) -> Vec<String> {
         .collect()
 }
 
-/// Group each mail domain and web form by the entries that use it, so each is checked once.
+/// Legal pages whose text has changed, that no longer load or that refused the check. A
+/// refused page proves nothing, so it stays unverified and keeps the issue open.
+fn legal_page_changes(
+    agent: &ureq::Agent,
+    pages: &[LegalPage],
+    text_dir: Option<&Path>,
+) -> Vec<String> {
+    let mut lines = Vec::new();
+    for &(name, id, url, sha256) in pages {
+        match evidence_page(agent, url) {
+            Ok(page) => {
+                if page.sha256 != sha256 {
+                    lines.push(format!(
+                        "- {name}: {url} has changed. Check the `escalation` values and the \
+                         plan's law status against it, then update `LEGAL_PAGES` in xtask"
+                    ));
+                }
+                if let (Some(dir), Some(main)) = (text_dir, &page.main) {
+                    save_text(dir, id, url, main);
+                }
+            }
+            Err(PageError::Refused(e)) => lines.push(format!(
+                "- {name}: {url}: unverified, because it refused the check ({e}). Compare it \
+                 by hand with the `escalation` values and the plan's law status"
+            )),
+            Err(PageError::Failed(e)) => lines.push(format!("- {name}: {url}: {e}")),
+        }
+    }
+    lines
+}
+
+/// Group each mail domain and each web form or manual-check page by the entries that use
+/// it, so each is checked once.
 fn collect_channels(
     entry: &Entry,
     mail_domains: &mut BTreeMap<String, Vec<String>>,
@@ -286,6 +331,12 @@ fn collect_channels(
             ids.push(entry.id.clone());
         }
     }
+    if let Some(manual) = &entry.manual_check {
+        let ids = forms.entry(manual.url.clone()).or_default();
+        if !ids.contains(&entry.id) {
+            ids.push(entry.id.clone());
+        }
+    }
 }
 
 fn channel_problems(
@@ -300,7 +351,7 @@ fn channel_problems(
         record(&mut lines, &what, ids, check_mail(&lookup, domain));
     }
     for (url, ids) in forms {
-        let what = format!("web form {url}");
+        let what = format!("web form or manual-check page {url}");
         record(&mut lines, &what, ids, check_form(agent, &lookup, url));
     }
     lines
@@ -600,9 +651,10 @@ fn report(changed: &[String], failing: &[String], channels: &[String], laws: &[S
                 entry and `verified_at`.\n";
     }
     if !laws.is_empty() {
-        out += "The monthly evidence check found a law version the law table has not read. \
-                Reread each lever's provisions in it, then update `LAWS` in xtask, \
-                `docs/plan.md` and any `src/core/law.rs` line that cites it.\n";
+        out += "The monthly evidence check found a law version the law table has not read, \
+                or a legal page that changed or could not be confirmed. For a new version, reread each lever's \
+                provisions in it, then update `LAWS` in xtask, `docs/plan.md` and any \
+                `src/core/law.rs` line that cites it.\n";
     }
     for (title, lines) in [
         ("Changed", changed),
@@ -763,6 +815,64 @@ levers = []
             .collect();
         assert_eq!(pins.len(), 3);
         assert!(pins.iter().all(|pin| LAWS.iter().any(|law| law.2 == *pin)));
+        assert!(ghostsoap::core::law::STATUS[0].contains(LAWS[0].2));
+    }
+
+    fn stale_page(url: &str) -> LegalPage<'_> {
+        ("EDR register", "edr", url, "stale")
+    }
+
+    #[test]
+    fn a_changed_legal_page_is_reported_and_a_matching_one_is_not() {
+        let agent = agent(TIMEOUT);
+        let url = serve_html("The recognised schemes changed.");
+        let lines = legal_page_changes(&agent, &[stale_page(&url)], None);
+        assert_eq!(lines.len(), 1);
+        assert!(lines[0].starts_with("- EDR register: "));
+        assert!(lines[0].contains("has changed"));
+        assert!(report(&[], &[], &[], &lines).contains("## Laws"));
+
+        let url = serve_html("The recognised schemes changed.");
+        let sha256 = evidence_page(&agent, &url).unwrap().sha256;
+        let url = serve_html("The recognised schemes changed.");
+        let same = ("EDR register", "edr", url.as_str(), sha256.as_str());
+        assert!(legal_page_changes(&agent, &[same], None).is_empty());
+    }
+
+    #[test]
+    fn a_legal_page_refused_to_scripts_is_unverified_and_a_dead_one_is_reported() {
+        let agent = agent(TIMEOUT);
+        let refused = serve_once("403 Forbidden");
+        let lines = legal_page_changes(&agent, &[stale_page(&refused)], None);
+        assert_eq!(lines.len(), 1);
+        assert!(lines[0].contains("unverified"), "{lines:?}");
+        assert!(report(&[], &[], &[], &lines).contains("## Laws"));
+        let dead = serve_once("404 Not Found");
+        assert_eq!(
+            legal_page_changes(&agent, &[stale_page(&dead)], None).len(),
+            1
+        );
+    }
+
+    #[test]
+    fn checks_a_manual_check_page_once_for_each_entry() {
+        let text = format!("{ENTRY}\n[manual_check]\nurl = \"https://example.com.au/form\"\n");
+        let entry: Entry = toml::from_str(&text).unwrap();
+        let (mut mail, mut forms) = (BTreeMap::new(), BTreeMap::new());
+        collect_channels(&entry, &mut mail, &mut forms);
+        assert_eq!(forms["https://example.com.au/form"], ["example-au"]);
+
+        let text = format!("{ENTRY}\n[manual_check]\nurl = \"https://example.com.au/search\"\n");
+        let entry: Entry = toml::from_str(&text).unwrap();
+        collect_channels(&entry, &mut mail, &mut forms);
+        assert_eq!(forms["https://example.com.au/search"], ["example-au"]);
+
+        let repeat = "[[channels]]\nkind = \"web-form\"\n\
+                      address = \"https://example.com.au/repeat\"\nlevers = []\n";
+        let text = format!("{ENTRY}\n{repeat}\n{repeat}");
+        let entry: Entry = toml::from_str(&text).unwrap();
+        collect_channels(&entry, &mut mail, &mut forms);
+        assert_eq!(forms["https://example.com.au/repeat"], ["example-au"]);
     }
 
     #[test]

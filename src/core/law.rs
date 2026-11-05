@@ -19,6 +19,22 @@ pub const SOURCES: [&str; 4] = [
     "OAIC, Australian Privacy Principles guidelines, chapters 7, 12 and 13, read 25 October 2026",
 ];
 
+/// The day the status lines below were read in their primary sources, unless a line gives
+/// its own date.
+pub const STATUS_READ: &str = "5 November 2026";
+
+/// Where the law stands around the table: the sources are in the plan, section 3. A
+/// statement about tranche 2 describes a draft and must say so.
+pub const STATUS: [&str; 7] = [
+    "In force: Privacy Act 1988 compilation C2026C00227. The Federal Register ends that version on 10 December 2026 and has not yet registered the next compilation.",
+    "From 10 December 2026: APP 1.7 to 1.9 require a privacy policy to describe certain automated decisions. That is a transparency duty: it gives you no request to make, so no lever uses it.",
+    "Children's Online Privacy Code (read 6 November 2026): s 26GC(10) requires the Commissioner to develop and register it within 24 months of Royal Assent on 10 December 2024, which the OAIC gives as 10 December 2026. The OAIC consulted on an Exposure Draft until 5 June 2026, and the Federal Register lists no such code yet. It would bind APP entities providing certain online services likely to be accessed by children. No lever uses it.",
+    "From 1 January 2027: the Interactive Gambling Amendment (Gambling Reform) Act 2026, sch 1 items 46 and 47, adds s 33C(1)(h) and inserts 'and subsection 62P(2)' in APP 7.8(aa). APP 7.8 limits APP 7, which the app7 levers rest on, so reread it then. No lever changes on the face of the items.",
+    "Tranche 2: the Privacy Amendment (Personal Data Protection) Bill 2026 is an Exposure Draft, not law, and may change. Consultation closed on 18 September 2026, and the draft's commencement table is blank.",
+    "The Exposure Draft would replace APP 7 and add a right to erasure against large digital platforms only. Neither applies today: every lever above rests on the law in force.",
+    "OAIC complaints: as at February 2026 the OAIC said it was unlikely to substantially progress a new complaint for some 6 to 12 months after lodgement, unless it finds exceptional circumstances, and it need not investigate every complaint. Where a recognised external dispute resolution scheme covers the business, such as the TIO or AFCA, generally try that scheme first, but the OAIC may decide not to investigate a complaint made more than 12 months after you became aware of the act or practice (s 41(1)(c)).",
+];
+
 /// When the entity must act.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Deadline {

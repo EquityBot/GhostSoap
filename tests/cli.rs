@@ -131,6 +131,19 @@ fn law_json_covers_every_lever_with_the_notice() {
             .expect("notice")
             .contains("not legal advice")
     );
+    assert_eq!(law["status"]["read"], "5 November 2026");
+    let lines = law["status"]["lines"].as_array().expect("status lines");
+    for needle in [
+        "not law",
+        "From 1 January 2027: the Interactive Gambling Amendment",
+    ] {
+        assert!(
+            lines
+                .iter()
+                .any(|l| l.as_str().is_some_and(|l| l.contains(needle))),
+            "missing {needle:?}"
+        );
+    }
 }
 
 #[test]
