@@ -104,7 +104,7 @@ GhostSoap provides information and templates, not legal advice. For advice, cont
 
 GhostSoap suits you if you want to keep your details on your own computer and send each request yourself. Other options fit other needs:
 
-- **Someone else does the work:** [ClearTrace AU](https://cleartrace.au/) and [Optery](https://www.optery.com/pricing-australia/) are paid services that send removal requests for you, which means giving them your details.
+- **Someone else does the work:** [ClearTrace AU](https://cleartrace.au/) and [Optery's paid plans](https://www.optery.com/pricing-australia/) handle removals for you, which means giving them your details.
 - **A guide rather than a tool:** [Serus's Australian guide](https://www.serus.ai/privacy-laws/remove-your-data-australia/) is free and covers opt-outs site by site. Serus also sells removal tools.
 - **A result gone from Google:** [Results about you](https://support.google.com/websearch/answer/12719076) asks Google to drop a result from Search. The information stays on the source page, so it complements a request to the site.
 
