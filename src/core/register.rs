@@ -150,6 +150,7 @@ pub enum ExemptionRisk {
 pub enum Escalation {
     Oaic,
     Afca,
+    Tio,
     Acma,
 }
 
@@ -480,6 +481,11 @@ fn check_entry(entry: &Entry, file: &str, today: NaiveDate, report: &mut Report)
     }
     for source in entry.sources.iter().filter(|s| !is_https(s)) {
         errors.push(format!("source `{source}` is not an https URL"));
+    }
+    if entry.kinds.contains(&Kind::Telecommunications)
+        && entry.escalation.first() != Some(&Escalation::Tio)
+    {
+        errors.push("a telecommunications entry must list `tio` first in escalation".to_owned());
     }
     check_levers(entry, &mut errors);
     check_channels(entry, &mut errors);
@@ -846,6 +852,24 @@ entries = ["example-au"]
             errors.iter().any(|m| m.contains(needle)),
             "no error containing {needle:?} in {errors:?}"
         );
+    }
+
+    #[test]
+    fn a_telecommunications_entry_lists_the_tio_first() {
+        let telco = |text: &str| {
+            text.replace(
+                r#"kinds = ["marketing-list"]"#,
+                r#"kinds = ["telecommunications"]"#,
+            )
+        };
+        assert_error(&check_one(telco), "must list `tio` first");
+        let report = check_one(|text| {
+            telco(text).replace(
+                r#"escalation = ["oaic"]"#,
+                r#"escalation = ["tio", "oaic"]"#,
+            )
+        });
+        assert_eq!(messages(&report, Severity::Error), Vec::<&str>::new());
     }
 
     #[test]

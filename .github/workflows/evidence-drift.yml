@@ -1,8 +1,9 @@
 name: Evidence drift
 
-# Once a month, re-fetch every register evidence page, check each email domain and web
-# form, compare each law with the version the law table read, and open or update one
-# issue listing what changed or failed. It never commits, sends an email or submits a form.
+# Once a month, re-fetch every register evidence page, check each email domain, web form
+# and manual-check page, compare each law with the version the law table read, hash the
+# OAIC's recognised dispute resolution register, and open or update one issue listing what
+# changed or failed. It never commits, sends an email or submits a form.
 on:
   schedule:
     - cron: "17 3 1 * *"

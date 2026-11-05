@@ -163,7 +163,7 @@ Evidence: 52 `[[evidence]]` hashes across 33 of these entries, taken on 26 Octob
 - `medibank-au`: no postal channel: the policy gives GPO Box 9999 in each capital city, which names no single address a letter can carry.
 - `jb-hi-fi-au`: the web form is the 'Submit a privacy enquiry' chat panel on the privacy policy page, which has no URL of its own; the policy URL now redirects to the help-and-support copy.
 - `allianz-au`: the policy names the dispute-resolution page for privacy requests; its complaints form has no privacy topic.
-- `telstra-au`, `optus-au`, `tpg-telecom-au`, `aussie-broadband-au`: members of the Telecommunications Industry Ombudsman, which `escalation` cannot yet name.
+- `telstra-au`, `optus-au`, `tpg-telecom-au`, `aussie-broadband-au`: `escalation` has named the Telecommunications Industry Ombudsman since 5 November 2026. The OAIC lists the TIO as a recognised external dispute resolution scheme, carriers and eligible carriage service providers must join its scheme (Telecommunications (Consumer Protection and Service Standards) Act 1999, s 128(1)), its Terms of Reference cover 'breach of privacy' (clause 2.2(g)) and people who were or intended to be customers, and each entity's own privacy policy names the TIO as a place to complain (all read on 5 November 2026). The TIO's member directory was not searched, so the letter keeps 'if my complaint is within its jurisdiction'.
 - Rejected: MyDeal (closed; the site refused connections), PeopleIN (its policy covers its own staff and host employers, not its agencies' candidates).
 
 ### Evidence drift recheck (2 November 2026)

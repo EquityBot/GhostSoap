@@ -9,9 +9,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use chrono::NaiveDate;
+use ghostsoap::core::embedded;
 use ghostsoap::core::letters::{self, Letter, Request};
 use ghostsoap::core::profile::Profile;
-use ghostsoap::core::register::{Entry, Lever};
+use ghostsoap::core::register::{self, Entry, Lever};
 
 /// An entry that accepts every lever by email and post, and asks only for name and email.
 const ENTRY: &str = r#"
@@ -135,6 +136,25 @@ fn combined_post_spam_and_small_business_letters_match_their_snapshots() {
         "small-business",
         &compose(&small, &profile(), &[Lever::App7NoMarketing], 0),
     );
+}
+
+/// The shipped entry, so the snapshot follows the register rather than a fixture. The
+/// profile leaves out the phone number and address, so none reaches the snapshot.
+#[test]
+fn a_telstra_letter_names_the_tio_before_the_oaic() {
+    let register = register::parse_register(&embedded::register()).expect("register parses");
+    let profile = Profile {
+        phone: None,
+        address: None,
+        ..profile()
+    };
+    let letter = compose(
+        &register.entries["telstra-au"],
+        &profile,
+        &[Lever::App7NoMarketing],
+        0,
+    );
+    snapshot("telstra", &letter);
 }
 
 #[test]

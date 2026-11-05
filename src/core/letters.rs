@@ -195,6 +195,9 @@ fn escalation(entry: &Entry, spam_only: bool, has_spam: bool) -> Option<String> 
         Escalation::Afca => {
             "the Australian Financial Complaints Authority (AFCA, if my complaint is within its jurisdiction)"
         }
+        Escalation::Tio => {
+            "the Telecommunications Industry Ombudsman (TIO, if my complaint is within its jurisdiction)"
+        }
         Escalation::Acma => "the Australian Communications and Media Authority (ACMA)",
     };
     let privacy: Vec<&str> = entry

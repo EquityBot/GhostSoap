@@ -683,6 +683,14 @@ fn show_law() {
     for source in law::SOURCES {
         println!("    {source}");
     }
+    println!();
+    println!(
+        "Law status, read {} unless a line says otherwise:",
+        law::STATUS_READ
+    );
+    for line in law::STATUS {
+        println!("    {line}");
+    }
     println!("{LEGAL_NOTICE}");
 }
 
@@ -702,7 +710,12 @@ fn show_law_json() {
         .collect();
     println!(
         "{}",
-        json!({ "levers": levers, "sources": law::SOURCES, "notice": LEGAL_NOTICE })
+        json!({
+            "levers": levers,
+            "sources": law::SOURCES,
+            "status": { "read": law::STATUS_READ, "lines": law::STATUS },
+            "notice": LEGAL_NOTICE,
+        })
     );
 }
 

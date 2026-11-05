@@ -11,7 +11,7 @@ levers = ["app7-no-marketing", "app7-source", "app11-destroy", "app13", "app13-n
 opt_in_levers = ["app12"]
 identity_fields = ["full_name", "email", "phone", "address"]
 exemption_risk = "none"
-escalation = ["oaic"]
+escalation = ["tio", "oaic"]
 effort = "easy"
 
 [[channels]]
