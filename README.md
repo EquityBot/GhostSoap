@@ -13,7 +13,7 @@
 [![OpenSSF Scorecard](https://raw.githubusercontent.com/ryanduguid/.github/badges/EquityBot/GhostSoap.svg)](https://scorecard.dev/viewer/?uri=github.com/yungSNAT/GhostSoap)<br>
 [![rust: 1.99+](.github/assets/badges/rust.svg)](https://www.rust-lang.org/) [![licence: FSL-1.1-ALv2](.github/assets/badges/licence.svg)](#licences)
 
-[First run](#first-run) · [Using it](#using-it) · [With an AI agent](#with-an-ai-agent) · [Safety](#safety) · [What leaves your machine](#what-leaves-your-machine) · [Building](#building) · [Licences](#licences)
+[First run](#first-run) · [Using it](#using-it) · [With an AI agent](#with-an-ai-agent) · [Safety](#safety) · [What leaves your machine](#what-leaves-your-machine) · [When to choose something else](#when-to-choose-something-else) · [Building](#building) · [Licences](#licences)
 
 </div>
 
@@ -99,6 +99,14 @@ Nothing from GhostSoap itself: it makes no network connections, and you send eac
 - Promise deletion. Australian law has no general right to erasure; GhostSoap tells you what each request can and cannot achieve.
 
 GhostSoap provides information and templates, not legal advice. For advice, contact a community legal centre or the [Office of the Australian Information Commissioner](https://www.oaic.gov.au/).
+
+## When to choose something else
+
+GhostSoap suits you if you want to keep your details on your own computer and send each request yourself. Other options fit other needs:
+
+- **Someone else does the work:** [ClearTrace AU](https://cleartrace.au/) and [Optery](https://www.optery.com/pricing-australia/) are paid services that send removal requests for you, which means giving them your details.
+- **A guide rather than a tool:** [Serus's Australian guide](https://www.serus.ai/privacy-laws/remove-your-data-australia/) is free and covers opt-outs site by site. Serus also sells removal tools.
+- **A result gone from Google:** [Results about you](https://support.google.com/websearch/answer/12719076) asks Google to drop a result from Search. The information stays on the source page, so it complements a request to the site.
 
 ## Building
 

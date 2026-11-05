@@ -10,7 +10,7 @@ GhostSoap is a free, local-first Rust tool that helps people in Australia reclai
 
 Research on 24 October 2026 (sources in section 13) found:
 
-- **No service uses Australian rights.** Optery is the only paid service with an Australian list (55 brokers, about 40 of them US business-data or ad-tech firms; from A$49 a year). DeleteMe lists Australia; Incogni does not. All of them cite US or EU law.
+- **Few services use Australian rights.** None did on 24 October, and Optery was the only paid service found with an Australian list (55 brokers, about 40 of them US business-data or ad-tech firms; from A$49 a year). DeleteMe lists Australia; Incogni does not. All of them cited US or EU law. By 5 November 2026 ClearTrace AU sold a managed service that says it operates under the Privacy Act (A$129 to A$259 a year), and Serus published a free guide built on the APPs.
 - **No open source tool covers Australia.** The closest projects are US or EU focused: digisamroc/eraser (Go, no licence, dormant since January 2026), datenanfragen (CC0 data, MIT site, EU), nulltrace (MIT, Go), symaira-eraseme (Apache-2.0, Rust) and Scrubbr (MIT, Python).
 - **No licence-compatible Australian broker dataset exists.** The Optery directory and the Big Ass Data Broker Opt-Out List are CC BY-NC-SA, so they can serve only as leads.
 - **The category underperforms.** Consumer Reports (August 2024, 32 volunteers) found paid services removed 35% of people-search profiles within 4 months; manual opt-outs did better.
@@ -293,6 +293,7 @@ Ryan approved draft 2 on 24 October 2026 and decided:
 
 - [Optery Australia launch](https://www.optery.com/?p=27466), [Optery Australian pricing and list](https://www.optery.com/?p=27451)
 - [Incogni pricing](https://incogni.com/pricing), [DeleteMe international](https://joindeleteme.com/international/)
+- [ClearTrace AU](https://cleartrace.au/), [Serus Australian guide](https://www.serus.ai/privacy-laws/remove-your-data-australia/) (both read on 5 November 2026)
 - [Consumer Reports evaluation of removal services](https://advocacy.consumerreports.org/press_release/consumer-reports-evaluation-of-people-search-site-removal-services-finds-that-they-are-largely-ineffective/)
 - [OAIC APP 7 guidelines](https://www.oaic.gov.au/privacy/australian-privacy-principles/australian-privacy-principles-guidelines/chapter-7-app-7-direct-marketing)
 - [ACCC data broker report](https://www.accc.gov.au/inquiries-and-consultations/finalised-inquiries/digital-platform-services-inquiry-2020-25/march-2024-interim-report)
