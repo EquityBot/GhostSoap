@@ -10,7 +10,7 @@ GhostSoap is a free, local-first Rust tool that helps people in Australia reclai
 
 Research on 24 October 2026 (sources in section 13) found:
 
-- **Few services use Australian rights.** The 24 October research found none, and Optery was the only paid service found with an Australian list (55 brokers, about 40 of them US business-data or ad-tech firms; from A$49 a year). DeleteMe lists Australia; Incogni does not. All of them cited US or EU law. By 5 November 2026 ClearTrace AU sold a managed service that says it operates under the Privacy Act (A$129 to A$259 a year), and Serus published a free guide citing the APPs.
+- **Few services use Australian rights.** The 24 October research found none, and Optery was the only paid service found with an Australian list (55 brokers, about 40 of them US business-data or ad-tech firms; from A$49 a year). DeleteMe lists Australia; Incogni does not. All of them cited US or EU law. By 5 November 2026 ClearTrace AU sold a managed service that says it operates under the Privacy Act (A$129 to A$259 for a year of re-scanning), and Serus published a free guide citing the APPs.
 - **No open source tool covers Australia.** The closest projects are US or EU focused: digisamroc/eraser (Go, no licence, dormant since January 2026), datenanfragen (CC0 data, MIT site, EU), nulltrace (MIT, Go), symaira-eraseme (Apache-2.0, Rust) and Scrubbr (MIT, Python).
 - **No licence-compatible Australian broker dataset exists.** The Optery directory and the Big Ass Data Broker Opt-Out List are CC BY-NC-SA, so they can serve only as leads.
 - **The category underperforms.** Consumer Reports (August 2024, 32 volunteers) found paid services removed 35% of people-search profiles within 4 months; manual opt-outs did better.
