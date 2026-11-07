@@ -365,6 +365,7 @@ fn record(lines: &mut Vec<String>, what: &str, ids: &[String], check: Check) {
             lines.push(format!("- `{}`: {what}: {problem}", ids.join("`, `")));
         }
         // The workflow log keeps these; they stay out of the issue so that it can close.
+        // evidence-drift.yml counts lines starting `inconclusive: ` for its closing comment.
         Check::Inconclusive(why) => eprintln!("inconclusive: {} {what}: {why}", ids.join(", ")),
     }
 }
